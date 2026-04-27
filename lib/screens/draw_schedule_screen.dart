@@ -1,0 +1,579 @@
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+import '../core/firebase/analytics_service.dart';
+import '../core/freemium/freemium_service.dart';
+import '../core/freemium/paywall_service.dart';
+import '../core/heloc_engine.dart';
+import '../core/theme/app_theme.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
+import '../main.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../widgets/paywall_hard.dart';
+import '../widgets/paywall_soft.dart';
+import '../widgets/premium_cta_widget.dart';
+
+class DrawScheduleScreen extends StatefulWidget {
+  const DrawScheduleScreen({super.key});
+
+  @override
+  State<DrawScheduleScreen> createState() => _DrawScheduleScreenState();
+}
+
+class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
+  final _drawCtrl = TextEditingController(text: '100000');
+  final _rateCtrl = TextEditingController(text: '8.5');
+  final _drawYearsCtrl = TextEditingController(text: '10');
+  final _repayYearsCtrl = TextEditingController(text: '20');
+
+  final _fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+  final _fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+
+  List<Map<String, double>>? _schedule;
+  double? _draw;
+  double? _rate;
+  int? _drawYears;
+  int? _repayYears;
+
+  @override
+  void dispose() {
+    _drawCtrl.dispose();
+    _rateCtrl.dispose();
+    _drawYearsCtrl.dispose();
+    _repayYearsCtrl.dispose();
+    super.dispose();
+  }
+
+  void _generate() {
+    final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
+    final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
+    final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
+    final repayYears = int.tryParse(_repayYearsCtrl.text) ?? 20;
+
+    setState(() {
+      _draw = draw;
+      _rate = rate;
+      _drawYears = drawYears;
+      _repayYears = repayYears;
+      _schedule = HelocEngine.drawSchedule(
+        drawAmount: draw,
+        annualRate: rate,
+        drawYears: drawYears,
+        repayYears: repayYears,
+      );
+    });
+
+    AnalyticsService.instance.logDrawScheduleViewed();
+    final trigger = paywallService.recordAction();
+    if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
+      if (trigger == PaywallTrigger.soft) {
+        PaywallSoft.show(context);
+      } else {
+        PaywallHard.show(context);
+      }
+    }
+  }
+
+  Future<void> _exportPdf(BuildContext context, bool isSpanish) async {
+    final doc = pw.Document();
+    final schedule = _schedule!;
+    final draw = _draw!;
+    final rate = _rate!;
+    final drawYears = _drawYears!;
+    final repayYears = _repayYears!;
+    final now = DateTime.now();
+    final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
+
+    final title = isSpanish ? 'Calendario HELOC' : 'HELOC Draw Schedule';
+    final homeLabel = isSpanish ? 'Monto dispuesto' : 'Draw Amount';
+    final creditLabel = isSpanish ? 'Límite de crédito' : 'Credit Limit';
+    final drawLabel = isSpanish ? 'Período disposición' : 'Draw Period';
+    final repayLabel = isSpanish ? 'Período de pago' : 'Repay Period';
+    final rateLabel = isSpanish ? 'Tasa HELOC' : 'HELOC Rate';
+    final monthLabel = isSpanish ? 'Mes' : 'Month';
+    final balanceLabel = isSpanish ? 'Balance' : 'Balance';
+    final interestLabel = isSpanish ? 'Pago interés' : 'Interest Payment';
+    final principalLabel = isSpanish ? 'Principal' : 'Principal';
+    final remainingLabel = isSpanish ? 'Restante' : 'Remaining';
+    final footerLabel = isSpanish
+        ? 'Generado: ${dateFmt.format(now)}'
+        : 'Generated: ${dateFmt.format(now)}';
+
+    final fmtCur = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => [
+          pw.Text(title,
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 12),
+          pw.Text('$homeLabel: ${fmtCur.format(draw)}'),
+          pw.Text('$creditLabel: ${fmtCur.format(draw)}'),
+          pw.Text('$drawLabel: ${drawYears}y'),
+          pw.Text('$repayLabel: ${repayYears}y'),
+          pw.Text('$rateLabel: ${rate.toStringAsFixed(2)}%'),
+          pw.SizedBox(height: 16),
+          pw.TableHelper.fromTextArray(
+            headers: [monthLabel, balanceLabel, interestLabel, principalLabel, remainingLabel],
+            data: schedule.map((row) {
+              final month = row['month']!.toInt();
+              final balance = row['balance'] ?? 0.0;
+              final payment = row['payment'] ?? 0.0;
+              final isDrawPhase = (row['type'] ?? 0) == 0;
+              final interest = isDrawPhase ? payment : (balance * (rate / 100 / 12));
+              final principal = isDrawPhase ? 0.0 : (payment - interest).clamp(0.0, double.infinity);
+              final remaining = (balance - principal).clamp(0.0, double.infinity);
+              return [
+                '$month',
+                fmtCur.format(balance),
+                fmtCur.format(interest),
+                fmtCur.format(principal),
+                fmtCur.format(remaining),
+              ];
+            }).toList(),
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+            cellStyle: const pw.TextStyle(fontSize: 8),
+            cellAlignment: pw.Alignment.centerRight,
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Text(footerLabel,
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey)),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (_) => doc.save());
+    AnalyticsService.instance.logPdfExported();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEs = isSpanishNotifier.value;
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEs ? 'Parámetros del HELOC' : 'HELOC Parameters',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 14),
+
+                _buildField(_drawCtrl,
+                    isEs ? 'Monto dispuesto (\$)' : 'Draw Amount (\$)', '100000'),
+                const SizedBox(height: 12),
+                _buildField(_rateCtrl,
+                    isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)', '8.5'),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(
+                    child: _buildField(_drawYearsCtrl,
+                        isEs ? 'Disposición (años)' : 'Draw Period (yrs)', '10'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildField(_repayYearsCtrl,
+                        isEs ? 'Pago (años)' : 'Repay Period (yrs)', '20'),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+
+                ElevatedButton.icon(
+                  onPressed: _generate,
+                  icon: const Icon(Icons.timeline),
+                  label: Text(isEs ? 'Generar calendario' : 'Generate Schedule'),
+                ),
+
+                if (_schedule != null) ...[
+                  const SizedBox(height: 24),
+
+                  // Balance chart
+                  _buildChart(isEs),
+
+                  const SizedBox(height: 20),
+
+                  // Rate scenarios + Export — single premium gate
+                  ValueListenableBuilder<bool>(
+                    valueListenable: freemiumService.isPremiumNotifier,
+                    builder: (_, isPremium, __) {
+                      if (!isPremium) {
+                        return PremiumCtaWidget(
+                          feature: isEs
+                              ? 'Escenarios de tasa y exportación PDF'
+                              : 'Rate Scenarios & PDF Export',
+                        );
+                      }
+                      return _buildRateScenarios(isEs);
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // First 12 months table
+                  Text(
+                    isEs ? 'Primeros 12 meses' : 'First 12 Months',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildTable(isEs, _schedule!.take(12).toList()),
+
+                  const SizedBox(height: 20),
+
+                  // Export — premium gated
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      if (!freemiumService.isPremium) {
+                        PaywallHard.show(context);
+                      } else {
+                        _exportPdf(context, isEs);
+                      }
+                    },
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: Text(
+                        isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf),
+                  ),
+                ],
+
+                const SizedBox(height: 80),
+              ],
+            ),
+          ),
+        ),
+        const BannerAdWidget(),
+      ],
+    );
+  }
+
+  Widget _buildChart(bool isEs) {
+    if (_schedule == null) return const SizedBox.shrink();
+
+    // Sample every 6 months for chart readability
+    final spots = <FlSpot>[];
+    for (int i = 0; i < _schedule!.length; i += 6) {
+      final row = _schedule![i];
+      spots.add(FlSpot(row['month']!, row['balance']!));
+    }
+    // Ensure last point
+    if (_schedule!.isNotEmpty) {
+      final last = _schedule!.last;
+      if (spots.isEmpty || spots.last.x != last['month']) {
+        spots.add(FlSpot(last['month']!, last['balance']!));
+      }
+    }
+
+    // Draw period end marker
+    final drawEndMonth = (_drawYears! * 12).toDouble();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isEs ? 'Balance del HELOC a lo largo del tiempo' : 'HELOC Balance Over Time',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              _LegendDot(color: AppTheme.primary),
+              const SizedBox(width: 4),
+              Text(isEs ? 'Período disposición' : 'Draw Period',
+                  style: const TextStyle(fontSize: 11)),
+              const SizedBox(width: 16),
+              _LegendDot(color: AppTheme.success),
+              const SizedBox(width: 4),
+              Text(isEs ? 'Período de pago' : 'Repayment',
+                  style: const TextStyle(fontSize: 11)),
+            ]),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (_) =>
+                        FlLine(color: AppTheme.divider, strokeWidth: 1),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 60,
+                        getTitlesWidget: (v, _) => Text(
+                          '\$${(v / 1000).toStringAsFixed(0)}k',
+                          style: const TextStyle(
+                              fontSize: 10, color: AppTheme.labelGray),
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 60,
+                        getTitlesWidget: (v, _) => Text(
+                          '${v ~/ 12}y',
+                          style: const TextStyle(
+                              fontSize: 10, color: AppTheme.labelGray),
+                        ),
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  extraLinesData: ExtraLinesData(verticalLines: [
+                    VerticalLine(
+                      x: drawEndMonth,
+                      color: Colors.orange.withValues(alpha: 0.6),
+                      strokeWidth: 1.5,
+                      dashArray: [5, 4],
+                      label: VerticalLineLabel(
+                        show: true,
+                        labelResolver: (_) =>
+                            isEs ? 'Fin disposición' : 'Draw End',
+                        style: const TextStyle(
+                            fontSize: 9, color: Colors.orange),
+                      ),
+                    ),
+                  ]),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: AppTheme.primary,
+                      barWidth: 2.5,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRateScenarios(bool isEs) {
+    final draw = _draw!;
+    final baseRate = _rate!;
+    final drawYears = _drawYears!;
+    final repayYears = _repayYears!;
+
+    final baseInterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate);
+    final base1InterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate + 1);
+    final base2InterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate + 2);
+
+    final baseRepay = HelocEngine.amortizedPayment(draw, baseRate, repayYears);
+    final base1Repay = HelocEngine.amortizedPayment(draw, baseRate + 1, repayYears);
+    final base2Repay = HelocEngine.amortizedPayment(draw, baseRate + 2, repayYears);
+
+    final baseTotal = HelocEngine.totalInterestPaid(draw, baseRate, drawYears, repayYears);
+    final base1Total = HelocEngine.totalInterestPaid(draw, baseRate + 1, drawYears, repayYears);
+    final base2Total = HelocEngine.totalInterestPaid(draw, baseRate + 2, drawYears, repayYears);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.compare_arrows, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                isEs ? 'Escenarios de tasa' : 'Rate Scenarios',
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ]),
+            const SizedBox(height: 12),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(2),
+                2: FlexColumnWidth(2),
+                3: FlexColumnWidth(2),
+              },
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.07)),
+                  children: [
+                    _th(isEs ? 'Tasa' : 'Rate'),
+                    _th(isEs ? 'Solo int.' : 'Int. Only'),
+                    _th(isEs ? 'Pago' : 'Repay'),
+                    _th(isEs ? 'Int. total' : 'Total Int.'),
+                  ],
+                ),
+                _scenarioRow(
+                    '${baseRate.toStringAsFixed(1)}%',
+                    _fmtDec.format(baseInterestOnly),
+                    _fmtDec.format(baseRepay),
+                    _fmt.format(baseTotal),
+                    isBase: true),
+                _scenarioRow(
+                    '+1% (${(baseRate + 1).toStringAsFixed(1)}%)',
+                    _fmtDec.format(base1InterestOnly),
+                    _fmtDec.format(base1Repay),
+                    _fmt.format(base1Total)),
+                _scenarioRow(
+                    '+2% (${(baseRate + 2).toStringAsFixed(1)}%)',
+                    _fmtDec.format(base2InterestOnly),
+                    _fmtDec.format(base2Repay),
+                    _fmt.format(base2Total)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _th(String text) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Text(text,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppTheme.primary)),
+      );
+
+  TableRow _scenarioRow(String rate, String io, String repay, String total,
+      {bool isBase = false}) {
+    final style = TextStyle(
+        fontSize: 11,
+        fontWeight: isBase ? FontWeight.bold : FontWeight.normal,
+        color: isBase ? AppTheme.primary : null);
+    return TableRow(
+      children: [rate, io, repay, total]
+          .map((t) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                child: Text(t, style: style),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildTable(bool isEs, List<Map<String, double>> rows) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6)),
+              child: Row(children: [
+                _tableHeader(isEs ? 'Mes' : 'Month', flex: 1),
+                _tableHeader(isEs ? 'Tipo' : 'Type', flex: 2),
+                _tableHeader(isEs ? 'Pago' : 'Payment', flex: 2),
+                _tableHeader(isEs ? 'Balance' : 'Balance', flex: 2),
+              ]),
+            ),
+            const SizedBox(height: 4),
+            ...rows.map((row) {
+              final month = row['month']!.toInt();
+              final isDrawPhase = row['type'] == 0;
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: Row(children: [
+                  Expanded(
+                      flex: 1,
+                      child: Text('$month',
+                          style: const TextStyle(fontSize: 12))),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (isDrawPhase
+                                ? AppTheme.primary
+                                : AppTheme.success)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isDrawPhase
+                            ? (isEs ? 'Disposición' : 'Draw')
+                            : (isEs ? 'Pago' : 'Repay'),
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: isDrawPhase
+                                ? AppTheme.primary
+                                : AppTheme.success,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                      flex: 2,
+                      child: Text(_fmtDec.format(row['payment']!),
+                          style: const TextStyle(fontSize: 12))),
+                  Expanded(
+                      flex: 2,
+                      child: Text(_fmt.format(row['balance']!),
+                          style: const TextStyle(fontSize: 12))),
+                ]),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tableHeader(String text, {required int flex}) => Expanded(
+        flex: flex,
+        child: Text(text,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppTheme.primary)),
+      );
+
+  Widget _buildField(
+      TextEditingController ctrl, String label, String hint) {
+    return TextFormField(
+      controller: ctrl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(labelText: label, hintText: hint),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  const _LegendDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
+}
