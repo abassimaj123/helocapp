@@ -1,3 +1,5 @@
+import '../core/ads/ad_footer.dart';
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +12,6 @@ import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -60,6 +61,16 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                     ]),
+                  ),
+                  // Theme toggle
+                  ValueListenableBuilder<ThemeMode>(
+                    valueListenable: themeModeService.notifier,
+                    builder: (_, mode, __) => ListTile(
+                      leading: Icon(themeModeService.icon, color: AppTheme.primary),
+                      title: Text(themeModeService.label(isSpanish: isEs)),
+                      trailing: const Icon(Icons.chevron_right, color: AppTheme.labelGray),
+                      onTap: () => themeModeService.toggle(),
+                    ),
                   ),
                   const Divider(height: 1),
 
@@ -171,11 +182,21 @@ class SettingsScreen extends StatelessWidget {
                     subtitle: isEs ? 'Ver todas nuestras calculadoras' : 'See all our calculators',
                     onTap: () => _launch('https://play.google.com/store/apps/developer?id=CalqWise'),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: Text(
+                      isEs ? AppStringsES.disclaimer : AppStringsEN.disclaimer,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF475569),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
-            const BannerAdWidget(),
+            const AdFooter(),
           ],
         );
       },
@@ -220,7 +241,7 @@ class _LangButton extends StatelessWidget {
             border: Border.all(
                 color: selected
                     ? AppTheme.primary
-                    : Colors.grey.shade300),
+                    : const Color(0xFFCBD5E1)),
             borderRadius: BorderRadius.circular(10),
           ),
           alignment: Alignment.center,
@@ -228,7 +249,7 @@ class _LangButton extends StatelessWidget {
             label,
             style: TextStyle(
               color:
-                  selected ? Colors.white : Colors.grey.shade700,
+                  selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
               fontWeight:
                   selected ? FontWeight.bold : FontWeight.normal,
             ),

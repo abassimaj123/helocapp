@@ -1,3 +1,7 @@
+import '../core/ads/ad_footer.dart';
+import 'dart:math' show pow;
+
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -9,17 +13,20 @@ import 'package:share_plus/share_plus.dart' show Share;
 import '../core/ads/ad_service.dart';
 import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
+import '../core/services/review_service.dart';
 import '../core/freemium/freemium_service.dart';
-import '../core/freemium/paywall_service.dart';
 import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
+import '../widgets/insight_card.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/premium_cta_widget.dart';
 import '../widgets/result_card.dart';
+import '../core/insight_engine.dart';
+import 'draw_optimizer_screen.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -36,11 +43,14 @@ double _parseNum(String v) {
   return double.tryParse(s) ?? 0.0;
 }
 
+/// Payment mode selected by the IO vs P&I toggle.
+enum _PaymentMode { interestOnly, fullPI }
+
 class _CalculatorScreenState extends State<CalculatorScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _homeValueCtrl = TextEditingController(text: '500000');
-  final _mortgageCtrl = TextEditingController(text: '200000');
+  final _homeValueCtrl = TextEditingController(text: '400000');
+  final _mortgageCtrl = TextEditingController(text: '250000');
   final _drawCtrl = TextEditingController(text: '100000');
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
@@ -53,6 +63,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   // Live computed equity
   double _availableEquity = 200000;
   double _ltvPct = 40;
+
+  // IO vs P&I toggle
+  _PaymentMode _paymentMode = _PaymentMode.interestOnly;
 
   Map<String, dynamic>? _results;
 
@@ -91,6 +104,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final totalInterest = HelocEngine.totalInterestPaid(draw, rate, drawYears, repayYears);
     final maxBorrow85 = HelocEngine.maxBorrowCapacity(homeValue, mortgage, ltvLimit: 0.85);
     final taxSavings = HelocEngine.estimatedAnnualTaxSavings(draw, rate, 22.0);
+    // Full P&I: amortize over combined term from day 1
+    final fullTotalMonths = (drawYears + repayYears) * 12;
+    final fullTermYears = fullTotalMonths ~/ 12;
+    final fullPI = HelocEngine.amortizedPayment(draw, rate, fullTermYears > 0 ? fullTermYears : 1);
+    final totalInterestFullPI = HelocEngine.totalInterestFullAmortizing(draw, rate, drawYears, repayYears);
     if (!mounted) return;
     setState(() {
       _results = {
@@ -99,6 +117,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         'equity': equity, 'ltv': ltv, 'interestOnly': interestOnly,
         'repayment': repayment, 'totalInterest': totalInterest,
         'maxBorrow85': maxBorrow85, 'taxSavings': taxSavings,
+        'fullPI': fullPI, 'totalInterestFullPI': totalInterestFullPI,
       };
     });
   }
@@ -120,7 +139,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  void _calculate() {
+  Future<void> _calculate() async {
     if (!_formKey.currentState!.validate()) return;
     final homeValue = _parseNum(_homeValueCtrl.text);
     final mortgage = _parseNum(_mortgageCtrl.text);
@@ -136,6 +155,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final totalInterest = HelocEngine.totalInterestPaid(draw, rate, drawYears, repayYears);
     final maxBorrow85 = HelocEngine.maxBorrowCapacity(homeValue, mortgage, ltvLimit: 0.85);
     final taxSavings = HelocEngine.estimatedAnnualTaxSavings(draw, rate, 22.0);
+    final fullTotalMonths = (drawYears + repayYears) * 12;
+    final fullTermYears = fullTotalMonths ~/ 12;
+    final fullPI = HelocEngine.amortizedPayment(draw, rate, fullTermYears > 0 ? fullTermYears : 1);
+    final totalInterestFullPI = HelocEngine.totalInterestFullAmortizing(draw, rate, drawYears, repayYears);
 
     setState(() {
       _results = {
@@ -152,6 +175,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         'totalInterest': totalInterest,
         'maxBorrow85': maxBorrow85,
         'taxSavings': taxSavings,
+        'fullPI': fullPI,
+        'totalInterestFullPI': totalInterestFullPI,
       };
     });
 
@@ -160,7 +185,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       homeValue: homeValue,
       ratePct: rate,
     );
-    final trigger = paywallService.recordAction();
+    final trigger = await paywallSession.recordAction();
     if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
       if (trigger == PaywallTrigger.soft) {
         PaywallSoft.show(context);
@@ -169,6 +194,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       }
     }
 
+    HapticFeedback.mediumImpact();
     DatabaseService.instance.insertHistory(
       inputs: {
         'homeValue': homeValue,
@@ -185,11 +211,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         'repayment': repayment,
       },
     );
+    ReviewService.instance.requestAfterSave();
   }
 
   void _reset() {
-    _homeValueCtrl.text = '500000';
-    _mortgageCtrl.text = '200000';
+    _homeValueCtrl.text = '400000';
+    _mortgageCtrl.text = '250000';
     _drawCtrl.text = '100000';
     _rateCtrl.text = '8.5';
     _drawYearsCtrl.text = '10';
@@ -199,11 +226,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   // ── Share ──────────────────────────────────────────────────────────────────
 
-  void _share(bool isEs) {
+  Future<void> _share(bool isEs) async {
     if (_results == null) return;
 
     if (!freemiumService.isPremium) {
-      final trigger = paywallService.recordAction();
+      final trigger = await paywallSession.recordAction();
       if (trigger == PaywallTrigger.hard) {
         PaywallHard.show(context);
         return;
@@ -513,10 +540,49 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
 
     return Column(
       children: [
+        // Sub-toolbar with optimizer shortcut
+        Material(
+          color: AppTheme.primary,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Row(children: [
+                const Icon(Icons.home_outlined, color: Colors.white70, size: 16),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    isEs ? 'Calculadora HELOC' : 'HELOC Calculator',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const DrawOptimizerScreen(),
+                    transitionsBuilder: (_, anim, __, child) =>
+                        FadeTransition(opacity: anim, child: child),
+                    transitionDuration: const Duration(milliseconds: 250),
+                  )),
+                  icon: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 18),
+                  label: Text(
+                    isEs ? 'Optimizar' : 'Optimizer',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
+                ),
+              ]),
+            ),
+          ),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: Form(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: CalcwisePageEntrance(child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,6 +685,10 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                   ]),
                   const SizedBox(height: 24),
 
+                  // ── IO vs P&I toggle ─────────────────────────────────────
+                  _buildPaymentModeToggle(isEs),
+                  const SizedBox(height: 16),
+
                   ElevatedButton.icon(
                     onPressed: _calculate,
                     icon: const Icon(Icons.calculate),
@@ -678,21 +748,12 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                     ),
                     const SizedBox(height: 12),
 
-                    ResultCard(
-                      highlight: true,
-                      label: isEs
-                          ? 'Pago Solo Interés (período disposición)'
-                          : 'Interest-Only Payment (Draw Period)',
-                      value: _fmtDec.format(_results!['interestOnly']),
-                      icon: Icons.payments_outlined,
-                    ),
-                    const SizedBox(height: 10),
-                    ResultCard(
-                      label: isEs
-                          ? 'Pago Amortizado (período de pago)'
-                          : 'Repayment Payment (After Draw)',
-                      value: _fmtDec.format(_results!['repayment']),
-                      icon: Icons.account_balance,
+                    // ── Mode-aware primary payment card ──────────────────
+                    _PaymentModeResultCard(
+                      results: _results!,
+                      mode: _paymentMode,
+                      isEs: isEs,
+                      fmtDec: _fmtDec,
                     ),
                     const SizedBox(height: 10),
                     Card(
@@ -720,8 +781,14 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                           ),
                           const Divider(height: 16),
                           MetricRow(
-                            label: isEs ? 'Interés total estimado' : 'Total Interest (Estimated)',
-                            value: _fmt.format(_results!['totalInterest']),
+                            label: _paymentMode == _PaymentMode.interestOnly
+                                ? (isEs ? 'Interés total estimado' : 'Total Interest (Estimated)')
+                                : (isEs ? 'Interés total (P&I completo)' : 'Total Interest (Full P&I)'),
+                            value: _fmt.format(
+                              _paymentMode == _PaymentMode.interestOnly
+                                  ? _results!['totalInterest']
+                                  : _results!['totalInterestFullPI'],
+                            ),
                             valueColor: Colors.red.shade700,
                           ),
                         ]),
@@ -734,7 +801,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                         margin: const EdgeInsets.only(top: 12),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.blue.shade200),
                         ),
@@ -774,16 +841,116 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Smart Insights
+                    InsightCard(
+                      insights: InsightEngine.generate(
+                        homeValue:          (_results!['homeValue'] as double? ?? 0),
+                        mortgageBalance:    (_results!['mortgage'] as double? ?? 0),
+                        helocLimit:         (_results!['draw'] as double? ?? 0),
+                        annualRatePct:      (_results!['rate'] as double? ?? 0),
+                        drawPayment:        (_results!['interestOnly'] as double? ?? 0),
+                        repaymentPayment:   (_results!['repayment'] as double? ?? 0),
+                        totalInterest:      (_results!['totalInterest'] as double? ?? 0),
+                        isEs: isEs,
+                      ),
+                      isSpanish: isEs,
+                    ),
+                    const SizedBox(height: 20),
                     _buildRateScenarios(isEs),
+                    const SizedBox(height: 20),
+                    // Feature 3 — Interest-Only vs Fully Amortizing
+                    _IoVsFullyAmortizingCard(
+                      draw: (_results!['draw'] as double?) ?? 0,
+                      rate: (_results!['rate'] as double?) ?? 0,
+                      drawYears: (_results!['drawYears'] as int?) ?? 10,
+                      repayYears: (_results!['repayYears'] as int?) ?? 20,
+                      isEs: isEs,
+                    ),
+                    const SizedBox(height: 20),
+                    // Feature 1 — Rate Sensitivity sliders
+                    ValueListenableBuilder<bool>(
+                      valueListenable: freemiumService.isPremiumNotifier,
+                      builder: (_, isPremium, __) {
+                        if (!isPremium) {
+                          return PremiumCtaWidget(
+                            feature: isEs
+                                ? 'Sensibilidad de Tasa'
+                                : 'Rate Sensitivity',
+                          );
+                        }
+                        return _RateSensitivityWidget(
+                          draw: (_results!['draw'] as double?) ?? 0,
+                          baseRate: (_results!['rate'] as double?) ?? 0,
+                          drawYears: (_results!['drawYears'] as int?) ?? 10,
+                          repayYears: (_results!['repayYears'] as int?) ?? 20,
+                          isEs: isEs,
+                        );
+                      },
+                    ),
                   ],
 
                   const SizedBox(height: 80),
                 ],
               ),
             ),
+            ), // CalcwisePageEntrance closes
+              ),
+            ),
           ),
         ),
-        const BannerAdWidget(),
+        const AdFooter(),
+      ],
+    );
+  }
+
+  Widget _buildPaymentModeToggle(bool isEs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isEs ? 'Modo de pago durante disposición' : 'Draw Period Payment Mode',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<_PaymentMode>(
+          segments: [
+            ButtonSegment<_PaymentMode>(
+              value: _PaymentMode.interestOnly,
+              label: Text(isEs ? 'Solo Interés' : 'Interest-Only',
+                  style: const TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.payments_outlined, size: 16),
+            ),
+            ButtonSegment<_PaymentMode>(
+              value: _PaymentMode.fullPI,
+              label: Text(isEs ? 'P&I Completo' : 'Full P&I',
+                  style: const TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.account_balance_outlined, size: 16),
+            ),
+          ],
+          selected: {_paymentMode},
+          onSelectionChanged: (sel) {
+            setState(() {
+              _paymentMode = sel.first;
+            });
+          },
+          style: ButtonStyle(
+            visualDensity: VisualDensity.compact,
+            shape: WidgetStateProperty.all(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _paymentMode == _PaymentMode.interestOnly
+              ? (isEs
+                  ? 'Durante el período de disposición solo pagas intereses. El saldo completo se amortiza después.'
+                  : 'During the draw period you pay interest only. The full balance amortizes after.')
+              : (isEs
+                  ? 'El pago amortiza capital e interés desde el primer mes sobre el término completo.'
+                  : 'Payment amortizes both principal & interest from month 1 over the full term.'),
+          style: const TextStyle(fontSize: 11, color: AppTheme.labelGray, height: 1.4),
+        ),
       ],
     );
   }
@@ -949,6 +1116,192 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
   }
 }
 
+// ============================================================================
+// Payment Mode Result Card — shows draw-period + repayment-period payments
+// for whichever mode is selected (IO or Full P&I)
+// ============================================================================
+
+class _PaymentModeResultCard extends StatelessWidget {
+  final Map<String, dynamic> results;
+  final _PaymentMode mode;
+  final bool isEs;
+  final NumberFormat fmtDec;
+
+  const _PaymentModeResultCard({
+    required this.results,
+    required this.mode,
+    required this.isEs,
+    required this.fmtDec,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final interestOnly = results['interestOnly'] as double? ?? 0;
+    final repayment = results['repayment'] as double? ?? 0;
+    final fullPI = results['fullPI'] as double? ?? 0;
+    final drawYears = results['drawYears'] as int? ?? 10;
+    final repayYears = results['repayYears'] as int? ?? 20;
+
+    final isIO = mode == _PaymentMode.interestOnly;
+    final drawPayment = isIO ? interestOnly : fullPI;
+    final repayPayment = isIO ? repayment : fullPI; // Full P&I: same payment throughout
+
+    final accentColor = isIO ? AppTheme.primary : const Color(0xFF01579B);
+    final modeLabel = isIO
+        ? (isEs ? 'Solo Interés' : 'Interest-Only')
+        : (isEs ? 'P&I Completo' : 'Full P&I');
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: accentColor.withValues(alpha: 0.35), width: 1.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Mode badge + title
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  modeLabel,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: accentColor),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                isIO ? Icons.payments_outlined : Icons.account_balance_outlined,
+                color: accentColor, size: 20,
+              ),
+            ]),
+            const SizedBox(height: 14),
+
+            // Two payment boxes side by side
+            Row(children: [
+              Expanded(
+                child: _PaymentBox(
+                  label: isEs ? 'Pago (disposición)' : 'Draw Period Payment',
+                  sublabel: isEs ? '${drawYears} años' : '${drawYears} yrs',
+                  value: fmtDec.format(drawPayment),
+                  note: isIO
+                      ? (isEs ? 'solo interés' : 'interest only')
+                      : (isEs ? 'P&I desde mes 1' : 'P&I from month 1'),
+                  color: accentColor,
+                  isHighlight: true,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _PaymentBox(
+                  label: isEs ? 'Pago (amortización)' : 'Repayment Period',
+                  sublabel: isEs ? '${repayYears} años' : '${repayYears} yrs',
+                  value: fmtDec.format(repayPayment),
+                  note: isIO
+                      ? (isEs ? 'capital + interés' : 'principal + interest')
+                      : (isEs ? 'mismo pago' : 'same payment'),
+                  color: accentColor,
+                  isHighlight: false,
+                ),
+              ),
+            ]),
+
+            if (isIO) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 15),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      isEs
+                          ? 'Atención: el pago sube de ${fmtDec.format(drawPayment)} a ${fmtDec.format(repayPayment)}/mes cuando comienza la amortización.'
+                          : 'Note: payment jumps from ${fmtDec.format(drawPayment)} to ${fmtDec.format(repayPayment)}/mo when repayment starts.',
+                      style: TextStyle(fontSize: 11, color: Colors.orange.shade800, height: 1.4),
+                    ),
+                  ),
+                ]),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentBox extends StatelessWidget {
+  final String label;
+  final String sublabel;
+  final String value;
+  final String note;
+  final Color color;
+  final bool isHighlight;
+
+  const _PaymentBox({
+    required this.label,
+    required this.sublabel,
+    required this.value,
+    required this.note,
+    required this.color,
+    required this.isHighlight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isHighlight ? color.withValues(alpha: 0.07) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isHighlight ? color.withValues(alpha: 0.25) : CalcwiseTheme.of(context).cardBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 10, color: AppTheme.labelGray, fontWeight: FontWeight.w500)),
+          Text(sublabel,
+              style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: isHighlight ? color : null, // null inherits theme onSurface
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text('/mo', style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
+          const SizedBox(height: 4),
+          Text(
+            note,
+            style: TextStyle(
+              fontSize: 10,
+              color: isHighlight ? color.withValues(alpha: 0.85) : AppTheme.labelGray,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EquityCard extends StatelessWidget {
   final double availableEquity;
   final double ltvPct;
@@ -1019,7 +1372,7 @@ class _EquityCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ltvFraction,
                   minHeight: 7,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: const Color(0xFFE2E8F0),
                   valueColor: AlwaysStoppedAnimation<Color>(ltvColor),
                 ),
               ),
@@ -1058,4 +1411,538 @@ class ClipRoundedRect extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       ClipRRect(borderRadius: borderRadius, child: child);
+}
+
+// ============================================================================
+// Feature 1 — Rate Sensitivity Widget (Premium)
+// ============================================================================
+
+class _RateSensitivityWidget extends StatefulWidget {
+  final double draw;
+  final double baseRate;
+  final int drawYears;
+  final int repayYears;
+  final bool isEs;
+
+  const _RateSensitivityWidget({
+    required this.draw,
+    required this.baseRate,
+    required this.drawYears,
+    required this.repayYears,
+    required this.isEs,
+  });
+
+  @override
+  State<_RateSensitivityWidget> createState() => _RateSensitivityWidgetState();
+}
+
+class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
+  double _delta = 0.0; // -3.0 .. +3.0 in 0.25 steps
+
+  final _fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+  final _fmtInt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+
+  double get _scenarioRate =>
+      (widget.baseRate + _delta).clamp(0.01, 50.0);
+
+  double get _baseMonthly =>
+      HelocEngine.interestOnlyPayment(widget.draw, widget.baseRate);
+
+  double get _newMonthly =>
+      HelocEngine.interestOnlyPayment(widget.draw, _scenarioRate);
+
+  double get _baseTotal =>
+      HelocEngine.totalInterestPaid(widget.draw, widget.baseRate, widget.drawYears, widget.repayYears);
+
+  double get _newTotal =>
+      HelocEngine.totalInterestPaid(widget.draw, _scenarioRate, widget.drawYears, widget.repayYears);
+
+  void _applyQuick(double offset) {
+    setState(() => _delta = offset.clamp(-3.0, 3.0));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEs = widget.isEs;
+    final paymentDelta = _newMonthly - _baseMonthly;
+    final totalDelta = _newTotal - _baseTotal;
+    final isUp = _delta > 0;
+    final isDown = _delta < 0;
+    final arrowColor = isUp
+        ? Colors.red.shade700
+        : isDown
+            ? Colors.green.shade700
+            : AppTheme.primary;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            Row(children: [
+              const Icon(Icons.tune, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                isEs ? 'Sensibilidad de Tasa' : 'Rate Sensitivity',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.shade300),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                  const SizedBox(width: 3),
+                  Text('Premium', style: TextStyle(fontSize: 10, color: Colors.amber.shade800, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            ]),
+            const SizedBox(height: 4),
+            Text(
+              isEs
+                  ? '¿Qué pasaría si tu tasa cambia?'
+                  : 'What if your rate goes up or down?',
+              style: const TextStyle(fontSize: 12, color: AppTheme.labelGray),
+            ),
+            const SizedBox(height: 16),
+
+            // Quick chips
+            Row(children: [
+              _QuickChip(
+                label: isEs ? 'Tasa +1%' : 'Rate +1%',
+                onTap: () => _applyQuick(1.0),
+                isSelected: _delta == 1.0,
+                color: Colors.red.shade700,
+              ),
+              const SizedBox(width: 8),
+              _QuickChip(
+                label: isEs ? 'Tasa +2%' : 'Rate +2%',
+                onTap: () => _applyQuick(2.0),
+                isSelected: _delta == 2.0,
+                color: Colors.red.shade700,
+              ),
+              const SizedBox(width: 8),
+              _QuickChip(
+                label: isEs ? 'Restablecer' : 'Reset',
+                onTap: () => _applyQuick(0.0),
+                isSelected: _delta == 0.0,
+                color: AppTheme.primary,
+              ),
+            ]),
+
+            const SizedBox(height: 16),
+
+            // Slider
+            Row(children: [
+              const Text('-3%', style: TextStyle(fontSize: 11, color: AppTheme.labelGray)),
+              Expanded(
+                child: Slider(
+                  value: _delta,
+                  min: -3.0,
+                  max: 3.0,
+                  divisions: 24, // 0.25 step
+                  activeColor: arrowColor,
+                  label: _delta >= 0 ? '+${_delta.toStringAsFixed(2)}%' : '${_delta.toStringAsFixed(2)}%',
+                  onChanged: (v) => setState(() => _delta = (v * 4).round() / 4),
+                ),
+              ),
+              const Text('+3%', style: TextStyle(fontSize: 11, color: AppTheme.labelGray)),
+            ]),
+
+            // Scenario label
+            Center(
+              child: Text(
+                _delta == 0
+                    ? (isEs ? 'Tasa actual: ${widget.baseRate.toStringAsFixed(2)}%' : 'Current rate: ${widget.baseRate.toStringAsFixed(2)}%')
+                    : (isEs
+                        ? 'Si la tasa ${isUp ? "sube" : "baja"} ${_delta.abs().toStringAsFixed(2)}% → ${_scenarioRate.toStringAsFixed(2)}%'
+                        : 'If rate ${isUp ? "rises" : "drops"} ${_delta.abs().toStringAsFixed(2)}% → ${_scenarioRate.toStringAsFixed(2)}%'),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: arrowColor,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Result cards
+            if (_delta != 0) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: arrowColor.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: arrowColor.withValues(alpha: 0.2)),
+                ),
+                child: Column(children: [
+                  _SensRow(
+                    label: isEs ? 'Nuevo pago mensual (interés)' : 'New monthly payment (interest)',
+                    value: _fmt.format(_newMonthly),
+                    delta: paymentDelta,
+                    color: arrowColor,
+                    isEs: isEs,
+                  ),
+                  const Divider(height: 16),
+                  _SensRow(
+                    label: isEs ? 'Delta interés total' : 'Total interest delta',
+                    value: _fmtInt.format(_newTotal),
+                    delta: totalDelta,
+                    color: arrowColor,
+                    isEs: isEs,
+                  ),
+                ]),
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    isEs
+                        ? 'Mueve el slider para ver el impacto en tiempo real.'
+                        : 'Move the slider to see real-time impact.',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.labelGray),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool isSelected;
+  final Color color;
+
+  const _QuickChip({
+    required this.label,
+    required this.onTap,
+    required this.isSelected,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? color : CalcwiseTheme.of(context).cardBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? color : AppTheme.labelGray,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SensRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final double delta;
+  final Color color;
+  final bool isEs;
+
+  const _SensRow({
+    required this.label,
+    required this.value,
+    required this.delta,
+    required this.color,
+    required this.isEs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sign = delta >= 0 ? '+' : '';
+    final fmtDelta = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+    return Row(children: [
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.labelGray)),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
+        ]),
+      ),
+      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Text(
+          isEs ? 'Cambio' : 'Change',
+          style: const TextStyle(fontSize: 10, color: AppTheme.labelGray),
+        ),
+        Text(
+          '$sign${fmtDelta.format(delta)}',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      ]),
+    ]);
+  }
+}
+
+// ============================================================================
+// Feature 3 — Interest-Only vs Fully Amortizing Comparison
+// ============================================================================
+
+class _IoVsFullyAmortizingCard extends StatelessWidget {
+  final double draw;
+  final double rate;
+  final int drawYears;
+  final int repayYears;
+  final bool isEs;
+
+  const _IoVsFullyAmortizingCard({
+    required this.draw,
+    required this.rate,
+    required this.drawYears,
+    required this.repayYears,
+    required this.isEs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (draw <= 0 || rate <= 0) return const SizedBox.shrink();
+
+    final r = rate / 100 / 12;
+
+    // ── Interest-Only path ───────────────────────────────────────────────────
+    final ioDrawPayment = HelocEngine.interestOnlyPayment(draw, rate);
+    final ioRepayPayment = HelocEngine.amortizedPayment(draw, rate, repayYears);
+    final ioTotalInterest = HelocEngine.totalInterestPaid(draw, rate, drawYears, repayYears);
+    final ioTotalPaid = ioTotalInterest + draw;
+
+    // ── Fully Amortizing from Day 1 ──────────────────────────────────────────
+    // Total term = drawYears + repayYears; amortize over full term from month 1
+    final fullTermMonths = (drawYears + repayYears) * 12;
+    final faMonthly = draw * r * pow(1 + r, fullTermMonths) / (pow(1 + r, fullTermMonths) - 1);
+    final faTotalPaid = faMonthly * fullTermMonths;
+    final faTotalInterest = faTotalPaid - draw;
+
+    // ── Verdict ──────────────────────────────────────────────────────────────
+    final monthlyDraw = ioDrawPayment - faMonthly; // +ve means IO cheaper during draw
+    final totalDiff = faTotalInterest - ioTotalInterest; // +ve means FA costs more overall... actually IO costs more
+
+    // IO: lower monthly during draw but higher total; FA: higher monthly but lower total
+    final fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+    final fmtInt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            Row(children: [
+              const Icon(Icons.compare, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isEs
+                      ? 'Solo Interés vs Amortización Completa'
+                      : 'Interest-Only vs Fully Amortizing',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 16),
+
+            // Column headers
+            Row(children: [
+              const SizedBox(width: 120),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.09),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isEs ? 'Solo Interés' : 'Interest-Only',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF01579B).withValues(alpha: 0.09),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isEs ? 'Amort. Completa' : 'Fully Amortizing',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF01579B), fontSize: 12),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 8),
+
+            // Row: monthly payment draw phase
+            _CompRow(
+              label: isEs ? 'Pago mensual\n(fase disposición)' : 'Monthly payment\n(draw phase)',
+              val1: fmt.format(ioDrawPayment),
+              val2: fmt.format(faMonthly),
+              winner: ioDrawPayment < faMonthly ? 0 : 1,
+            ),
+            _CompRow(
+              label: isEs ? 'Pago mensual\n(fase de pago)' : 'Monthly payment\n(repay phase)',
+              val1: fmt.format(ioRepayPayment),
+              val2: fmt.format(faMonthly),
+              winner: ioRepayPayment < faMonthly ? 0 : 1,
+            ),
+            _CompRow(
+              label: isEs ? 'Interés total' : 'Total interest',
+              val1: fmtInt.format(ioTotalInterest),
+              val2: fmtInt.format(faTotalInterest),
+              highlight: true,
+              winner: ioTotalInterest < faTotalInterest ? 0 : 1,
+            ),
+            _CompRow(
+              label: isEs ? 'Total pagado' : 'Total paid',
+              val1: fmtInt.format(ioTotalPaid),
+              val2: fmtInt.format(faTotalPaid),
+              winner: ioTotalPaid < faTotalPaid ? 0 : 1,
+            ),
+
+            const SizedBox(height: 14),
+
+            // Verdict badge
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.shade300),
+              ),
+              child: Row(children: [
+                Icon(Icons.lightbulb_outline, color: Colors.amber.shade700, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isEs
+                        ? 'Solo interés ahorra ${fmt.format(monthlyDraw.abs())}/mes ahora, '
+                          'pero cuesta ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "más" : "menos"} en total.'
+                        : 'Interest-only saves ${fmt.format(monthlyDraw.abs())}/mo now, '
+                          'costs ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "more" : "less"} total.',
+                    style: TextStyle(fontSize: 12, color: Colors.amber.shade900, height: 1.4),
+                  ),
+                ),
+              ]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompRow extends StatelessWidget {
+  final String label;
+  final String val1;
+  final String val2;
+  final bool highlight;
+  final int winner; // 0 = left wins, 1 = right wins, -1 = tie
+
+  const _CompRow({
+    required this.label,
+    required this.val1,
+    required this.val2,
+    this.highlight = false,
+    this.winner = -1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.labelGray,
+              fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+        Expanded(child: _Cell(val1, winner == 0, highlight, AppTheme.primary)),
+        const SizedBox(width: 4),
+        Expanded(child: _Cell(val2, winner == 1, highlight, const Color(0xFF01579B))),
+      ]),
+    );
+  }
+}
+
+class _Cell extends StatelessWidget {
+  final String value;
+  final bool isWinner;
+  final bool highlight;
+  final Color winColor;
+
+  const _Cell(this.value, this.isWinner, this.highlight, this.winColor);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+      decoration: BoxDecoration(
+        color: isWinner ? winColor.withValues(alpha: 0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        border: isWinner ? Border.all(color: winColor.withValues(alpha: 0.25)) : null,
+      ),
+      child: Text(
+        value,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: highlight ? 14 : 12,
+          fontWeight: highlight ? FontWeight.bold : FontWeight.w600,
+          color: isWinner ? winColor : null,
+        ),
+      ),
+    );
+  }
 }

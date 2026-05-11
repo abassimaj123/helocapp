@@ -1,3 +1,5 @@
+import '../core/ads/ad_footer.dart';
+import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -5,11 +7,9 @@ import 'package:intl/intl.dart';
 import '../core/ads/ad_service.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
-import '../core/freemium/paywall_service.dart';
 import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 
@@ -58,7 +58,7 @@ class _CompareScreenState extends State<CompareScreen> {
     super.dispose();
   }
 
-  void _compare() {
+  Future<void> _compare() async {
     if (!_formKey.currentState!.validate()) return;
     final result = HelocEngine.compare(
       withdrawalAmount: _parseN(_drawCtrl.text),
@@ -76,7 +76,7 @@ class _CompareScreenState extends State<CompareScreen> {
       helocRate: _parseN(_helocRateCtrl.text),
       refiRate: _parseN(_refiRateCtrl.text),
     );
-    final trigger = paywallService.recordAction();
+    final trigger = await paywallSession.recordAction();
     if (trigger == PaywallTrigger.hard && !freemiumService.isPremium) {
       PaywallHard.show(context);
     } else if (trigger == PaywallTrigger.soft && !freemiumService.isPremium) {
@@ -249,7 +249,7 @@ class _CompareScreenState extends State<CompareScreen> {
             ),
           ),
         ),
-        const BannerAdWidget(),
+        const AdFooter(),
       ],
     );
   }

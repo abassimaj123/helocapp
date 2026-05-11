@@ -1,7 +1,7 @@
 name: heloc_app
 description: HELOC Calculator
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,7 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.19.0
+  calcwise_core:
+    path: ../packages/calcwise_core
+  intl: ^0.20.0
   fl_chart: ^0.68.0
   google_mobile_ads: ^5.1.0
   shared_preferences: ^2.2.3
@@ -30,13 +32,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-flutter_native_splash:
-  color: "#00695C"
-  android_12:
-    color: "#00695C"
-    icon_background_color: "#00695C"
-  android: true
-  ios: false
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.3
 
 flutter:
   uses-material-design: true
@@ -46,10 +43,8 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: false
-  image_path_android: "assets/icons/icon_foreground.png"
-  adaptive_icon_background: "#00695C"
-  adaptive_icon_foreground: "assets/icons/icon_foreground.png"
+  ios: true
+  image_path: "assets/images/icon.png"
   min_sdk_android: 21
   web:
     generate: false

@@ -179,4 +179,121 @@ class HelocEngine {
     }
     return interest;
   }
+
+  // ── P&I (full amortizing from day 1) ─────────────────────────────────────
+
+  /// Full P&I payment when amortizing over the entire term (drawYears + repayYears)
+  /// starting from month 1 — this is the "Fully Amortizing" draw-period payment.
+  static double fullAmortizingPayment(double drawAmount, double annualRate, int drawYears, int repayYears) {
+    final totalMonths = (drawYears + repayYears) * 12;
+    return amortizedPayment(drawAmount, annualRate, totalMonths ~/ 12 == 0 ? 1 : totalMonths ~/ 12);
+  }
+
+  /// Total interest for a full P&I (amortizing from day 1) over the combined term.
+  static double totalInterestFullAmortizing(double drawAmount, double annualRate, int drawYears, int repayYears) {
+    final totalMonths = (drawYears + repayYears) * 12;
+    if (totalMonths <= 0 || annualRate <= 0) return 0;
+    final r = annualRate / 100 / 12;
+    final payment = drawAmount * r * pow(1 + r, totalMonths) / (pow(1 + r, totalMonths) - 1);
+    return payment * totalMonths - drawAmount;
+  }
+
+  // ── Variable rate simulation ───────────────────────────────────────────────
+
+  /// Simulate interest-only draw period with stepped rates.
+  ///
+  /// [drawAmount]       — HELOC balance (assumed fully drawn from month 1)
+  /// [drawYears]        — length of draw period in years
+  /// [repayYears]       — length of repayment period in years
+  /// [rateSteps]        — list of (startYear, annualRatePct); sorted by startYear.
+  ///                      Year 1 = first year of draw period.
+  ///
+  /// Returns a list of monthly rows: {month, rate, payment, balance, phase}
+  ///   phase 0 = draw (interest-only), phase 1 = repay (amortizing)
+  static List<Map<String, double>> variableRateSchedule({
+    required double drawAmount,
+    required int drawYears,
+    required int repayYears,
+    required List<({int startYear, double ratePct})> rateSteps,
+  }) {
+    if (rateSteps.isEmpty) return [];
+    final sorted = [...rateSteps]..sort((a, b) => a.startYear.compareTo(b.startYear));
+    final rows = <Map<String, double>>[];
+
+    double _rateAt(int month) {
+      // month is 1-based, within the entire period
+      final year = ((month - 1) ~/ 12) + 1;
+      double rate = sorted.first.ratePct;
+      for (final step in sorted) {
+        if (year >= step.startYear) rate = step.ratePct;
+      }
+      return rate;
+    }
+
+    // Draw phase — interest only
+    double balance = drawAmount;
+    for (int m = 1; m <= drawYears * 12; m++) {
+      final rate = _rateAt(m);
+      final r = rate / 100 / 12;
+      final payment = balance * r;
+      rows.add({'month': m.toDouble(), 'rate': rate, 'payment': payment, 'balance': balance, 'phase': 0});
+    }
+
+    // Repayment phase — amortize remaining balance at the rate in effect at that month
+    // Rate can still change during repay phase (steps referencing year > drawYears apply)
+    for (int m = 1; m <= repayYears * 12 && balance > 0.01; m++) {
+      final globalMonth = drawYears * 12 + m;
+      final rate = _rateAt(globalMonth);
+      final r = rate / 100 / 12;
+      // Remaining months in repayment
+      final remaining = repayYears * 12 - m + 1;
+      final payment = remaining > 0
+          ? balance * r * pow(1 + r, remaining) / (pow(1 + r, remaining) - 1)
+          : balance;
+      final interest = balance * r;
+      final principal = (payment - interest).clamp(0.0, balance);
+      balance = (balance - principal);
+      if (balance < 0.01) balance = 0;
+      rows.add({'month': globalMonth.toDouble(), 'rate': rate, 'payment': payment, 'balance': balance, 'phase': 1});
+    }
+
+    return rows;
+  }
+
+  /// Total interest paid from a variable-rate schedule.
+  static double totalInterestFromSchedule(List<Map<String, double>> schedule) {
+    double total = 0;
+    for (final row in schedule) {
+      final phase = (row['phase'] ?? 0).toInt();
+      final balance = row['balance'] ?? 0.0;
+      final payment = row['payment'] ?? 0.0;
+      if (phase == 0) {
+        // IO phase: full payment is interest
+        total += payment;
+      } else {
+        // Repay phase: interest portion only
+        total += (payment - balance).clamp(0.0, payment);
+      }
+    }
+    // Simpler: accumulate interest component directly
+    // Re-derive from schedule to be precise
+    total = 0;
+    for (int i = 0; i < schedule.length; i++) {
+      final row = schedule[i];
+      final phase = (row['phase'] ?? 0).toInt();
+      if (phase == 0) {
+        total += row['payment'] ?? 0.0;
+      } else {
+        // For repay rows the interest portion = prev_balance * r
+        // But we don't store prev_balance; approximate as payment - principal
+        // principal = prev_balance - balance (balance is AFTER payment)
+        final prevBalance = i > 0 ? (schedule[i - 1]['balance'] ?? 0.0) : 0.0;
+        final bal = row['balance'] ?? 0.0;
+        final principal = (prevBalance - bal).clamp(0.0, double.infinity);
+        final interest = (row['payment'] ?? 0.0) - principal;
+        total += interest.clamp(0.0, double.infinity);
+      }
+    }
+    return total;
+  }
 }

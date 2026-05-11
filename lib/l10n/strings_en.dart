@@ -22,4 +22,5 @@ class AppStringsEN {
   static const premiumActive   = 'Premium Active';
   static const premiumDesc     = 'Unlimited · No ads · PDF export';
   static const calqwise        = 'Financial Calculators Suite';
+  static const disclaimer      = 'For informational purposes only. Not financial advice. Consult a qualified advisor before making financial decisions.';
 }

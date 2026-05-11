@@ -1,3 +1,5 @@
+import '../core/ads/ad_footer.dart';
+import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -5,12 +7,10 @@ import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/freemium/iap_service.dart';
-import '../core/freemium/paywall_service.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import 'history_detail_screen.dart';
@@ -43,7 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (mounted) {
       setState(() { _history = rows; _loading = false; });
       AnalyticsService.instance.logHistoryViewed();
-      final trigger = paywallService.recordAction();
+      final trigger = await paywallSession.recordAction();
       if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
         if (trigger == PaywallTrigger.soft) {
           PaywallSoft.show(context);
@@ -113,7 +113,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     child: Text(
                                       isPremium
                                           ? '${_history.length} ${isEs ? 'cálculos guardados' : 'entries saved'}'
-                                          : '${_history.length} / ${FreemiumService.freeHistoryLimit} ${isEs ? 'guardados' : 'saved'}',
+                                          : '${_history.length} / ${MonetizationConfig.freeCalculationLimit} ${isEs ? 'guardados' : 'saved'}',
                                       style: const TextStyle(
                                           color: AppTheme.labelGray,
                                           fontSize: 13),
@@ -178,14 +178,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.history,
-                                    size: 64, color: Colors.grey.shade300),
+                                    size: 64, color: const Color(0xFFCBD5E1)),
                                 const SizedBox(height: 16),
                                 Text(
                                   isEs
                                       ? AppStringsES.historyEmpty
                                       : AppStringsEN.historyEmpty,
                                   style: TextStyle(
-                                      color: Colors.grey.shade500,
+                                      color: Color(0xFF64748B),
                                       fontSize: 16),
                                   textAlign: TextAlign.center,
                                 ),
@@ -387,7 +387,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
         ),
-        const BannerAdWidget(),
+        const AdFooter(),
       ],
     );
   }

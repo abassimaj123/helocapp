@@ -51,7 +51,10 @@ class AdService {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (a) => _rewarded = a,
-        onAdFailedToLoad: (_) => _rewarded = null,
+        onAdFailedToLoad: (_) {
+          _rewarded = null;
+          AnalyticsService.instance.logRewardedAdFailed();
+        },
       ),
     );
   }

@@ -1,4 +1,6 @@
+import '../core/ads/ad_footer.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -7,13 +9,11 @@ import 'package:printing/printing.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
-import '../core/freemium/paywall_service.dart';
 import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../widgets/premium_cta_widget.dart';
@@ -49,7 +49,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
     super.dispose();
   }
 
-  void _generate() {
+  Future<void> _generate() async {
     final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
     final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
     final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
@@ -69,7 +69,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
     });
 
     AnalyticsService.instance.logDrawScheduleViewed();
-    final trigger = paywallService.recordAction();
+    final trigger = await paywallSession.recordAction();
     if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
       if (trigger == PaywallTrigger.soft) {
         PaywallSoft.show(context);
@@ -251,7 +251,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
             ),
           ),
         ),
-        const BannerAdWidget(),
+        const AdFooter(),
       ],
     );
   }
@@ -299,14 +299,28 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   style: const TextStyle(fontSize: 11)),
             ]),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 200,
-              child: LineChart(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final chartHeight = (constraints.maxWidth < 400) ? 200.0 : 240.0;
+                return SizedBox(
+                  height: chartHeight,
+                  child: LineChart(
                 LineChartData(
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    handleBuiltInTouches: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => Colors.blueGrey.shade800,
+                      getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
+                        '\$${(s.y / 1000).toStringAsFixed(1)}k',
+                        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      )).toList(),
+                    ),
+                  ),
                   gridData: FlGridData(
                     drawVerticalLine: false,
                     getDrawingHorizontalLine: (_) =>
-                        FlLine(color: AppTheme.divider, strokeWidth: 1),
+                        FlLine(color: CalcwiseTheme.of(context).cardBorder, strokeWidth: 1),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -367,7 +381,9 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   ],
                 ),
               ),
-            ),
+                  );
+                },
+              ),
           ],
         ),
       ),

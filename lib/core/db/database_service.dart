@@ -28,6 +28,9 @@ class DatabaseService {
           )
         ''');
       },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // Future schema migrations go here
+      },
     );
   }
 
@@ -45,9 +48,9 @@ class DatabaseService {
 
     if (!freemiumService.isPremium) {
       final all = await db.query('history', orderBy: 'created_at DESC');
-      if (all.length > FreemiumService.freeHistoryLimit) {
+      if (all.length > MonetizationConfig.freeCalculationLimit) {
         final idsToDelete = all
-            .skip(FreemiumService.freeHistoryLimit)
+            .skip(MonetizationConfig.freeCalculationLimit)
             .map((r) => r['id'] as int)
             .toList();
         for (final id in idsToDelete) {

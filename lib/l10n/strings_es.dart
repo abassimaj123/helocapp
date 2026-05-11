@@ -22,4 +22,5 @@ class AppStringsES {
   static const premiumActive   = 'Premium Activo';
   static const premiumDesc     = 'Ilimitado · Sin anuncios · PDF';
   static const calqwise        = 'Suite de Calculadoras Financieras';
+  static const disclaimer      = 'Solo con fines informativos. No es asesoramiento financiero. Consulte a un profesional antes de tomar decisiones financieras.';
 }

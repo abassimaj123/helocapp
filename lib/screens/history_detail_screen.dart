@@ -1,5 +1,7 @@
+import '../core/ads/ad_footer.dart';
 import 'dart:typed_data';
 
+import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -9,12 +11,10 @@ import 'package:share_plus/share_plus.dart' show Share;
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
-import '../core/freemium/paywall_service.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 
@@ -35,9 +35,12 @@ class HistoryDetailScreen extends StatelessWidget {
   }) {
     return Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => HistoryDetailScreen(entry: entry, onDelete: onDelete),
-      ),
+      PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => HistoryDetailScreen(entry: entry, onDelete: onDelete),
+                    transitionsBuilder: (_, anim, __, child) =>
+                        FadeTransition(opacity: anim, child: child),
+                    transitionDuration: const Duration(milliseconds: 250),
+                  ),
     );
   }
 
@@ -93,9 +96,9 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
 
   // ── Share ─────────────────────────────────────────────────────────────────
 
-  void _share(BuildContext context, bool isEs) {
+  Future<void> _share(BuildContext context, bool isEs) async {
     if (!freemiumService.isPremium) {
-      final trigger = paywallService.recordAction();
+      final trigger = await paywallSession.recordAction();
       if (trigger == PaywallTrigger.hard) {
         PaywallHard.show(context);
         return;
@@ -579,7 +582,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               ValueListenableBuilder<bool>(
                 valueListenable: freemiumService.isPremiumNotifier,
                 builder: (_, isPremium, __) =>
-                    isPremium ? const SizedBox.shrink() : const BannerAdWidget(),
+                    isPremium ? const SizedBox.shrink() : const AdFooter(),
               ),
             ],
           ),
