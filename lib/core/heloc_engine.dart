@@ -65,7 +65,8 @@ class HelocEngine {
       drawAmount * (annualRate / 100 / 12);
 
   // Amortized payment after draw period
-  static double amortizedPayment(double balance, double annualRate, int repaymentYears) {
+  static double amortizedPayment(
+      double balance, double annualRate, int repaymentYears) {
     if (annualRate == 0) return balance / (repaymentYears * 12);
     final r = annualRate / 100 / 12;
     final n = repaymentYears * 12;
@@ -76,14 +77,19 @@ class HelocEngine {
   static List<Map<String, double>> drawSchedule({
     required double drawAmount,
     required double annualRate,
-    required int drawYears,    // typically 10
-    required int repayYears,   // typically 20
+    required int drawYears, // typically 10
+    required int repayYears, // typically 20
   }) {
     final rows = <Map<String, double>>[];
     final r = annualRate / 100 / 12;
     // Draw period
     for (int m = 1; m <= drawYears * 12; m++) {
-      rows.add({'month': m.toDouble(), 'payment': drawAmount * r, 'balance': drawAmount, 'type': 0});
+      rows.add({
+        'month': m.toDouble(),
+        'payment': drawAmount * r,
+        'balance': drawAmount,
+        'type': 0
+      });
     }
     // Repayment period
     double balance = drawAmount;
@@ -92,7 +98,12 @@ class HelocEngine {
       final interest = balance * r;
       final principal = repayPayment - interest;
       balance -= principal;
-      rows.add({'month': (drawYears * 12 + m).toDouble(), 'payment': repayPayment, 'balance': balance.clamp(0, double.infinity), 'type': 1});
+      rows.add({
+        'month': (drawYears * 12 + m).toDouble(),
+        'payment': repayPayment,
+        'balance': balance.clamp(0, double.infinity),
+        'type': 1
+      });
     }
     return rows;
   }
@@ -111,8 +122,10 @@ class HelocEngine {
   }) {
     // ── HELOC side ──────────────────────────────────────────────────────────
     final helocDrawPayment = interestOnlyPayment(withdrawalAmount, helocRate);
-    final helocRepayPayment = amortizedPayment(withdrawalAmount, helocRate, helocRepayYears);
-    final helocTotalInterest = totalInterestPaid(withdrawalAmount, helocRate, helocDrawYears, helocRepayYears);
+    final helocRepayPayment =
+        amortizedPayment(withdrawalAmount, helocRate, helocRepayYears);
+    final helocTotalInterest = totalInterestPaid(
+        withdrawalAmount, helocRate, helocDrawYears, helocRepayYears);
 
     // HELOC interest over 10-year horizon
     final hr = helocRate / 100 / 12;
@@ -125,13 +138,16 @@ class HelocEngine {
       } else {
         final interest = helocBal * hr;
         helocInterest10 += interest;
-        helocBal = (helocBal - (helocRepayPayment - interest)).clamp(0, double.infinity);
+        helocBal = (helocBal - (helocRepayPayment - interest))
+            .clamp(0, double.infinity);
       }
     }
 
     // ── Cash-out Refi side (equity portion only) ─────────────────────────
-    final refiPayment = amortizedPayment(withdrawalAmount, refiRate, refiTermYears);
-    final refiTotalInterest = refiPayment * refiTermYears * 12 - withdrawalAmount;
+    final refiPayment =
+        amortizedPayment(withdrawalAmount, refiRate, refiTermYears);
+    final refiTotalInterest =
+        refiPayment * refiTermYears * 12 - withdrawalAmount;
 
     final rr = refiRate / 100 / 12;
     double refiInterest10 = refiClosingCosts; // closing costs upfront
@@ -144,9 +160,8 @@ class HelocEngine {
 
     // Break-even: months for refi to recover closing costs vs HELOC repay payment
     final savingsVsRepay = helocRepayPayment - refiPayment;
-    final breakEven = savingsVsRepay > 0
-        ? (refiClosingCosts / savingsVsRepay).ceil()
-        : 9999;
+    final breakEven =
+        savingsVsRepay > 0 ? (refiClosingCosts / savingsVsRepay).ceil() : 9999;
 
     return HelocCompareResult(
       withdrawalAmount: withdrawalAmount,
@@ -160,11 +175,13 @@ class HelocEngine {
       refiClosingCosts: refiClosingCosts,
       refiBreakEvenMonths: breakEven,
       helocCheaperShortTerm: helocInterest10 < refiInterest10,
-      helocCheaperLongTerm: helocTotalInterest < (refiTotalInterest + refiClosingCosts),
+      helocCheaperLongTerm:
+          helocTotalInterest < (refiTotalInterest + refiClosingCosts),
     );
   }
 
-  static double totalInterestPaid(double drawAmount, double annualRate, int drawYears, int repayYears) {
+  static double totalInterestPaid(
+      double drawAmount, double annualRate, int drawYears, int repayYears) {
     final r = annualRate / 100 / 12;
     // Interest during draw period
     double interest = drawAmount * r * drawYears * 12;
@@ -184,17 +201,23 @@ class HelocEngine {
 
   /// Full P&I payment when amortizing over the entire term (drawYears + repayYears)
   /// starting from month 1 — this is the "Fully Amortizing" draw-period payment.
-  static double fullAmortizingPayment(double drawAmount, double annualRate, int drawYears, int repayYears) {
+  static double fullAmortizingPayment(
+      double drawAmount, double annualRate, int drawYears, int repayYears) {
     final totalMonths = (drawYears + repayYears) * 12;
-    return amortizedPayment(drawAmount, annualRate, totalMonths ~/ 12 == 0 ? 1 : totalMonths ~/ 12);
+    return amortizedPayment(
+        drawAmount, annualRate, totalMonths ~/ 12 == 0 ? 1 : totalMonths ~/ 12);
   }
 
   /// Total interest for a full P&I (amortizing from day 1) over the combined term.
-  static double totalInterestFullAmortizing(double drawAmount, double annualRate, int drawYears, int repayYears) {
+  static double totalInterestFullAmortizing(
+      double drawAmount, double annualRate, int drawYears, int repayYears) {
     final totalMonths = (drawYears + repayYears) * 12;
     if (totalMonths <= 0 || annualRate <= 0) return 0;
     final r = annualRate / 100 / 12;
-    final payment = drawAmount * r * pow(1 + r, totalMonths) / (pow(1 + r, totalMonths) - 1);
+    final payment = drawAmount *
+        r *
+        pow(1 + r, totalMonths) /
+        (pow(1 + r, totalMonths) - 1);
     return payment * totalMonths - drawAmount;
   }
 
@@ -217,7 +240,8 @@ class HelocEngine {
     required List<({int startYear, double ratePct})> rateSteps,
   }) {
     if (rateSteps.isEmpty) return [];
-    final sorted = [...rateSteps]..sort((a, b) => a.startYear.compareTo(b.startYear));
+    final sorted = [...rateSteps]
+      ..sort((a, b) => a.startYear.compareTo(b.startYear));
     final rows = <Map<String, double>>[];
 
     double _rateAt(int month) {
@@ -236,7 +260,13 @@ class HelocEngine {
       final rate = _rateAt(m);
       final r = rate / 100 / 12;
       final payment = balance * r;
-      rows.add({'month': m.toDouble(), 'rate': rate, 'payment': payment, 'balance': balance, 'phase': 0});
+      rows.add({
+        'month': m.toDouble(),
+        'rate': rate,
+        'payment': payment,
+        'balance': balance,
+        'phase': 0
+      });
     }
 
     // Repayment phase — amortize remaining balance at the rate in effect at that month
@@ -254,10 +284,33 @@ class HelocEngine {
       final principal = (payment - interest).clamp(0.0, balance);
       balance = (balance - principal);
       if (balance < 0.01) balance = 0;
-      rows.add({'month': globalMonth.toDouble(), 'rate': rate, 'payment': payment, 'balance': balance, 'phase': 1});
+      rows.add({
+        'month': globalMonth.toDouble(),
+        'rate': rate,
+        'payment': payment,
+        'balance': balance,
+        'phase': 1
+      });
     }
 
     return rows;
+  }
+
+  // ── Personal Loan ─────────────────────────────────────────────────────────
+
+  /// Monthly payment for a fully-amortizing personal loan.
+  static double personalLoanPayment(
+      double amount, double annualRate, int termYears) {
+    if (annualRate == 0)
+      return termYears > 0 ? amount / (termYears * 12) : amount;
+    return amortizedPayment(amount, annualRate, termYears);
+  }
+
+  /// Total interest paid over the life of a personal loan.
+  static double personalLoanTotalInterest(
+      double amount, double annualRate, int termYears) {
+    final payment = personalLoanPayment(amount, annualRate, termYears);
+    return payment * termYears * 12 - amount;
   }
 
   /// Total interest paid from a variable-rate schedule.

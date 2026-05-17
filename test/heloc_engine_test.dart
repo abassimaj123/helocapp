@@ -6,7 +6,7 @@ void main() {
   // Helpers
   // ─────────────────────────────────────────────────────────────────────────
   const currencyDelta = 1.0; // $1 tolerance for currency values
-  const rateDelta = 0.001;   // 0.1% tolerance for rate/percentage values
+  const rateDelta = 0.001; // 0.1% tolerance for rate/percentage values
 
   // ─────────────────────────────────────────────────────────────────────────
   // availableEquity — 85% LTV (industry standard)
@@ -94,16 +94,14 @@ void main() {
     test('100k at 8.5% at 22% tax bracket → 1870/yr', () {
       // annualInterest = 100000 × 0.085 = 8500
       // savings = 8500 × 0.22 = 1870
-      final result =
-          HelocEngine.estimatedAnnualTaxSavings(100000, 8.5, 22.0);
+      final result = HelocEngine.estimatedAnnualTaxSavings(100000, 8.5, 22.0);
       expect(result, closeTo(1870.0, currencyDelta));
     });
 
     test('50k at 7.5% at 24% tax bracket → 900/yr', () {
       // annualInterest = 50000 × 0.075 = 3750
       // savings = 3750 × 0.24 = 900
-      final result =
-          HelocEngine.estimatedAnnualTaxSavings(50000, 7.5, 24.0);
+      final result = HelocEngine.estimatedAnnualTaxSavings(50000, 7.5, 24.0);
       expect(result, closeTo(900.0, currencyDelta));
     });
 
@@ -263,7 +261,8 @@ void main() {
       expect(schedule.length, lessThanOrEqualTo(180));
     });
 
-    test('draw period: all rows have type=0 and constant balance = drawAmount', () {
+    test('draw period: all rows have type=0 and constant balance = drawAmount',
+        () {
       final drawAmount = 50000.0;
       final schedule = HelocEngine.drawSchedule(
         drawAmount: drawAmount,
@@ -394,7 +393,9 @@ void main() {
       expect(result.helocTotalInterest, greaterThan(0));
     });
 
-    test('helocInterestOver10Yrs equals draw-period interest (10yr draw = 120 months)', () {
+    test(
+        'helocInterestOver10Yrs equals draw-period interest (10yr draw = 120 months)',
+        () {
       // Since helocDrawYears=10, the entire 10-year horizon is draw-only:
       // interest = 60000 × (0.08/12) × 120 = 400 × 120 = 48000
       expect(result.helocInterestOver10Yrs, closeTo(48000, currencyDelta));
@@ -428,18 +429,25 @@ void main() {
       expect(result.helocCheaperLongTerm, isA<bool>());
     });
 
-    test('refiBreakEvenMonths — refi payment is lower (6.5% < 8.0%), so break-even is positive', () {
+    test(
+        'refiBreakEvenMonths — refi payment is lower (6.5% < 8.0%), so break-even is positive',
+        () {
       // helocRepayPayment > refiPayment → savings positive → breakEven < 9999
       expect(result.refiBreakEvenMonths, greaterThan(0));
       expect(result.refiBreakEvenMonths, lessThan(9999));
     });
 
-    test('compare is consistent: helocInterestOver10Yrs vs refiInterestOver10Yrs drives helocCheaperShortTerm', () {
-      final expected = result.helocInterestOver10Yrs < result.refiInterestOver10Yrs;
+    test(
+        'compare is consistent: helocInterestOver10Yrs vs refiInterestOver10Yrs drives helocCheaperShortTerm',
+        () {
+      final expected =
+          result.helocInterestOver10Yrs < result.refiInterestOver10Yrs;
       expect(result.helocCheaperShortTerm, equals(expected));
     });
 
-    test('compare is consistent: helocTotalInterest vs refiTotalInterest drives helocCheaperLongTerm', () {
+    test(
+        'compare is consistent: helocTotalInterest vs refiTotalInterest drives helocCheaperLongTerm',
+        () {
       final expected = result.helocTotalInterest < result.refiTotalInterest;
       expect(result.helocCheaperLongTerm, equals(expected));
     });
@@ -461,18 +469,21 @@ void main() {
       );
       expect(r.refiClosingCosts, equals(0.0));
       // With same rate but 30yr term, refi payment is lower → savings > 0 → some breakeven
-      expect(r.refiBreakEvenMonths, equals(0)); // ceil(0/savings) = 0 when costs=0
+      expect(
+          r.refiBreakEvenMonths, equals(0)); // ceil(0/savings) = 0 when costs=0
     });
 
-    test('very high closing costs push break-even to 9999 when refi payment >= heloc repay', () {
+    test(
+        'very high closing costs push break-even to 9999 when refi payment >= heloc repay',
+        () {
       // Use high helocRate so helocRepayPayment < refiPayment (shorter repay term)
       // Actually force savingsVsRepay <= 0 by choosing rates where heloc repay < refi pay
       final r = HelocEngine.compare(
         withdrawalAmount: 50000,
-        helocRate: 3.0,   // very low → tiny repay payment
+        helocRate: 3.0, // very low → tiny repay payment
         helocDrawYears: 10,
         helocRepayYears: 30,
-        refiRate: 10.0,   // high → large refi payment
+        refiRate: 10.0, // high → large refi payment
         refiTermYears: 10, // short term → even larger
         refiClosingCosts: 5000,
       );

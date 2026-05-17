@@ -1,5 +1,6 @@
-﻿import 'dart:async';
-import 'package:calcwise_core/calcwise_core.dart' hide CrashlyticsService, iapErrorNotifier;
+import 'package:calcwise_core/calcwise_core.dart'
+    hide CrashlyticsService, iapErrorNotifier;
+import 'core/ads/ad_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/ads/ad_service.dart';
 import 'core/firebase/analytics_service.dart';
 import 'core/firebase/firebase_options.dart';
 import 'core/freemium/freemium_service.dart';
@@ -19,13 +19,27 @@ import 'l10n/strings_es.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/compare_screen.dart';
 import 'screens/draw_schedule_screen.dart';
+import 'screens/heloc_vs_cashout_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/payment_shock_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/paywall_hard.dart';
 import 'widgets/paywall_soft.dart';
 
 final paywallSession = PaywallSessionService(appKey: 'helocapp');
+
+final adService = CalcwiseAdService(
+  config: CalcwiseAdConfig(
+    bannerAndroid: AdConfig.bannerAndroid,
+    interstitialAndroid: AdConfig.interstitialAndroid,
+    rewardedAndroid: AdConfig.rewardedAndroid,
+    calcThreshold: AdConfig.calcThreshold,
+    cooldownMinutes: AdConfig.cooldownMinutes,
+  ),
+  freemium: freemiumService,
+  analytics: AnalyticsService.instance,
+);
 
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
 
@@ -49,8 +63,7 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF0D0B1E),
-    systemNavigationBarIconBrightness: Brightness.light,
+    // systemNavigationBarColor is set dynamically in the shell build()
   ));
 
   await themeModeService.initialize();
@@ -59,13 +72,24 @@ Future<void> main() async {
   await paywallSession.initialize();
 
   try {
-    await _requestConsent();
+    await requestCalcwiseConsent();
     await MobileAds.instance.initialize();
-    await AdService.instance.initialize();
+    if (AdConfig.adsEnabled) await adService.initialize();
   } catch (e) {
     debugPrint('AdMob init error: $e');
   }
 
+  CalcwiseAdFooter.configure(
+    adService: adService,
+    freemium: freemiumService,
+    isSpanishNotifier: isSpanishNotifier,
+    onGetPremium: () => IAPService.instance.buy(),
+  );
+  CalcwiseRewardAdSheet.configure(
+    adService: adService,
+    freemium: freemiumService,
+    isSpanishNotifier: isSpanishNotifier,
+  );
   runApp(const _IapErrorWrapper());
 }
 
@@ -94,8 +118,7 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
     if (msg == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       iapErrorNotifier.value = null;
     });
   }
@@ -123,6 +146,8 @@ class HELOCApp extends StatelessWidget {
             home: const SplashScreen(),
             routes: {
               '/home': (_) => const MainShell(),
+              '/payment-shock': (_) => const PaymentShockScreen(),
+              '/heloc-vs-cashout': (_) => const HelocVsCashoutScreen(),
             },
           ),
         );
@@ -140,21 +165,44 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  bool _wasPremium = false;
 
   @override
   void initState() {
     super.initState();
+    _wasPremium = freemiumService.hasFullAccess;
     isSpanishNotifier.addListener(_onLangChange);
-    WidgetsBinding.instance.addPostFrameCallback((_) async => await paywallSession.recordSession());
+    freemiumService.isPremiumNotifier.addListener(_onPremiumChange);
+    iapErrorNotifier.addListener(_onIapError);
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) async => await paywallSession.recordSession());
   }
 
   @override
   void dispose() {
     isSpanishNotifier.removeListener(_onLangChange);
+    freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
+    iapErrorNotifier.removeListener(_onIapError);
     super.dispose();
   }
 
   void _onLangChange() => setState(() {});
+
+  void _onPremiumChange() {
+    final now = freemiumService.hasFullAccess;
+    if (now && !_wasPremium && mounted) {
+      final isEs = isSpanishNotifier.value;
+      showPremiumWelcomeSnackBar(context, isSpanish: isSpanishNotifier.value);
+    }
+    _wasPremium = now;
+  }
+
+  void _onIapError() {
+    final msg = iapErrorNotifier.value;
+    if (msg == null || !mounted) return;
+    showIapErrorSnackBar(context, msg);
+    iapErrorNotifier.value = null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +210,8 @@ class _MainShellState extends State<MainShell> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: CalcwiseTheme.of(context).surface,
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
     ));
@@ -170,6 +219,22 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEs ? AppStringsES.appName : AppStringsEN.appName),
+        actions: [
+          CalcwiseAppBarActions(
+            freemium: freemiumService,
+            session: paywallSession,
+            onSettings: () => Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => const SettingsScreen(),
+                transitionsBuilder: (_, anim, __, child) =>
+                    FadeTransition(opacity: anim, child: child),
+                transitionDuration: AppDuration.base,
+              ),
+            ),
+            onRewardAd: () => CalcwiseRewardAdSheet.show(context),
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _index,
@@ -177,7 +242,6 @@ class _MainShellState extends State<MainShell> {
           CalculatorScreen(),
           DrawScheduleScreen(),
           CompareScreen(),
-          SettingsScreen(),
           HistoryScreen(),
         ],
       ),
@@ -188,12 +252,15 @@ class _MainShellState extends State<MainShell> {
           setState(() => _index = i);
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
           final trigger = await paywallSession.recordAction();
-          if (trigger != PaywallTrigger.none && !freemiumService.isPremium) {
+          if (trigger != PaywallTrigger.none &&
+              !freemiumService.hasFullAccess) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               if (trigger == PaywallTrigger.soft) {
+                AnalyticsService.instance.logPaywallSoftShown();
                 PaywallSoft.show(context);
               } else {
+                AnalyticsService.instance.logPaywallHardShown();
                 PaywallHard.show(context);
               }
             });
@@ -201,27 +268,22 @@ class _MainShellState extends State<MainShell> {
         },
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
+            icon: const Icon(Icons.home_rounded),
+            selectedIcon: const Icon(Icons.home_rounded),
             label: isEs ? AppStringsES.calculator : AppStringsEN.calculator,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.timeline_outlined),
+            icon: const Icon(Icons.timeline_rounded),
             selectedIcon: const Icon(Icons.timeline),
             label: isEs ? 'Calendario' : 'Draw Schedule',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.compare_arrows_outlined),
+            icon: const Icon(Icons.compare_arrows_rounded),
             selectedIcon: const Icon(Icons.compare_arrows),
             label: isEs ? 'Comparar' : 'Compare',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: isEs ? AppStringsES.settings : AppStringsEN.settings,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history_outlined),
+            icon: const Icon(Icons.history_rounded),
             selectedIcon: const Icon(Icons.history),
             label: isEs ? AppStringsES.history : AppStringsEN.history,
           ),
@@ -229,27 +291,4 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
-}
-
-
-/// Request GDPR/PIPEDA consent via Google UMP SDK.
-/// Resolves on success, timeout, or error so the app always launches.
-/// On non-EEA/UK devices the UMP SDK completes immediately without showing a form.
-Future<void> _requestConsent() async {
-  final completer = Completer<void>();
-  ConsentInformation.instance.requestConsentInfoUpdate(
-    ConsentRequestParameters(),
-    () async {
-      // Consent info updated — show form only if required
-      if (await ConsentInformation.instance.isConsentFormAvailable()) {
-        ConsentForm.loadAndShowConsentFormIfRequired(
-          (_) { if (!completer.isCompleted) completer.complete(); },
-        );
-      } else {
-        if (!completer.isCompleted) completer.complete();
-      }
-    },
-    (_) { if (!completer.isCompleted) completer.complete(); },
-  );
-  return completer.future;
 }

@@ -1,5 +1,6 @@
-import '../core/ads/ad_footer.dart';
-import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
+import 'package:calcwise_core/calcwise_core.dart'
+    show PaywallTrigger, MonetizationConfig, CalcwiseAdFooter;
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -26,10 +27,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
 
-  final _fmtCur = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+  final _fmtCur =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+  final _fmtDec =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
   final _fmtPct = NumberFormat('##0.0#');
+
+  String _dateGroup(DateTime d, bool isEs) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final entry = DateTime(d.year, d.month, d.day);
+    final diff = today.difference(entry).inDays;
+    if (diff <= 0) return isEs ? 'Hoy' : 'Today';
+    if (diff < 7) return isEs ? 'Esta semana' : 'This week';
+    if (diff < 30) return isEs ? 'Este mes' : 'This month';
+    return isEs ? 'Anterior' : 'Older';
+  }
+
+  String _shortK(double v) {
+    if (v >= 1000000)
+      return '\$${(v / 1000000).toStringAsFixed(v % 1000000 == 0 ? 0 : 1)}M';
+    if (v >= 1000) return '\$${(v / 1000).toStringAsFixed(0)}k';
+    return '\$${v.toStringAsFixed(0)}';
+  }
 
   @override
   void initState() {
@@ -41,10 +62,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     setState(() => _loading = true);
     final rows = await DatabaseService.instance.getHistory();
     if (mounted) {
-      setState(() { _history = rows; _loading = false; });
+      setState(() {
+        _history = rows;
+        _loading = false;
+      });
       AnalyticsService.instance.logHistoryViewed();
       final trigger = await paywallSession.recordAction();
-      if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
+      if (trigger != PaywallTrigger.none &&
+          mounted &&
+          !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
           PaywallSoft.show(context);
         } else {
@@ -116,7 +142,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           : '${_history.length} / ${MonetizationConfig.freeCalculationLimit} ${isEs ? 'guardados' : 'saved'}',
                                       style: const TextStyle(
                                           color: AppTheme.labelGray,
-                                          fontSize: 13),
+                                          fontSize: AppTextSize.md),
                                     ),
                                   ),
                                   if (isPremium && _history.isNotEmpty)
@@ -127,7 +153,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       label: Text(
                                         isEs ? 'Borrar todo' : 'Clear all',
                                         style: const TextStyle(
-                                            color: Colors.red, fontSize: 13),
+                                            color: Colors.red,
+                                            fontSize: AppTextSize.md),
                                       ),
                                     ),
                                 ]),
@@ -143,7 +170,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             ? AppStringsES.historyLimit
                                             : AppStringsEN.historyLimit,
                                         style: const TextStyle(
-                                            fontSize: 12,
+                                            fontSize: AppTextSize.sm,
                                             color: AppTheme.labelGray),
                                       ),
                                     ),
@@ -159,7 +186,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         style: const TextStyle(
                                             color: AppTheme.primary,
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 12),
+                                            fontSize: AppTextSize.sm),
                                       ),
                                     ),
                                   ]),
@@ -169,7 +196,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
                       ),
-
                       if (_history.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
@@ -186,8 +212,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       : AppStringsEN.historyEmpty,
                                   style: TextStyle(
                                       color: Color(0xFF64748B),
-                                      fontSize: 16),
+                                      fontSize: AppTextSize.bodyLg),
                                   textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 20),
+                                FilledButton.icon(
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: const Icon(Icons.calculate_rounded),
+                                  label: Text(isEs
+                                      ? 'Hacer mi primer cálculo'
+                                      : 'Run my first calculation'),
                                 ),
                               ],
                             ),
@@ -212,171 +246,233 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     (inputs['homeValue'] as num).toDouble();
                                 final balance =
                                     (inputs['balance'] as num).toDouble();
-                                final draw =
-                                    (inputs['draw'] as num).toDouble();
-                                final rate =
-                                    (inputs['rate'] as num).toDouble();
+                                final draw = (inputs['draw'] as num).toDouble();
+                                final rate = (inputs['rate'] as num).toDouble();
                                 final drawYears =
                                     (inputs['drawYears'] as num).toInt();
                                 final repayYears =
                                     (inputs['repayYears'] as num).toInt();
                                 final equity =
                                     (results['equity'] as num).toDouble();
-                                final ltv =
-                                    (results['ltv'] as num).toDouble();
+                                final ltv = (results['ltv'] as num).toDouble();
                                 final interestOnly =
-                                    (results['interestOnly'] as num)
-                                        .toDouble();
+                                    (results['interestOnly'] as num).toDouble();
                                 final repayment =
                                     (results['repayment'] as num).toDouble();
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Dismissible(
-                                    key: ValueKey(id),
-                                    direction: DismissDirection.endToStart,
-                                    background: Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(right: 20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.shade400,
-                                        borderRadius: BorderRadius.circular(16),
+                                // Date-group header logic
+                                final currentGroup =
+                                    _dateGroup(createdAt.toLocal(), isEs);
+                                final prevGroup = i == 0
+                                    ? null
+                                    : _dateGroup(
+                                        DateTime.parse(_history[i - 1]
+                                                ['created_at'] as String)
+                                            .toLocal(),
+                                        isEs);
+                                final showHeader = currentGroup != prevGroup;
+
+                                // Human label (HELOC pattern)
+                                final humanLabel =
+                                    '${_shortK(draw)} ${isEs ? 'dispuesto' : 'draw'} @ ${rate.toStringAsFixed(1)}%';
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (showHeader)
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            4, 16, 4, 8),
+                                        child: Text(
+                                          currentGroup.toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: AppTextSize.xs,
+                                            fontWeight: FontWeight.w600,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
                                       ),
-                                      child: const Icon(Icons.delete_outline,
-                                          color: Colors.white, size: 26),
-                                    ),
-                                    confirmDismiss: (_) async {
-                                      return await showDialog<bool>(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: Text(isEs
-                                              ? '¿Eliminar entrada?'
-                                              : 'Delete entry?'),
-                                          content: Text(isEs
-                                              ? '¿Eliminar este cálculo?'
-                                              : 'Remove this calculation?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx, false),
-                                              child: Text(isEs
-                                                  ? 'Cancelar'
-                                                  : 'Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx, true),
-                                              child: Text(
-                                                isEs ? 'Eliminar' : 'Delete',
-                                                style: const TextStyle(
-                                                    color: Colors.red),
-                                              ),
-                                            ),
-                                          ],
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 10),
+                                      child: Dismissible(
+                                        key: ValueKey(id),
+                                        direction: DismissDirection.endToStart,
+                                        background: Container(
+                                          alignment: Alignment.centerRight,
+                                          padding:
+                                              const EdgeInsets.only(right: 20),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.shade400,
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.xl),
+                                          ),
+                                          child: const Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.white,
+                                              size: 26),
                                         ),
-                                      );
-                                    },
-                                    onDismissed: (_) => _delete(id),
-                                    child: Card(
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(16),
-                                        onTap: () => HistoryDetailScreen.push(
-                                          context,
-                                          entry: item,
-                                          onDelete: () => _delete(id),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(14),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(children: [
-                                                Expanded(
+                                        confirmDismiss: (_) async {
+                                          return await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: Text(isEs
+                                                  ? '¿Eliminar entrada?'
+                                                  : 'Delete entry?'),
+                                              content: Text(isEs
+                                                  ? '¿Eliminar este cálculo?'
+                                                  : 'Remove this calculation?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                  child: Text(isEs
+                                                      ? 'Cancelar'
+                                                      : 'Cancel'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, true),
                                                   child: Text(
-                                                    '${isEs ? 'Vivienda' : 'Home'}: ${_fmtCur.format(homeValue)}',
+                                                    isEs
+                                                        ? 'Eliminar'
+                                                        : 'Delete',
                                                     style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 15,
-                                                        color:
-                                                            AppTheme.primary),
+                                                        color: Colors.red),
                                                   ),
                                                 ),
-                                                const Icon(
-                                                    Icons.chevron_right,
-                                                    size: 18,
-                                                    color: AppTheme.labelGray),
-                                              ]),
-                                              const SizedBox(height: 8),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Hipoteca actual'
-                                                    : 'Mortgage Balance',
-                                                value: _fmtCur.format(balance),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                        onDismissed: (_) => _delete(id),
+                                        child: Card(
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.xl),
+                                            onTap: () =>
+                                                HistoryDetailScreen.push(
+                                              context,
+                                              entry: item,
+                                              onDelete: () => _delete(id),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(
+                                                  AppSpacing.mdPlus),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(children: [
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            humanLabel,
+                                                            style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize:
+                                                                    AppTextSize
+                                                                        .bodyMd,
+                                                                color: AppTheme
+                                                                    .primary),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 2),
+                                                          Text(
+                                                            _fmtDate.format(
+                                                                createdAt
+                                                                    .toLocal()),
+                                                            style: const TextStyle(
+                                                                fontSize:
+                                                                    AppTextSize
+                                                                        .xs,
+                                                                color: AppTheme
+                                                                    .labelGray),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const Icon(
+                                                        Icons
+                                                            .chevron_right_rounded,
+                                                        size: 18,
+                                                        color:
+                                                            AppTheme.labelGray),
+                                                  ]),
+                                                  const SizedBox(height: 8),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Hipoteca actual'
+                                                        : 'Mortgage Balance',
+                                                    value:
+                                                        _fmtCur.format(balance),
+                                                  ),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Monto dispuesto'
+                                                        : 'Draw Amount',
+                                                    value: _fmtCur.format(draw),
+                                                  ),
+                                                  _HistoryRow(
+                                                    label:
+                                                        isEs ? 'Tasa' : 'Rate',
+                                                    value:
+                                                        '${rate.toStringAsFixed(2)}%',
+                                                  ),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Período (disp/pago)'
+                                                        : 'Period (draw/repay)',
+                                                    value:
+                                                        '${drawYears}y / ${repayYears}y',
+                                                  ),
+                                                  const Divider(height: 14),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Capital disponible'
+                                                        : 'Available Equity',
+                                                    value:
+                                                        _fmtCur.format(equity),
+                                                    color: AppTheme.success,
+                                                  ),
+                                                  _HistoryRow(
+                                                    label: 'LTV',
+                                                    value:
+                                                        '${_fmtPct.format(ltv)}%',
+                                                  ),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Pago solo interés'
+                                                        : 'Interest-Only Payment',
+                                                    value: _fmtDec
+                                                        .format(interestOnly),
+                                                    bold: true,
+                                                    color: AppTheme.primary,
+                                                  ),
+                                                  _HistoryRow(
+                                                    label: isEs
+                                                        ? 'Pago amortizado'
+                                                        : 'Repayment Payment',
+                                                    value: _fmtDec
+                                                        .format(repayment),
+                                                  ),
+                                                ],
                                               ),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Monto dispuesto'
-                                                    : 'Draw Amount',
-                                                value: _fmtCur.format(draw),
-                                              ),
-                                              _HistoryRow(
-                                                label:
-                                                    isEs ? 'Tasa' : 'Rate',
-                                                value:
-                                                    '${rate.toStringAsFixed(2)}%',
-                                              ),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Período (disp/pago)'
-                                                    : 'Period (draw/repay)',
-                                                value:
-                                                    '${drawYears}y / ${repayYears}y',
-                                              ),
-                                              const Divider(height: 14),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Capital disponible'
-                                                    : 'Available Equity',
-                                                value: _fmtCur.format(equity),
-                                                color: AppTheme.success,
-                                              ),
-                                              _HistoryRow(
-                                                label: 'LTV',
-                                                value:
-                                                    '${_fmtPct.format(ltv)}%',
-                                              ),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Pago solo interés'
-                                                    : 'Interest-Only Payment',
-                                                value:
-                                                    _fmtDec.format(interestOnly),
-                                                bold: true,
-                                                color: AppTheme.primary,
-                                              ),
-                                              _HistoryRow(
-                                                label: isEs
-                                                    ? 'Pago amortizado'
-                                                    : 'Repayment Payment',
-                                                value:
-                                                    _fmtDec.format(repayment),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                _fmtDate.format(
-                                                    createdAt.toLocal()),
-                                                style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: AppTheme.labelGray),
-                                              ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 );
                               },
                               childCount: _history.length,
@@ -387,7 +483,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
         ),
-        const AdFooter(),
+        const CalcwiseAdFooter(),
       ],
     );
   }
@@ -413,12 +509,11 @@ class _HistoryRow extends StatelessWidget {
           children: [
             Text(label,
                 style: const TextStyle(
-                    fontSize: 13, color: AppTheme.labelGray)),
+                    fontSize: AppTextSize.md, color: AppTheme.labelGray)),
             Text(value,
                 style: TextStyle(
-                    fontSize: 13,
-                    fontWeight:
-                        bold ? FontWeight.bold : FontWeight.w500,
+                    fontSize: AppTextSize.md,
+                    fontWeight: bold ? FontWeight.bold : FontWeight.w500,
                     color: color)),
           ],
         ),

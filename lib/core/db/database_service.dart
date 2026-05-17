@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:calcwise_core/calcwise_core.dart' show MonetizationConfig;
 import '../freemium/freemium_service.dart';
 
 class DatabaseService {
@@ -46,7 +47,7 @@ class DatabaseService {
       'created_at': DateTime.now().toIso8601String(),
     });
 
-    if (!freemiumService.isPremium) {
+    if (!freemiumService.hasFullAccess) {
       final all = await db.query('history', orderBy: 'created_at DESC');
       if (all.length > MonetizationConfig.freeCalculationLimit) {
         final idsToDelete = all

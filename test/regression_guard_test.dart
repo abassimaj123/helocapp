@@ -27,7 +27,8 @@ void main() {
                 children: const [
                   Text('Available Equity'),
                   Text(r'$150,000.00',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

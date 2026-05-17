@@ -28,7 +28,7 @@ class InsightEngine {
     if (ltv > 90) {
       insights.add(Insight(
         severity: InsightSeverity.alert,
-        icon:     Icons.warning_amber_rounded,
+        icon: Icons.warning_amber_rounded,
         title: isEs ? 'LTV muy alto' : 'Very High LTV',
         body: isEs
             ? 'LTV muy alto (${ltv.toStringAsFixed(1)}%) — el prestamista puede limitar o denegar el HELOC.'
@@ -37,7 +37,7 @@ class InsightEngine {
     } else if (ltv >= 80) {
       insights.add(Insight(
         severity: InsightSeverity.warning,
-        icon:     Icons.info_outline,
+        icon: Icons.info_outline,
         title: isEs ? 'LTV elevado' : 'Elevated LTV',
         body: isEs
             ? 'LTV del ${ltv.toStringAsFixed(1)}% — es posible que no califiques para las mejores tasas.'
@@ -46,7 +46,7 @@ class InsightEngine {
     } else {
       insights.add(Insight(
         severity: InsightSeverity.good,
-        icon:     Icons.check_circle_outline,
+        icon: Icons.check_circle_outline,
         title: isEs ? 'LTV saludable' : 'Healthy LTV',
         body: isEs
             ? 'LTV saludable del ${ltv.toStringAsFixed(1)}% — buena posición para un HELOC.'
@@ -60,7 +60,7 @@ class InsightEngine {
       final pct = (helocLimit / availableEquity * 100).round();
       insights.add(Insight(
         severity: InsightSeverity.good,
-        icon:     Icons.account_balance_wallet_outlined,
+        icon: Icons.account_balance_wallet_rounded,
         title: isEs ? 'Límite HELOC vs. capital' : 'HELOC Limit vs. Equity',
         body: isEs
             ? 'Tu límite HELOC de ${_fmt(helocLimit)} = $pct% del capital disponible.'
@@ -70,15 +70,15 @@ class InsightEngine {
 
     // ── 3. Rate sensitivity ───────────────────────────────────────────────────
     if (helocLimit > 0 && annualRatePct > 0) {
-      final rateMonthly     = annualRatePct / 100 / 12;
-      final newRateMonthly  = (annualRatePct + 0.5) / 100 / 12;
-      final currentPayment  = helocLimit * rateMonthly;
-      final higherPayment   = helocLimit * newRateMonthly;
-      final delta           = (higherPayment - currentPayment).abs();
+      final rateMonthly = annualRatePct / 100 / 12;
+      final newRateMonthly = (annualRatePct + 0.5) / 100 / 12;
+      final currentPayment = helocLimit * rateMonthly;
+      final higherPayment = helocLimit * newRateMonthly;
+      final delta = (higherPayment - currentPayment).abs();
       if (delta >= 5) {
         insights.add(Insight(
           severity: InsightSeverity.warning,
-          icon:     Icons.trending_up_outlined,
+          icon: Icons.trending_up_rounded,
           title: isEs ? 'Sensibilidad a la tasa' : 'Rate Sensitivity',
           body: isEs
               ? 'Cada aumento de 0.5% en la tasa añade ~${_fmt(delta)}/mes durante el período de disposición.'
@@ -93,7 +93,7 @@ class InsightEngine {
       if (ratio > 1.5) {
         insights.add(Insight(
           severity: InsightSeverity.alert,
-          icon:     Icons.arrow_upward_rounded,
+          icon: Icons.arrow_upward_rounded,
           title: isEs ? 'Choque de amortización' : 'Repayment Shock',
           body: isEs
               ? 'El pago de amortización (${_fmt(repaymentPayment)}) es ${ratio.toStringAsFixed(1)}× mayor que el pago durante la disposición (${_fmt(drawPayment)}) — planifica con anticipación.'
@@ -105,12 +105,11 @@ class InsightEngine {
     // ── 5. Total interest cost ────────────────────────────────────────────────
     if (totalInterest > 0 && helocLimit > 0) {
       final interestRatio = totalInterest / helocLimit;
-      final severity = interestRatio > 0.30
-          ? InsightSeverity.alert
-          : InsightSeverity.good;
+      final severity =
+          interestRatio > 0.30 ? InsightSeverity.alert : InsightSeverity.good;
       insights.add(Insight(
         severity: severity,
-        icon:     Icons.payments_outlined,
+        icon: Icons.payments_rounded,
         title: isEs ? 'Costo total de interés' : 'Total Interest Cost',
         body: isEs
             ? 'Interés total estimado durante el plazo: ${_fmt(totalInterest)}.'
@@ -119,10 +118,13 @@ class InsightEngine {
     }
 
     // Prioritise alerts > warnings > good, cap at maxCount
-    final alerts   = insights.where((i) => i.severity == InsightSeverity.alert).toList();
-    final warnings = insights.where((i) => i.severity == InsightSeverity.warning).toList();
-    final goods    = insights.where((i) => i.severity == InsightSeverity.good).toList();
-    final ordered  = [...alerts, ...warnings, ...goods];
+    final alerts =
+        insights.where((i) => i.severity == InsightSeverity.alert).toList();
+    final warnings =
+        insights.where((i) => i.severity == InsightSeverity.warning).toList();
+    final goods =
+        insights.where((i) => i.severity == InsightSeverity.good).toList();
+    final ordered = [...alerts, ...warnings, ...goods];
     if (ordered.isEmpty) {
       ordered.add(Insight(
         severity: InsightSeverity.good,

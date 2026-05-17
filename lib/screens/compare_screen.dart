@@ -1,10 +1,10 @@
-import '../core/ads/ad_footer.dart';
-import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
+import 'package:calcwise_core/calcwise_core.dart'
+    show PaywallTrigger, CalcwiseAdFooter;
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import '../core/ads/ad_service.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
@@ -12,6 +12,11 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+
+// ── Option colors ─────────────────────────────────────────────────────────────
+const _helocColor = AppTheme.primary;
+const _refiColor = Color(0xFF01579B);
+const _loanColor = Color(0xFF6A1B9A);
 
 class CompareScreen extends StatefulWidget {
   const CompareScreen({super.key});
@@ -26,6 +31,18 @@ double _parseN(String v) {
       ? v.replaceAll(',', '')
       : v.replaceAll(',', '.');
   return double.tryParse(s) ?? 0.0;
+}
+
+class _CompareResult {
+  final HelocCompareResult heloc;
+  final double loanMonthlyPayment;
+  final double loanTotalInterest;
+
+  const _CompareResult({
+    required this.heloc,
+    required this.loanMonthlyPayment,
+    required this.loanTotalInterest,
+  });
 }
 
 class _CompareScreenState extends State<CompareScreen> {
@@ -44,15 +61,30 @@ class _CompareScreenState extends State<CompareScreen> {
   final _refiTermCtrl = TextEditingController(text: '30');
   final _closingCtrl = TextEditingController(text: '5000');
 
-  final _fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+  // Personal Loan
+  final _loanRateCtrl = TextEditingController(text: '12.0');
+  final _loanTermCtrl = TextEditingController(text: '5');
 
-  HelocCompareResult? _result;
+  final _fmt =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+  final _fmtDec =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+
+  _CompareResult? _result;
 
   @override
   void dispose() {
-    for (final c in [_drawCtrl, _helocRateCtrl, _drawYearsCtrl, _repayYearsCtrl,
-                     _refiRateCtrl, _refiTermCtrl, _closingCtrl]) {
+    for (final c in [
+      _drawCtrl,
+      _helocRateCtrl,
+      _drawYearsCtrl,
+      _repayYearsCtrl,
+      _refiRateCtrl,
+      _refiTermCtrl,
+      _closingCtrl,
+      _loanRateCtrl,
+      _loanTermCtrl
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -60,8 +92,9 @@ class _CompareScreenState extends State<CompareScreen> {
 
   Future<void> _compare() async {
     if (!_formKey.currentState!.validate()) return;
-    final result = HelocEngine.compare(
-      withdrawalAmount: _parseN(_drawCtrl.text),
+    final amount = _parseN(_drawCtrl.text);
+    final helocResult = HelocEngine.compare(
+      withdrawalAmount: amount,
       helocRate: _parseN(_helocRateCtrl.text),
       helocDrawYears: int.tryParse(_drawYearsCtrl.text) ?? 10,
       helocRepayYears: int.tryParse(_repayYearsCtrl.text) ?? 20,
@@ -69,17 +102,29 @@ class _CompareScreenState extends State<CompareScreen> {
       refiTermYears: int.tryParse(_refiTermCtrl.text) ?? 30,
       refiClosingCosts: _parseN(_closingCtrl.text),
     );
-    setState(() => _result = result);
-    AdService.instance.onCalculation();
+    final loanRate = _parseN(_loanRateCtrl.text);
+    final loanTerm = int.tryParse(_loanTermCtrl.text) ?? 5;
+    final loanPayment =
+        HelocEngine.personalLoanPayment(amount, loanRate, loanTerm);
+    final loanInterest =
+        HelocEngine.personalLoanTotalInterest(amount, loanRate, loanTerm);
+
+    setState(() => _result = _CompareResult(
+          heloc: helocResult,
+          loanMonthlyPayment: loanPayment,
+          loanTotalInterest: loanInterest,
+        ));
+    adService.onAction();
     AnalyticsService.instance.logCompareViewed(
-      withdrawalAmount: _parseN(_drawCtrl.text),
+      withdrawalAmount: amount,
       helocRate: _parseN(_helocRateCtrl.text),
       refiRate: _parseN(_refiRateCtrl.text),
     );
     final trigger = await paywallSession.recordAction();
-    if (trigger == PaywallTrigger.hard && !freemiumService.isPremium) {
+    if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
       PaywallHard.show(context);
-    } else if (trigger == PaywallTrigger.soft && !freemiumService.isPremium) {
+    } else if (trigger == PaywallTrigger.soft &&
+        !freemiumService.hasFullAccess) {
       PaywallSoft.show(context);
     }
   }
@@ -92,6 +137,8 @@ class _CompareScreenState extends State<CompareScreen> {
     _refiRateCtrl.text = '6.5';
     _refiTermCtrl.text = '30';
     _closingCtrl.text = '5000';
+    _loanRateCtrl.text = '12.0';
+    _loanTermCtrl.text = '5';
     setState(() => _result = null);
   }
 
@@ -103,7 +150,7 @@ class _CompareScreenState extends State<CompareScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Form(
               key: _formKey,
               child: Column(
@@ -111,21 +158,24 @@ class _CompareScreenState extends State<CompareScreen> {
                 children: [
                   // ── Header info banner ─────────────────────────────────
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(AppSpacing.mdPlus),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                      color: _helocColor.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border:
+                          Border.all(color: _helocColor.withValues(alpha: 0.2)),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.info_outline, color: AppTheme.primary, size: 18),
+                      const Icon(Icons.info_outline,
+                          color: _helocColor, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           isEs
-                              ? 'Compara el costo real de acceder al mismo capital con ambas opciones.'
-                              : 'Compare the true cost of accessing the same equity under each option.',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.primary),
+                              ? 'Compara el costo real de financiar tus renovaciones con las 3 opciones principales.'
+                              : 'Compare the true cost of financing your renovation under all 3 options.',
+                          style: const TextStyle(
+                              fontSize: AppTextSize.sm, color: _helocColor),
                         ),
                       ),
                     ]),
@@ -133,7 +183,8 @@ class _CompareScreenState extends State<CompareScreen> {
                   const SizedBox(height: 20),
 
                   // ── Shared input ───────────────────────────────────────
-                  _sectionHeader(isEs ? 'Capital a acceder' : 'Equity to Access'),
+                  _sectionHeader(
+                      isEs ? 'Capital a financiar' : 'Amount to Finance'),
                   const SizedBox(height: 12),
                   _field(
                     ctrl: _drawCtrl,
@@ -146,10 +197,10 @@ class _CompareScreenState extends State<CompareScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ── HELOC column ───────────────────────────────────────
+                  // ── HELOC ──────────────────────────────────────────────
                   _sectionHeader(
                     isEs ? 'Opción A — HELOC' : 'Option A — HELOC',
-                    color: AppTheme.primary,
+                    color: _helocColor,
                   ),
                   const SizedBox(height: 12),
                   _field(
@@ -165,30 +216,37 @@ class _CompareScreenState extends State<CompareScreen> {
                     Expanded(
                       child: _field(
                         ctrl: _drawYearsCtrl,
-                        label: isEs ? 'Período disposición (años)' : 'Draw Period (yrs)',
+                        label: isEs
+                            ? 'Período disposición (años)'
+                            : 'Draw Period (yrs)',
                         hint: '10',
                         intOnly: true,
-                        validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
+                        validator: (v) =>
+                            (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _field(
                         ctrl: _repayYearsCtrl,
-                        label: isEs ? 'Período de pago (años)' : 'Repayment (yrs)',
+                        label:
+                            isEs ? 'Período de pago (años)' : 'Repayment (yrs)',
                         hint: '20',
                         intOnly: true,
-                        validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
+                        validator: (v) =>
+                            (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
                       ),
                     ),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  // ── Cash-out Refi column ───────────────────────────────
+                  // ── Cash-out Refi ──────────────────────────────────────
                   _sectionHeader(
-                    isEs ? 'Opción B — Refinanciación con Retiro de Capital' : 'Option B — Cash-Out Refinance',
-                    color: const Color(0xFF01579B),
+                    isEs
+                        ? 'Opción B — Refinanciación con Retiro de Capital'
+                        : 'Option B — Cash-Out Refinance',
+                    color: _refiColor,
                   ),
                   const SizedBox(height: 12),
                   Row(children: [
@@ -209,31 +267,75 @@ class _CompareScreenState extends State<CompareScreen> {
                         label: isEs ? 'Plazo (años)' : 'Term (yrs)',
                         hint: '30',
                         intOnly: true,
-                        validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
+                        validator: (v) =>
+                            (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
                       ),
                     ),
                   ]),
                   const SizedBox(height: 12),
                   _field(
                     ctrl: _closingCtrl,
-                    label: isEs ? 'Costos de cierre (\$)' : 'Closing Costs (\$)',
+                    label:
+                        isEs ? 'Costos de cierre (\$)' : 'Closing Costs (\$)',
                     hint: '5000',
                     validator: (v) => _parseN(v ?? '') < 0 ? '?' : null,
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Personal Loan ──────────────────────────────────────
+                  _sectionHeader(
+                    isEs
+                        ? 'Opción C — Préstamo Personal'
+                        : 'Option C — Personal Loan',
+                    color: _loanColor,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(
+                      child: _field(
+                        ctrl: _loanRateCtrl,
+                        label: isEs ? 'Tasa préstamo (%)' : 'Loan Rate (%)',
+                        hint: '12.0',
+                        validator: (v) => _parseN(v ?? '') <= 0
+                            ? (isEs ? 'Ingresa una tasa' : 'Enter rate')
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _field(
+                        ctrl: _loanTermCtrl,
+                        label: isEs ? 'Plazo (años)' : 'Term (yrs)',
+                        hint: '5',
+                        intOnly: true,
+                        validator: (v) =>
+                            (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
+                      ),
+                    ),
+                  ]),
 
                   const SizedBox(height: 24),
 
                   ElevatedButton.icon(
                     onPressed: _compare,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.xl)),
+                    ),
                     icon: const Icon(Icons.compare_arrows),
-                    label: Text(isEs ? 'Comparar opciones' : 'Compare Options'),
+                    label: Text(isEs
+                        ? 'Comparar las 3 opciones'
+                        : 'Compare All 3 Options'),
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: _reset,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.xl)),
                     ),
                     child: Text(isEs ? 'Limpiar' : 'Reset'),
                   ),
@@ -249,83 +351,122 @@ class _CompareScreenState extends State<CompareScreen> {
             ),
           ),
         ),
-        const AdFooter(),
+        const CalcwiseAdFooter(),
       ],
     );
   }
 
-  Widget _buildResults(bool isEs, HelocCompareResult r) {
-    final helocWinsShort = r.helocCheaperShortTerm;
-    final helocWinsLong = r.helocCheaperLongTerm;
+  Widget _buildResults(bool isEs, _CompareResult cr) {
+    final r = cr.heloc;
+
+    // Find best option by total interest (full term)
+    final helocTotal = r.helocTotalInterest;
+    final refiTotal = r.refiTotalInterest;
+    final loanTotal = cr.loanTotalInterest;
+    final minTotal =
+        [helocTotal, refiTotal, loanTotal].reduce((a, b) => a < b ? a : b);
+    final bestIsHeloc = helocTotal == minTotal;
+    final bestIsRefi = refiTotal == minTotal && !bestIsHeloc;
+    final bestIsLoan = loanTotal == minTotal && !bestIsHeloc && !bestIsRefi;
+
+    String bestName;
+    if (bestIsHeloc)
+      bestName = 'HELOC';
+    else if (bestIsRefi)
+      bestName = isEs ? 'Refinanciación' : 'Cash-Out Refi';
+    else
+      bestName = isEs ? 'Préstamo Personal' : 'Personal Loan';
+
+    // Savings vs personal loan (most expensive usually)
+    final maxTotal =
+        [helocTotal, refiTotal, loanTotal].reduce((a, b) => a > b ? a : b);
+    final savingsVsMax = maxTotal - minTotal;
+    final worstName = helocTotal == maxTotal
+        ? 'HELOC'
+        : (refiTotal == maxTotal
+            ? (isEs ? 'Refinanciación' : 'Cash-Out Refi')
+            : (isEs ? 'Préstamo Personal' : 'Personal Loan'));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Verdict banner
-        _verdictBanner(isEs, helocWinsShort),
+        // Best option banner
+        _buildBestBanner(isEs, bestName, savingsVsMax, worstName),
         const SizedBox(height: 16),
 
-        // Side-by-side header
-        _columnHeader(isEs),
+        // 3-column header
+        _buildColumnHeader(isEs),
         const SizedBox(height: 8),
 
-        // Monthly costs
-        _compRow(
-          isEs ? 'Pago mensual (fase inicial)' : 'Monthly (initial phase)',
+        // Monthly payment (initial)
+        _build3Row(
+          isEs ? 'Pago mensual inicial' : 'Monthly (initial)',
           _fmtDec.format(r.helocDrawPayment),
           _fmtDec.format(r.refiMonthlyPayment),
+          _fmtDec.format(cr.loanMonthlyPayment),
           note1: isEs ? 'Solo interés' : 'Interest-only',
-          note2: isEs ? 'Capital + interés' : 'Principal + interest',
-          winner: r.helocDrawPayment < r.refiMonthlyPayment ? 0 : 1,
+          note2: isEs ? 'P + I' : 'P + I',
+          note3: isEs ? 'P + I' : 'P + I',
+          winner: _winnerOf(
+              r.helocDrawPayment, r.refiMonthlyPayment, cr.loanMonthlyPayment),
         ),
-        _compRow(
-          isEs ? 'Pago mensual (fase de pago)' : 'Monthly (repayment phase)',
+        // Monthly payment (repayment phase)
+        _build3Row(
+          isEs ? 'Pago mensual (fase pago)' : 'Monthly (repayment)',
           _fmtDec.format(r.helocRepayPayment),
           _fmtDec.format(r.refiMonthlyPayment),
-          winner: r.helocRepayPayment < r.refiMonthlyPayment ? 0 : 1,
+          _fmtDec.format(cr.loanMonthlyPayment),
+          winner: _winnerOf(
+              r.helocRepayPayment, r.refiMonthlyPayment, cr.loanMonthlyPayment),
         ),
-        _compRow(
+        // Upfront costs
+        _build3Row(
           isEs ? 'Costos iniciales' : 'Upfront costs',
-          r.helocClosingCosts > 0 ? _fmt.format(r.helocClosingCosts) : ('\$0'),
+          '\$0',
           r.refiClosingCosts > 0 ? _fmt.format(r.refiClosingCosts) : '\$0',
+          '\$0',
           winner: 0,
         ),
         const Divider(height: 24),
-        _compRow(
-          isEs ? 'Interés total + costos (10 años)' : 'Total cost over 10 years',
+        // Total interest 10 years
+        _build3Row(
+          isEs ? 'Interés total (10 años)' : 'Total cost (10 years)',
           _fmt.format(r.helocInterestOver10Yrs),
           _fmt.format(r.refiInterestOver10Yrs),
+          _fmt.format(_loanInterestOver10(cr)),
           highlight: true,
-          winner: helocWinsShort ? 0 : 1,
+          winner: _winnerOf(r.helocInterestOver10Yrs, r.refiInterestOver10Yrs,
+              _loanInterestOver10(cr)),
         ),
-        _compRow(
-          isEs ? 'Interés total (vida del producto)' : 'Total interest (full term)',
-          _fmt.format(r.helocTotalInterest),
-          _fmt.format(r.refiTotalInterest),
-          winner: helocWinsLong ? 0 : 1,
+        // Total interest full term
+        _build3Row(
+          isEs ? 'Interés total (vida útil)' : 'Total interest (full term)',
+          _fmt.format(helocTotal),
+          _fmt.format(refiTotal),
+          _fmt.format(loanTotal),
+          winner: _winnerOf(helocTotal, refiTotal, loanTotal),
         ),
 
-        // Break-even info
+        // Refi break-even note
         if (r.refiBreakEvenMonths < 9999) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: const Color(0xFF01579B).withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF01579B).withValues(alpha: 0.2)),
+              color: _refiColor.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+              border: Border.all(color: _refiColor.withValues(alpha: 0.2)),
             ),
             child: Row(children: [
-              const Icon(Icons.timeline, color: Color(0xFF01579B), size: 18),
-              const SizedBox(width: 10),
+              const Icon(Icons.timeline, color: _refiColor, size: 16),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   isEs
-                      ? 'La refinanciación recupera los costos de cierre en ${r.refiBreakEvenMonths} meses '
-                        '(comparado con el pago de reembolso del HELOC).'
-                      : 'Cash-out refi recovers closing costs in ${r.refiBreakEvenMonths} months '
-                        '(vs. HELOC repayment payment).',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF01579B)),
+                      ? 'La refinanciación recupera costos de cierre en ${r.refiBreakEvenMonths} meses.'
+                      : 'Cash-out refi recovers closing costs in ${r.refiBreakEvenMonths} months.',
+                  style: const TextStyle(
+                      fontSize: AppTextSize.sm, color: _refiColor),
                 ),
               ),
             ]),
@@ -334,174 +475,230 @@ class _CompareScreenState extends State<CompareScreen> {
 
         // Guidance
         const SizedBox(height: 16),
-        _guidanceCard(isEs, r),
+        _buildGuidance(isEs, cr),
       ],
     );
   }
 
-  Widget _verdictBanner(bool isEs, bool helocWins) {
-    final color = helocWins ? AppTheme.primary : const Color(0xFF01579B);
-    final icon = helocWins ? Icons.water_outlined : Icons.home_work_outlined;
-    final title = helocWins
-        ? (isEs ? '✅ HELOC es más económico en 10 años' : '✅ HELOC is cheaper over 10 years')
-        : (isEs ? '✅ La refinanciación es más económica en 10 años' : '✅ Cash-out Refi is cheaper over 10 years');
+  /// Approximate personal loan interest paid over first 10 years
+  /// (or full term if < 10 years).
+  double _loanInterestOver10(_CompareResult cr) {
+    final term = int.tryParse(_loanTermCtrl.text) ?? 5;
+    final months = [term * 12, 120].reduce((a, b) => a < b ? a : b);
+    return cr.loanMonthlyPayment * months -
+        (_parseN(_drawCtrl.text) * (months / (term * 12)));
+  }
+
+  // Returns 0 for HELOC, 1 for Refi, 2 for Personal Loan, -1 for no winner
+  int _winnerOf(double a, double b, double c) {
+    final min = [a, b, c].reduce((x, y) => x < y ? x : y);
+    if (a == min) return 0;
+    if (b == min) return 1;
+    return 2;
+  }
+
+  Widget _buildBestBanner(
+      bool isEs, String bestName, double savings, String worstName) {
+    final color = bestName == 'HELOC'
+        ? _helocColor
+        : (bestName.contains('Refi') || bestName.contains('Refinan')
+            ? _refiColor
+            : _loanColor);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3))],
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        boxShadow: [
+          BoxShadow(
+              color: color.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3))
+        ],
       ),
       child: Row(children: [
-        Icon(icon, color: Colors.white, size: 24),
+        const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 26),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(
+              isEs ? '✅ Mejor opción: $bestName' : '✅ Best option: $bestName',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: AppTextSize.bodyMd),
+            ),
+            if (savings > 0)
+              Text(
+                isEs
+                    ? '$bestName ahorra ${_fmt.format(savings)} vs $worstName'
+                    : '$bestName saves ${_fmt.format(savings)} vs $worstName',
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: AppTextSize.sm),
+              ),
+          ]),
         ),
       ]),
     );
   }
 
-  Widget _columnHeader(bool isEs) {
+  Widget _buildColumnHeader(bool isEs) {
     return Row(children: [
-      const SizedBox(width: 140),
-      Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), bottomLeft: Radius.circular(8)),
-          ),
-          child: Center(
-            child: Text('HELOC',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 13)),
-          ),
-        ),
-      ),
-      const SizedBox(width: 4),
-      Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF01579B).withValues(alpha: 0.1),
-            borderRadius: const BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8)),
-          ),
-          child: Center(
-            child: Text(isEs ? 'Refi' : 'Cash-out Refi',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF01579B), fontSize: 13)),
-          ),
-        ),
-      ),
+      const SizedBox(width: 110),
+      _headerCell('HELOC', _helocColor, leftRound: true),
+      const SizedBox(width: 3),
+      _headerCell(isEs ? 'Refi' : 'Cash-Out Refi', _refiColor),
+      const SizedBox(width: 3),
+      _headerCell(isEs ? 'Préstamo' : 'Personal Loan', _loanColor,
+          rightRound: true),
     ]);
   }
 
-  Widget _compRow(String label, String val1, String val2, {
-    String? note1, String? note2, bool highlight = false, int winner = -1,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(
-          width: 140,
+  Widget _headerCell(String label, Color color,
+      {bool leftRound = false, bool rightRound = false}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.only(
+            topLeft: leftRound ? const Radius.circular(8) : Radius.zero,
+            bottomLeft: leftRound ? const Radius.circular(8) : Radius.zero,
+            topRight: rightRound ? const Radius.circular(8) : Radius.zero,
+            bottomRight: rightRound ? const Radius.circular(8) : Radius.zero,
+          ),
+        ),
+        child: Center(
           child: Text(label,
               style: TextStyle(
-                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontSize: AppTextSize.xs),
+              textAlign: TextAlign.center),
+        ),
+      ),
+    );
+  }
+
+  Widget _build3Row(
+    String label,
+    String val0,
+    String val1,
+    String val2, {
+    String? note1,
+    String? note2,
+    String? note3,
+    bool highlight = false,
+    int winner = -1,
+  }) {
+    final colors = [_helocColor, _refiColor, _loanColor];
+    final vals = [val0, val1, val2];
+    final notes = [note1, note2, note3];
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 110,
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: AppTextSize.xs,
                   color: AppTheme.labelGray,
                   fontWeight: highlight ? FontWeight.w600 : FontWeight.normal)),
         ),
-        Expanded(
-          child: _valueCell(val1, note1,
-              isWinner: winner == 0,
+        for (int i = 0; i < 3; i++) ...[
+          if (i > 0) const SizedBox(width: 3),
+          Expanded(
+            child: _valueCell3(
+              vals[i],
+              notes[i],
+              isWinner: winner == i,
               highlight: highlight,
-              winColor: AppTheme.primary),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _valueCell(val2, note2,
-              isWinner: winner == 1,
-              highlight: highlight,
-              winColor: const Color(0xFF01579B)),
-        ),
+              winColor: colors[i],
+            ),
+          ),
+        ],
       ]),
     );
   }
 
-  Widget _valueCell(String value, String? note, {
-    required bool isWinner, required bool highlight, required Color winColor,
+  Widget _valueCell3(
+    String value,
+    String? note, {
+    required bool isWinner,
+    required bool highlight,
+    required Color winColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       decoration: BoxDecoration(
         color: isWinner ? winColor.withValues(alpha: 0.08) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        border: isWinner ? Border.all(color: winColor.withValues(alpha: 0.3)) : null,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: isWinner
+            ? Border.all(color: winColor.withValues(alpha: 0.35))
+            : null,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Text(value,
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: highlight ? FontWeight.bold : FontWeight.w600,
-                fontSize: highlight ? 15 : 13,
+                fontSize: highlight ? 13 : 12,
                 color: isWinner ? winColor : null)),
         if (note != null)
           Text(note,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
+              style: const TextStyle(fontSize: 9, color: AppTheme.labelGray)),
       ]),
     );
   }
 
-  Widget _guidanceCard(bool isEs, HelocCompareResult r) {
+  Widget _buildGuidance(bool isEs, _CompareResult cr) {
+    final r = cr.heloc;
     final bullets = <String>[];
-    if (r.helocCheaperShortTerm) {
-      bullets.add(isEs
-          ? '📉 Si planeas quedarte menos de ${_breakEvenYears(r)} años, el HELOC cuesta menos.'
-          : '📉 If you plan to stay under ${_breakEvenYears(r)} years, HELOC costs less.');
-    } else {
-      bullets.add(isEs
-          ? '💡 La refinanciación es más económica si te quedas en la vivienda a largo plazo.'
-          : '💡 Cash-out refi is cheaper if you stay long-term.');
-    }
-    if (r.refiBreakEvenMonths < 36) {
-      bullets.add(isEs
-          ? '⚡ Los costos de cierre se recuperan rápido (${r.refiBreakEvenMonths} meses).'
-          : '⚡ Closing costs recovered quickly (${r.refiBreakEvenMonths} months).');
-    }
     bullets.add(isEs
-        ? '🔒 El HELOC es flexible — solo pides lo que necesitas. La refinanciación bloquea el capital desde el inicio.'
-        : '🔒 HELOC is flexible — draw only what you need. Refi locks in the full amount from day 1.');
+        ? '🏠 HELOC: tasa variable, solo pagas lo que usas, flexible. Ideal si el proyecto puede extenderse.'
+        : '🏠 HELOC: variable rate, draw only what you use, flexible. Best if project scope may grow.');
+    bullets.add(isEs
+        ? '🔄 Refinanciación: tasa fija más baja pero costos de cierre altos. Mejor para proyectos grandes a largo plazo.'
+        : '🔄 Cash-Out Refi: lower fixed rate but high closing costs. Better for large, long-term projects.');
+    bullets.add(isEs
+        ? '💳 Préstamo Personal: aprobación rápida, sin garantía hipotecaria, pero tasa más alta. Mejor para montos pequeños.'
+        : '💳 Personal Loan: fast approval, no home equity needed, but higher rate. Best for smaller amounts.');
+    if (r.refiBreakEvenMonths < 9999 && r.refiBreakEvenMonths < 36) {
+      bullets.add(isEs
+          ? '⚡ La refinanciación recupera sus costos de cierre rápidamente (${r.refiBreakEvenMonths} meses).'
+          : '⚡ Refi recovers closing costs quickly (${r.refiBreakEvenMonths} months).');
+    }
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isEs ? '💡 Cómo elegir' : '💡 How to choose',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text(isEs ? '💡 ¿Cuál elegir?' : '💡 How to choose',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: AppTextSize.body)),
             const SizedBox(height: 10),
             ...bullets.map((b) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(b, style: const TextStyle(fontSize: 13, height: 1.4)),
-            )),
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(b,
+                      style: const TextStyle(
+                          fontSize: AppTextSize.sm, height: 1.4)),
+                )),
           ],
         ),
       ),
     );
   }
 
-  int _breakEvenYears(HelocCompareResult r) {
-    if (r.refiBreakEvenMonths >= 9999) return 30;
-    return (r.refiBreakEvenMonths / 12).ceil();
-  }
-
   Widget _sectionHeader(String text, {Color? color}) => Text(
         text,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 15,
-          color: color ?? AppTheme.primary,
+          fontSize: AppTextSize.bodyMd,
+          color: color ?? _helocColor,
         ),
       );
 
@@ -512,19 +709,19 @@ class _CompareScreenState extends State<CompareScreen> {
     String? Function(String?)? validator,
     bool intOnly = false,
   }) =>
-      TextFormField(
-        controller: ctrl,
-        keyboardType: intOnly
-            ? TextInputType.number
-            : const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(intOnly ? RegExp(r'[0-9]') : RegExp(r'[0-9.,]')),
-        ],
-        decoration: InputDecoration(labelText: label, hintText: hint),
-        validator: validator,
+      Padding(
+        padding: const EdgeInsets.only(bottom: 0),
+        child: TextFormField(
+          controller: ctrl,
+          keyboardType: intOnly
+              ? TextInputType.number
+              : const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+                intOnly ? RegExp(r'[0-9]') : RegExp(r'[0-9.,]')),
+          ],
+          decoration: InputDecoration(labelText: label, hintText: hint),
+          validator: validator,
+        ),
       );
-}
-
-extension on HelocCompareResult {
-  double get helocClosingCosts => 0;
 }

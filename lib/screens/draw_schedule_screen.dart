@@ -1,4 +1,3 @@
-import '../core/ads/ad_footer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +30,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
-  final _fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+  final _fmt =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+  final _fmtDec =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
   List<Map<String, double>>? _schedule;
   double? _draw;
@@ -70,7 +71,9 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
 
     AnalyticsService.instance.logDrawScheduleViewed();
     final trigger = await paywallSession.recordAction();
-    if (trigger != PaywallTrigger.none && mounted && !freemiumService.isPremium) {
+    if (trigger != PaywallTrigger.none &&
+        mounted &&
+        !freemiumService.hasFullAccess) {
       if (trigger == PaywallTrigger.soft) {
         PaywallSoft.show(context);
       } else {
@@ -104,14 +107,16 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
         ? 'Generado: ${dateFmt.format(now)}'
         : 'Generated: ${dateFmt.format(now)}';
 
-    final fmtCur = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+    final fmtCur =
+        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         build: (ctx) => [
           pw.Text(title,
-              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              style: pw.TextStyle(
+                  fontSize: AppTextSize.title, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 12),
           pw.Text('$homeLabel: ${fmtCur.format(draw)}'),
           pw.Text('$creditLabel: ${fmtCur.format(draw)}'),
@@ -120,15 +125,25 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
           pw.Text('$rateLabel: ${rate.toStringAsFixed(2)}%'),
           pw.SizedBox(height: 16),
           pw.TableHelper.fromTextArray(
-            headers: [monthLabel, balanceLabel, interestLabel, principalLabel, remainingLabel],
+            headers: [
+              monthLabel,
+              balanceLabel,
+              interestLabel,
+              principalLabel,
+              remainingLabel
+            ],
             data: schedule.map((row) {
               final month = row['month']!.toInt();
               final balance = row['balance'] ?? 0.0;
               final payment = row['payment'] ?? 0.0;
               final isDrawPhase = (row['type'] ?? 0) == 0;
-              final interest = isDrawPhase ? payment : (balance * (rate / 100 / 12));
-              final principal = isDrawPhase ? 0.0 : (payment - interest).clamp(0.0, double.infinity);
-              final remaining = (balance - principal).clamp(0.0, double.infinity);
+              final interest =
+                  isDrawPhase ? payment : (balance * (rate / 100 / 12));
+              final principal = isDrawPhase
+                  ? 0.0
+                  : (payment - interest).clamp(0.0, double.infinity);
+              final remaining =
+                  (balance - principal).clamp(0.0, double.infinity);
               return [
                 '$month',
                 fmtCur.format(balance),
@@ -137,7 +152,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                 fmtCur.format(remaining),
               ];
             }).toList(),
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+            headerStyle:
+                pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
             cellStyle: const pw.TextStyle(fontSize: 8),
             cellAlignment: pw.Alignment.centerRight,
             headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
@@ -161,26 +177,31 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   isEs ? 'Parámetros del HELOC' : 'HELOC Parameters',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: AppTextSize.bodyLg),
                 ),
                 const SizedBox(height: 14),
-
-                _buildField(_drawCtrl,
-                    isEs ? 'Monto dispuesto (\$)' : 'Draw Amount (\$)', '100000'),
+                _buildField(
+                    _drawCtrl,
+                    isEs ? 'Monto dispuesto (\$)' : 'Draw Amount (\$)',
+                    '100000'),
                 const SizedBox(height: 12),
                 _buildField(_rateCtrl,
                     isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)', '8.5'),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(
-                    child: _buildField(_drawYearsCtrl,
-                        isEs ? 'Disposición (años)' : 'Draw Period (yrs)', '10'),
+                    child: _buildField(
+                        _drawYearsCtrl,
+                        isEs ? 'Disposición (años)' : 'Draw Period (yrs)',
+                        '10'),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -189,13 +210,12 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   ),
                 ]),
                 const SizedBox(height: 20),
-
                 ElevatedButton.icon(
                   onPressed: _generate,
                   icon: const Icon(Icons.timeline),
-                  label: Text(isEs ? 'Generar calendario' : 'Generate Schedule'),
+                  label:
+                      Text(isEs ? 'Generar calendario' : 'Generate Schedule'),
                 ),
-
                 if (_schedule != null) ...[
                   const SizedBox(height: 24),
 
@@ -224,7 +244,9 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   // First 12 months table
                   Text(
                     isEs ? 'Primeros 12 meses' : 'First 12 Months',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: AppTextSize.bodyLg),
                   ),
                   const SizedBox(height: 8),
                   _buildTable(isEs, _schedule!.take(12).toList()),
@@ -234,24 +256,23 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   // Export — premium gated
                   ElevatedButton.icon(
                     onPressed: () {
-                      if (!freemiumService.isPremium) {
+                      if (!freemiumService.hasFullAccess) {
                         PaywallHard.show(context);
                       } else {
                         _exportPdf(context, isEs);
                       }
                     },
-                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
                     label: Text(
                         isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf),
                   ),
                 ],
-
                 const SizedBox(height: 80),
               ],
             ),
           ),
         ),
-        const AdFooter(),
+        const CalcwiseAdFooter(),
       ],
     );
   }
@@ -278,112 +299,122 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEs ? 'Balance del HELOC a lo largo del tiempo' : 'HELOC Balance Over Time',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              isEs
+                  ? 'Balance del HELOC a lo largo del tiempo'
+                  : 'HELOC Balance Over Time',
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, fontSize: AppTextSize.bodyMd),
             ),
             const SizedBox(height: 6),
             Row(children: [
               _LegendDot(color: AppTheme.primary),
               const SizedBox(width: 4),
               Text(isEs ? 'Período disposición' : 'Draw Period',
-                  style: const TextStyle(fontSize: 11)),
+                  style: const TextStyle(fontSize: AppTextSize.xs)),
               const SizedBox(width: 16),
               _LegendDot(color: AppTheme.success),
               const SizedBox(width: 4),
               Text(isEs ? 'Período de pago' : 'Repayment',
-                  style: const TextStyle(fontSize: 11)),
+                  style: const TextStyle(fontSize: AppTextSize.xs)),
             ]),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
-                final chartHeight = (constraints.maxWidth < 400) ? 200.0 : 240.0;
+                final chartHeight =
+                    (constraints.maxWidth < 400) ? 200.0 : 240.0;
                 return SizedBox(
                   height: chartHeight,
                   child: LineChart(
-                LineChartData(
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (_) => Colors.blueGrey.shade800,
-                      getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-                        '\$${(s.y / 1000).toStringAsFixed(1)}k',
-                        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                      )).toList(),
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) =>
-                        FlLine(color: CalcwiseTheme.of(context).cardBorder, strokeWidth: 1),
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 60,
-                        getTitlesWidget: (v, _) => Text(
-                          '\$${(v / 1000).toStringAsFixed(0)}k',
-                          style: const TextStyle(
-                              fontSize: 10, color: AppTheme.labelGray),
+                    LineChartData(
+                      lineTouchData: LineTouchData(
+                        enabled: true,
+                        handleBuiltInTouches: true,
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipColor: (_) => Colors.blueGrey.shade800,
+                          getTooltipItems: (spots) => spots
+                              .map((s) => LineTooltipItem(
+                                    '\$${(s.y / 1000).toStringAsFixed(1)}k',
+                                    const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: AppTextSize.sm),
+                                  ))
+                              .toList(),
                         ),
                       ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 60,
-                        getTitlesWidget: (v, _) => Text(
-                          '${v ~/ 12}y',
-                          style: const TextStyle(
-                              fontSize: 10, color: AppTheme.labelGray),
+                      gridData: FlGridData(
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (_) => FlLine(
+                            color: CalcwiseTheme.of(context).cardBorder,
+                            strokeWidth: 1),
+                      ),
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 60,
+                            getTitlesWidget: (v, _) => Text(
+                              '\$${(v / 1000).toStringAsFixed(0)}k',
+                              style: const TextStyle(
+                                  fontSize: 10, color: AppTheme.labelGray),
+                            ),
+                          ),
                         ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 60,
+                            getTitlesWidget: (v, _) => Text(
+                              '${v ~/ 12}y',
+                              style: const TextStyle(
+                                  fontSize: 10, color: AppTheme.labelGray),
+                            ),
+                          ),
+                        ),
+                        topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                       ),
+                      borderData: FlBorderData(show: false),
+                      extraLinesData: ExtraLinesData(verticalLines: [
+                        VerticalLine(
+                          x: drawEndMonth,
+                          color: Colors.orange.withValues(alpha: 0.6),
+                          strokeWidth: 1.5,
+                          dashArray: [5, 4],
+                          label: VerticalLineLabel(
+                            show: true,
+                            labelResolver: (_) =>
+                                isEs ? 'Fin disposición' : 'Draw End',
+                            style: const TextStyle(
+                                fontSize: 9, color: Colors.orange),
+                          ),
+                        ),
+                      ]),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: AppTheme.primary,
+                          barWidth: 2.5,
+                          dotData: const FlDotData(show: false),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: AppTheme.primary.withValues(alpha: 0.08),
+                          ),
+                        ),
+                      ],
                     ),
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
                   ),
-                  borderData: FlBorderData(show: false),
-                  extraLinesData: ExtraLinesData(verticalLines: [
-                    VerticalLine(
-                      x: drawEndMonth,
-                      color: Colors.orange.withValues(alpha: 0.6),
-                      strokeWidth: 1.5,
-                      dashArray: [5, 4],
-                      label: VerticalLineLabel(
-                        show: true,
-                        labelResolver: (_) =>
-                            isEs ? 'Fin disposición' : 'Draw End',
-                        style: const TextStyle(
-                            fontSize: 9, color: Colors.orange),
-                      ),
-                    ),
-                  ]),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: AppTheme.primary,
-                      barWidth: 2.5,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-                  );
-                },
-              ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -397,20 +428,27 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
     final repayYears = _repayYears!;
 
     final baseInterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate);
-    final base1InterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate + 1);
-    final base2InterestOnly = HelocEngine.interestOnlyPayment(draw, baseRate + 2);
+    final base1InterestOnly =
+        HelocEngine.interestOnlyPayment(draw, baseRate + 1);
+    final base2InterestOnly =
+        HelocEngine.interestOnlyPayment(draw, baseRate + 2);
 
     final baseRepay = HelocEngine.amortizedPayment(draw, baseRate, repayYears);
-    final base1Repay = HelocEngine.amortizedPayment(draw, baseRate + 1, repayYears);
-    final base2Repay = HelocEngine.amortizedPayment(draw, baseRate + 2, repayYears);
+    final base1Repay =
+        HelocEngine.amortizedPayment(draw, baseRate + 1, repayYears);
+    final base2Repay =
+        HelocEngine.amortizedPayment(draw, baseRate + 2, repayYears);
 
-    final baseTotal = HelocEngine.totalInterestPaid(draw, baseRate, drawYears, repayYears);
-    final base1Total = HelocEngine.totalInterestPaid(draw, baseRate + 1, drawYears, repayYears);
-    final base2Total = HelocEngine.totalInterestPaid(draw, baseRate + 2, drawYears, repayYears);
+    final baseTotal =
+        HelocEngine.totalInterestPaid(draw, baseRate, drawYears, repayYears);
+    final base1Total = HelocEngine.totalInterestPaid(
+        draw, baseRate + 1, drawYears, repayYears);
+    final base2Total = HelocEngine.totalInterestPaid(
+        draw, baseRate + 2, drawYears, repayYears);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -419,7 +457,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               const SizedBox(width: 8),
               Text(
                 isEs ? 'Escenarios de tasa' : 'Rate Scenarios',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: AppTextSize.bodyMd),
               ),
             ]),
             const SizedBox(height: 12),
@@ -470,14 +509,14 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
         child: Text(text,
             style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: AppTextSize.xs,
                 color: AppTheme.primary)),
       );
 
   TableRow _scenarioRow(String rate, String io, String repay, String total,
       {bool isBase = false}) {
     final style = TextStyle(
-        fontSize: 11,
+        fontSize: AppTextSize.xs,
         fontWeight: isBase ? FontWeight.bold : FontWeight.normal,
         color: isBase ? AppTheme.primary : null);
     return TableRow(
@@ -493,7 +532,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
   Widget _buildTable(bool isEs, List<Map<String, double>> rows) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             // Header
@@ -501,7 +540,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
               decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6)),
+                  borderRadius: BorderRadius.circular(AppRadius.sm)),
               child: Row(children: [
                 _tableHeader(isEs ? 'Mes' : 'Month', flex: 1),
                 _tableHeader(isEs ? 'Tipo' : 'Type', flex: 2),
@@ -514,24 +553,22 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               final month = row['month']!.toInt();
               final isDrawPhase = row['type'] == 0;
               return Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: Row(children: [
                   Expanded(
                       flex: 1,
                       child: Text('$month',
-                          style: const TextStyle(fontSize: 12))),
+                          style: const TextStyle(fontSize: AppTextSize.sm))),
                   Expanded(
                     flex: 2,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (isDrawPhase
-                                ? AppTheme.primary
-                                : AppTheme.success)
-                            .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        color:
+                            (isDrawPhase ? AppTheme.primary : AppTheme.success)
+                                .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Text(
                         isDrawPhase
@@ -549,11 +586,11 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   Expanded(
                       flex: 2,
                       child: Text(_fmtDec.format(row['payment']!),
-                          style: const TextStyle(fontSize: 12))),
+                          style: const TextStyle(fontSize: AppTextSize.sm))),
                   Expanded(
                       flex: 2,
                       child: Text(_fmt.format(row['balance']!),
-                          style: const TextStyle(fontSize: 12))),
+                          style: const TextStyle(fontSize: AppTextSize.sm))),
                 ]),
               );
             }),
@@ -568,12 +605,11 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
         child: Text(text,
             style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: AppTextSize.xs,
                 color: AppTheme.primary)),
       );
 
-  Widget _buildField(
-      TextEditingController ctrl, String label, String hint) {
+  Widget _buildField(TextEditingController ctrl, String label, String hint) {
     return TextFormField(
       controller: ctrl,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),

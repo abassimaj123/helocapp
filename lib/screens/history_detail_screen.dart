@@ -1,7 +1,7 @@
-import '../core/ads/ad_footer.dart';
 import 'dart:typed_data';
 
 import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
+import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -36,11 +36,12 @@ class HistoryDetailScreen extends StatelessWidget {
     return Navigator.push(
       context,
       PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => HistoryDetailScreen(entry: entry, onDelete: onDelete),
-                    transitionsBuilder: (_, anim, __, child) =>
-                        FadeTransition(opacity: anim, child: child),
-                    transitionDuration: const Duration(milliseconds: 250),
-                  ),
+        pageBuilder: (_, __, ___) =>
+            HistoryDetailScreen(entry: entry, onDelete: onDelete),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: AppDuration.base,
+      ),
     );
   }
 
@@ -97,7 +98,7 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
   // ── Share ─────────────────────────────────────────────────────────────────
 
   Future<void> _share(BuildContext context, bool isEs) async {
-    if (!freemiumService.isPremium) {
+    if (!freemiumService.hasFullAccess) {
       final trigger = await paywallSession.recordAction();
       if (trigger == PaywallTrigger.hard) {
         PaywallHard.show(context);
@@ -157,7 +158,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
   // ── PDF ──────────────────────────────────────────────────────────────────
 
   Future<void> _exportPdf(BuildContext context, bool isEs) async {
-    if (!freemiumService.isPremium) {
+    if (!freemiumService.hasFullAccess) {
       await PaywallHard.show(context);
       return;
     }
@@ -166,7 +167,8 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
     if (!mounted) return;
     await Printing.sharePdf(
       bytes: bytes,
-      filename: 'HELOC_Calculator_${DateFormat('yyyyMMdd').format(_createdAt)}.pdf',
+      filename:
+          'HELOC_Calculator_${DateFormat('yyyyMMdd').format(_createdAt)}.pdf',
     );
   }
 
@@ -184,10 +186,10 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
             children: [
               // Header
               pw.Container(
-                padding: const pw.EdgeInsets.all(16),
+                padding: const pw.EdgeInsets.all(AppSpacing.lg),
                 decoration: pw.BoxDecoration(
                   color: const PdfColor.fromInt(0xFF00695C),
-                  borderRadius: pw.BorderRadius.circular(8),
+                  borderRadius: pw.BorderRadius.circular(AppRadius.md),
                 ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -195,7 +197,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                     pw.Text(
                       isEs ? 'HELOC Calculator' : 'HELOC Calculator',
                       style: pw.TextStyle(
-                        fontSize: 20,
+                        fontSize: AppTextSize.title,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.white,
                       ),
@@ -203,7 +205,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                     pw.Text(
                       dateFmt.format(_createdAt.toLocal()),
                       style: const pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: AppTextSize.sm,
                         color: PdfColors.white,
                       ),
                     ),
@@ -242,18 +244,39 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               _pdfTable(
                 isEs
                     ? [
-                        ['Pago solo interés (período disposición)', _fmtDec.format(_interestOnly)],
-                        ['Pago amortizado (período de pago)', _fmtDec.format(_repayment)],
-                        ['Capital disponible (85% LTV)', _fmtCur.format(_equity)],
+                        [
+                          'Pago solo interés (período disposición)',
+                          _fmtDec.format(_interestOnly)
+                        ],
+                        [
+                          'Pago amortizado (período de pago)',
+                          _fmtDec.format(_repayment)
+                        ],
+                        [
+                          'Capital disponible (85% LTV)',
+                          _fmtCur.format(_equity)
+                        ],
                         ['LTV actual', '${_fmtPct.format(_ltv)}%'],
-                        ['Ahorro fiscal estimado (22%)', '${_fmtDec.format(_taxSavings)}/año'],
+                        [
+                          'Ahorro fiscal estimado (22%)',
+                          '${_fmtDec.format(_taxSavings)}/año'
+                        ],
                       ]
                     : [
-                        ['Interest-Only Payment (Draw Period)', _fmtDec.format(_interestOnly)],
-                        ['Repayment Payment (After Draw)', _fmtDec.format(_repayment)],
+                        [
+                          'Interest-Only Payment (Draw Period)',
+                          _fmtDec.format(_interestOnly)
+                        ],
+                        [
+                          'Repayment Payment (After Draw)',
+                          _fmtDec.format(_repayment)
+                        ],
                         ['Available Equity (85% LTV)', _fmtCur.format(_equity)],
                         ['Current LTV', '${_fmtPct.format(_ltv)}%'],
-                        ['Est. Tax Savings (22% bracket)', '${_fmtDec.format(_taxSavings)}/year'],
+                        [
+                          'Est. Tax Savings (22% bracket)',
+                          '${_fmtDec.format(_taxSavings)}/year'
+                        ],
                       ],
                 highlightFirst: true,
               ),
@@ -261,10 +284,10 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
               // Tax deductibility note
               pw.Container(
-                padding: const pw.EdgeInsets.all(12),
+                padding: const pw.EdgeInsets.all(AppSpacing.md),
                 decoration: pw.BoxDecoration(
                   color: const PdfColor.fromInt(0xFFE3F2FD),
-                  borderRadius: pw.BorderRadius.circular(6),
+                  borderRadius: pw.BorderRadius.circular(AppRadius.sm),
                   border: pw.Border.all(
                     color: const PdfColor.fromInt(0xFF1565C0),
                     width: 0.5,
@@ -274,9 +297,11 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      isEs ? 'Nota sobre Deducibilidad Fiscal' : 'Tax Deductibility Note',
+                      isEs
+                          ? 'Nota sobre Deducibilidad Fiscal'
+                          : 'Tax Deductibility Note',
                       style: pw.TextStyle(
-                        fontSize: 11,
+                        fontSize: AppTextSize.xs,
                         fontWeight: pw.FontWeight.bold,
                         color: const PdfColor.fromInt(0xFF1565C0),
                       ),
@@ -322,12 +347,12 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: pw.BoxDecoration(
         color: const PdfColor.fromInt(0xFFE8F5E9),
-        borderRadius: pw.BorderRadius.circular(4),
+        borderRadius: pw.BorderRadius.circular(AppRadius.xs),
       ),
       child: pw.Text(
         title,
         style: pw.TextStyle(
-          fontSize: 13,
+          fontSize: AppTextSize.md,
           fontWeight: pw.FontWeight.bold,
           color: const PdfColor.fromInt(0xFF00695C),
         ),
@@ -349,10 +374,12 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               ? const pw.BoxDecoration(color: PdfColor.fromInt(0xFFE8F5E9))
               : (e.key % 2 == 0
                   ? const pw.BoxDecoration(color: PdfColors.white)
-                  : const pw.BoxDecoration(color: PdfColor.fromInt(0xFFF5F5F5))),
+                  : const pw.BoxDecoration(
+                      color: PdfColor.fromInt(0xFFF5F5F5))),
           children: [
             pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: pw.Text(
                 e.value[0],
                 style: pw.TextStyle(
@@ -362,12 +389,14 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               ),
             ),
             pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: pw.Text(
                 e.value[1],
                 style: pw.TextStyle(
                   fontSize: 10,
-                  fontWeight: isFirst ? pw.FontWeight.bold : pw.FontWeight.normal,
+                  fontWeight:
+                      isFirst ? pw.FontWeight.bold : pw.FontWeight.normal,
                   color: isFirst
                       ? const PdfColor.fromInt(0xFF00695C)
                       : PdfColors.black,
@@ -424,10 +453,11 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
         final dateStr = _fmtDate.format(_createdAt.toLocal());
         return Scaffold(
           appBar: AppBar(
-            title: Text(dateStr, style: const TextStyle(fontSize: 14)),
+            title: Text(dateStr,
+                style: const TextStyle(fontSize: AppTextSize.body)),
             actions: [
               IconButton(
-                icon: const Icon(Icons.share_outlined),
+                icon: const Icon(Icons.share_rounded),
                 tooltip: isEs ? 'Compartir' : 'Share',
                 onPressed: () => _share(context, isEs),
               ),
@@ -435,12 +465,14 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                 valueListenable: freemiumService.isPremiumNotifier,
                 builder: (_, isPremium, __) => IconButton(
                   icon: Icon(
-                    Icons.picture_as_pdf_outlined,
+                    Icons.picture_as_pdf_rounded,
                     color: isPremium ? Colors.white : Colors.white60,
                   ),
                   tooltip: isPremium
                       ? (isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf)
-                      : (isEs ? AppStringsES.exportLocked : AppStringsEN.exportLocked),
+                      : (isEs
+                          ? AppStringsES.exportLocked
+                          : AppStringsEN.exportLocked),
                   onPressed: () => _exportPdf(context, isEs),
                 ),
               ),
@@ -455,29 +487,32 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ── Inputs card ─────────────────────────────────────
                       _SectionHeader(
-                        icon: Icons.input_outlined,
+                        icon: Icons.input_rounded,
                         title: isEs ? 'Datos de Entrada' : 'Input Parameters',
                       ),
                       const SizedBox(height: 8),
                       Card(
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Column(children: [
                             _DetailRow(
-                              label: isEs ? 'Valor de la vivienda' : 'Home Value',
+                              label:
+                                  isEs ? 'Valor de la vivienda' : 'Home Value',
                               value: _fmtCur.format(_homeValue),
                               valueColor: AppTheme.primary,
                               bold: true,
                             ),
                             const Divider(height: 16),
                             _DetailRow(
-                              label: isEs ? 'Saldo hipotecario' : 'Mortgage Balance',
+                              label: isEs
+                                  ? 'Saldo hipotecario'
+                                  : 'Mortgage Balance',
                               value: _fmtCur.format(_balance),
                             ),
                             _DetailRow(
@@ -501,13 +536,13 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
                       // ── Results card ────────────────────────────────────
                       _SectionHeader(
-                        icon: Icons.bar_chart_outlined,
+                        icon: Icons.bar_chart_rounded,
                         title: isEs ? 'Resultados' : 'Results',
                       ),
                       const SizedBox(height: 8),
                       Card(
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Column(children: [
                             _DetailRow(
                               label: isEs
@@ -519,11 +554,15 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                             ),
                             const Divider(height: 16),
                             _DetailRow(
-                              label: isEs ? 'Pago amortizado' : 'Repayment Payment',
+                              label: isEs
+                                  ? 'Pago amortizado'
+                                  : 'Repayment Payment',
                               value: '${_fmtDec.format(_repayment)}/mo',
                             ),
                             _DetailRow(
-                              label: isEs ? 'Capital disponible' : 'Available Equity',
+                              label: isEs
+                                  ? 'Capital disponible'
+                                  : 'Available Equity',
                               value: _fmtCur.format(_equity),
                               valueColor: AppTheme.success,
                             ),
@@ -546,10 +585,10 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
                       // Tax info banner
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.mdPlus),
                           border: Border.all(color: Colors.blue.shade200),
                         ),
                         child: Row(
@@ -564,7 +603,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                     ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
                                     : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: AppTextSize.xs,
                                   color: Colors.blue.shade800,
                                   height: 1.4,
                                 ),
@@ -577,12 +616,6 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                     ],
                   ),
                 ),
-              ),
-              // BannerAd for free users
-              ValueListenableBuilder<bool>(
-                valueListenable: freemiumService.isPremiumNotifier,
-                builder: (_, isPremium, __) =>
-                    isPremium ? const SizedBox.shrink() : const AdFooter(),
               ),
             ],
           ),
@@ -608,7 +641,7 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: AppTextSize.bodyMd,
               fontWeight: FontWeight.w600,
               color: AppTheme.primary,
             ),
@@ -640,7 +673,7 @@ class _DetailRow extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: AppTextSize.md,
                   color: AppTheme.labelGray,
                 ),
               ),
@@ -648,7 +681,7 @@ class _DetailRow extends StatelessWidget {
             Text(
               value,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: AppTextSize.md,
                 fontWeight: bold ? FontWeight.bold : FontWeight.w600,
                 color: valueColor,
               ),
