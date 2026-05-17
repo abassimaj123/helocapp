@@ -17,7 +17,8 @@ class IAPService {
       productId: productId,
       freemium: freemiumService,
       analytics: CalcwiseAnalytics(appName: 'helocapp'),
-      onPurchaseCompleted: () => CalcwiseReviewService.instance.requestReview(),
+      onPurchaseCompleted: () =>
+          CalcwiseReviewService.instance.requestAfterPurchase(),
     );
     await _iap.initialize();
     PaywallHard.registerPrice(_iap.localizedPrice);

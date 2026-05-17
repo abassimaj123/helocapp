@@ -9,15 +9,17 @@ import '../core/freemium/iap_service.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
+import '../l10n/strings_fr.dart';
 import '../main.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _setLanguage(bool isSpanish) async {
-    isSpanishNotifier.value = isSpanish;
+  Future<void> _setLanguage(String lang) async {
+    isSpanishNotifier.value = lang == 'es';
+    isFrenchNotifier.value = lang == 'fr';
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', isSpanish ? 'es' : 'en');
+    await prefs.setString('language', lang);
   }
 
   Future<void> _launch(String url) async {
@@ -32,14 +34,19 @@ class SettingsScreen extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isEs, __) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: isFrenchNotifier,
+          builder: (_, isFr, __) {
+        final headerLabel = isFr
+            ? 'LANGUE / LANGUAGE'
+            : (isEs ? 'IDIOMA / LANGUAGE' : 'LANGUAGE / IDIOMA');
         return Column(
           children: [
             Expanded(
               child: ListView(
                 children: [
                   // Language
-                  _SectionHeader(
-                      isEs ? 'IDIOMA / LANGUAGE' : 'LANGUAGE / IDIOMA'),
+                  _SectionHeader(headerLabel),
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -47,16 +54,24 @@ class SettingsScreen extends StatelessWidget {
                       Expanded(
                         child: _LangButton(
                           label: 'English',
-                          selected: !isEs,
-                          onTap: () => _setLanguage(false),
+                          selected: !isEs && !isFr,
+                          onTap: () => _setLanguage('en'),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: _LangButton(
                           label: 'Español',
                           selected: isEs,
-                          onTap: () => _setLanguage(true),
+                          onTap: () => _setLanguage('es'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _LangButton(
+                          label: 'Français',
+                          selected: isFr,
+                          onTap: () => _setLanguage('fr'),
                         ),
                       ),
                     ]),
@@ -76,9 +91,11 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 1),
 
                   // Premium
-                  _SectionHeader(isEs
-                      ? AppStringsES.premium.toUpperCase()
-                      : AppStringsEN.premium.toUpperCase()),
+                  _SectionHeader(isFr
+                      ? AppStringsFR.premium.toUpperCase()
+                      : (isEs
+                          ? AppStringsES.premium.toUpperCase()
+                          : AppStringsEN.premium.toUpperCase())),
                   ValueListenableBuilder<bool>(
                     valueListenable: freemiumService.isPremiumNotifier,
                     builder: (_, isPremium, __) {
@@ -86,52 +103,68 @@ class SettingsScreen extends StatelessWidget {
                         return ListTile(
                           leading: const Icon(Icons.verified_rounded,
                               color: Colors.amber),
-                          title: Text(isEs
-                              ? AppStringsES.premiumActive
-                              : AppStringsEN.premiumActive),
-                          subtitle: Text(isEs
-                              ? AppStringsES.premiumDesc
-                              : AppStringsEN.premiumDesc),
+                          title: Text(isFr
+                              ? AppStringsFR.premiumActive
+                              : (isEs
+                                  ? AppStringsES.premiumActive
+                                  : AppStringsEN.premiumActive)),
+                          subtitle: Text(isFr
+                              ? AppStringsFR.premiumDesc
+                              : (isEs
+                                  ? AppStringsES.premiumDesc
+                                  : AppStringsEN.premiumDesc)),
                         );
                       }
                       return Column(mainAxisSize: MainAxisSize.min, children: [
                         ListTile(
                           leading: const Icon(Icons.star_outline),
-                          title: Text(isEs
-                              ? '${AppStringsES.getPremium} — \$2.99'
-                              : '${AppStringsEN.getPremium} — \$2.99'),
-                          subtitle: Text(isEs
-                              ? AppStringsES.premiumDesc
-                              : AppStringsEN.premiumDesc),
+                          title: Text(isFr
+                              ? '${AppStringsFR.getPremium} — \$2.99'
+                              : (isEs
+                                  ? '${AppStringsES.getPremium} — \$2.99'
+                                  : '${AppStringsEN.getPremium} — \$2.99')),
+                          subtitle: Text(isFr
+                              ? AppStringsFR.premiumDesc
+                              : (isEs
+                                  ? AppStringsES.premiumDesc
+                                  : AppStringsEN.premiumDesc)),
                           trailing: const Icon(Icons.chevron_right_rounded,
                               color: AppTheme.labelGray),
                           onTap: () => IAPService.instance.buy(),
                         ),
                         ListTile(
                           leading: const Icon(Icons.restore),
-                          title: Text(isEs
-                              ? AppStringsES.restorePurchase
-                              : AppStringsEN.restorePurchase),
+                          title: Text(isFr
+                              ? AppStringsFR.restorePurchase
+                              : (isEs
+                                  ? AppStringsES.restorePurchase
+                                  : AppStringsEN.restorePurchase)),
                           onTap: () => IAPService.instance.restore(),
                         ),
                         ListTile(
                           leading: const Icon(Icons.play_circle_outline,
                               color: AppTheme.primary),
-                          title: Text(isEs
-                              ? 'Sin anuncios 60 min'
-                              : 'Ad-free for 60 min'),
-                          subtitle: Text(isEs
-                              ? 'Ver un anuncio para desbloquear'
-                              : 'Watch an ad to unlock'),
+                          title: Text(isFr
+                              ? 'Sans pub 60 min'
+                              : (isEs
+                                  ? 'Sin anuncios 60 min'
+                                  : 'Ad-free for 60 min')),
+                          subtitle: Text(isFr
+                              ? 'Regarder une pub pour débloquer'
+                              : (isEs
+                                  ? 'Ver un anuncio para desbloquear'
+                                  : 'Watch an ad to unlock')),
                           onTap: () async {
                             final earned = await adService.showRewarded();
                             if (earned) freemiumService.activateRewarded();
                             if (!earned && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(isEs
-                                      ? 'Anuncio no disponible'
-                                      : 'Ad not available'),
+                                  content: Text(isFr
+                                      ? 'Pub non disponible'
+                                      : (isEs
+                                          ? 'Anuncio no disponible'
+                                          : 'Ad not available')),
                                 ),
                               );
                             }
@@ -150,50 +183,72 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 1),
 
                   // Support
-                  _SectionHeader(isEs ? 'SOPORTE' : 'SUPPORT'),
+                  _SectionHeader(isFr
+                      ? 'SUPPORT'
+                      : (isEs ? 'SOPORTE' : 'SUPPORT')),
                   _SettingsTile(
                     icon: Icons.privacy_tip_rounded,
-                    label: isEs
-                        ? AppStringsES.privacyPolicy
-                        : AppStringsEN.privacyPolicy,
+                    label: isFr
+                        ? AppStringsFR.privacyPolicy
+                        : (isEs
+                            ? AppStringsES.privacyPolicy
+                            : AppStringsEN.privacyPolicy),
                     onTap: () => _launch('https://calqwise.com/privacy'),
                   ),
                   CalcwiseRateAppTile(
-                      label: isEs ? 'Calificar la app' : 'Rate the App'),
+                      label: isFr
+                          ? "Noter l'app"
+                          : (isEs ? 'Calificar la app' : 'Rate the App')),
                   _SettingsTile(
                     icon: Icons.email_rounded,
-                    label: isEs
-                        ? AppStringsES.contactSupport
-                        : AppStringsEN.contactSupport,
+                    label: isFr
+                        ? AppStringsFR.contactSupport
+                        : (isEs
+                            ? AppStringsES.contactSupport
+                            : AppStringsEN.contactSupport),
                     onTap: () => _launch('mailto:support@calqwise.com'),
                   ),
                   const Divider(height: 1),
 
                   // Discover
-                  _SectionHeader(isEs
-                      ? AppStringsES.discover.toUpperCase()
-                      : AppStringsEN.discover.toUpperCase()),
+                  _SectionHeader(isFr
+                      ? AppStringsFR.discover.toUpperCase()
+                      : (isEs
+                          ? AppStringsES.discover.toUpperCase()
+                          : AppStringsEN.discover.toUpperCase())),
                   _SettingsTile(
                     icon: Icons.apps_rounded,
                     label: 'CalqWise',
-                    subtitle:
-                        isEs ? AppStringsES.calqwise : AppStringsEN.calqwise,
+                    subtitle: isFr
+                        ? AppStringsFR.calqwise
+                        : (isEs
+                            ? AppStringsES.calqwise
+                            : AppStringsEN.calqwise),
                     onTap: () => _launch('https://calqwise.com'),
                   ),
                   _SettingsTile(
                     icon: Icons.grid_view_rounded,
-                    label:
-                        isEs ? 'Más apps de CalqWise' : 'More apps by CalqWise',
-                    subtitle: isEs
-                        ? 'Ver todas nuestras calculadoras'
-                        : 'See all our calculators',
+                    label: isFr
+                        ? 'Plus d\'apps CalqWise'
+                        : (isEs
+                            ? 'Más apps de CalqWise'
+                            : 'More apps by CalqWise'),
+                    subtitle: isFr
+                        ? 'Voir toutes nos calculatrices'
+                        : (isEs
+                            ? 'Ver todas nuestras calculadoras'
+                            : 'See all our calculators'),
                     onTap: () => _launch(
                         'https://play.google.com/store/apps/developer?id=CalqWise'),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: Text(
-                      isEs ? AppStringsES.disclaimer : AppStringsEN.disclaimer,
+                      isFr
+                          ? AppStringsFR.disclaimer
+                          : (isEs
+                              ? AppStringsES.disclaimer
+                              : AppStringsEN.disclaimer),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: const Color(0xFF475569),
                             fontStyle: FontStyle.italic,
@@ -206,6 +261,8 @@ class SettingsScreen extends StatelessWidget {
             ),
             const CalcwiseAdFooter(),
           ],
+        );
+          },
         );
       },
     );

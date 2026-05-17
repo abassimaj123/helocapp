@@ -16,6 +16,7 @@ import 'core/services/crashlytics_service.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/strings_en.dart';
 import 'l10n/strings_es.dart';
+import 'l10n/strings_fr.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/compare_screen.dart';
 import 'screens/draw_schedule_screen.dart';
@@ -42,6 +43,7 @@ final adService = CalcwiseAdService(
 );
 
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
+final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,10 +56,12 @@ Future<void> main() async {
   final saved = prefs.getString('language');
   if (saved != null) {
     isSpanishNotifier.value = saved == 'es';
+    isFrenchNotifier.value = saved == 'fr';
   } else {
     final locales = PlatformDispatcher.instance.locales;
     final lang = locales.isNotEmpty ? locales.first.languageCode : 'en';
     isSpanishNotifier.value = lang == 'es';
+    isFrenchNotifier.value = lang == 'fr';
   }
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -135,10 +139,15 @@ class HELOCApp extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isEs, __) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: isFrenchNotifier,
+          builder: (_, isFr, __) {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: themeModeService.notifier,
           builder: (context, themeMode, child) => MaterialApp(
-            title: isEs ? AppStringsES.appName : AppStringsEN.appName,
+            title: isFr
+                ? AppStringsFR.appName
+                : (isEs ? AppStringsES.appName : AppStringsEN.appName),
             theme: AppTheme.theme,
             darkTheme: AppTheme.dark,
             themeMode: themeMode,
@@ -150,6 +159,8 @@ class HELOCApp extends StatelessWidget {
               '/heloc-vs-cashout': (_) => const HelocVsCashoutScreen(),
             },
           ),
+        );
+          },
         );
       },
     );
@@ -172,8 +183,8 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _wasPremium = freemiumService.hasFullAccess;
     isSpanishNotifier.addListener(_onLangChange);
+    isFrenchNotifier.addListener(_onLangChange);
     freemiumService.isPremiumNotifier.addListener(_onPremiumChange);
-    iapErrorNotifier.addListener(_onIapError);
     WidgetsBinding.instance.addPostFrameCallback(
         (_) async => await paywallSession.recordSession());
   }
@@ -181,8 +192,8 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     isSpanishNotifier.removeListener(_onLangChange);
+    isFrenchNotifier.removeListener(_onLangChange);
     freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
-    iapErrorNotifier.removeListener(_onIapError);
     super.dispose();
   }
 
@@ -191,17 +202,9 @@ class _MainShellState extends State<MainShell> {
   void _onPremiumChange() {
     final now = freemiumService.hasFullAccess;
     if (now && !_wasPremium && mounted) {
-      final isEs = isSpanishNotifier.value;
       showPremiumWelcomeSnackBar(context, isSpanish: isSpanishNotifier.value);
     }
     _wasPremium = now;
-  }
-
-  void _onIapError() {
-    final msg = iapErrorNotifier.value;
-    if (msg == null || !mounted) return;
-    showIapErrorSnackBar(context, msg);
-    iapErrorNotifier.value = null;
   }
 
   @override
