@@ -142,24 +142,24 @@ class HELOCApp extends StatelessWidget {
         return ValueListenableBuilder<bool>(
           valueListenable: isFrenchNotifier,
           builder: (_, isFr, __) {
-        return ValueListenableBuilder<ThemeMode>(
-          valueListenable: themeModeService.notifier,
-          builder: (context, themeMode, child) => MaterialApp(
-            title: isFr
-                ? AppStringsFR.appName
-                : (isEs ? AppStringsES.appName : AppStringsEN.appName),
-            theme: AppTheme.theme,
-            darkTheme: AppTheme.dark,
-            themeMode: themeMode,
-            debugShowCheckedModeBanner: false,
-            home: const SplashScreen(),
-            routes: {
-              '/home': (_) => const MainShell(),
-              '/payment-shock': (_) => const PaymentShockScreen(),
-              '/heloc-vs-cashout': (_) => const HelocVsCashoutScreen(),
-            },
-          ),
-        );
+            return ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeModeService.notifier,
+              builder: (context, themeMode, child) => MaterialApp(
+                title: isFr
+                    ? AppStringsFR.appName
+                    : (isEs ? AppStringsES.appName : AppStringsEN.appName),
+                theme: AppTheme.theme,
+                darkTheme: AppTheme.dark,
+                themeMode: themeMode,
+                debugShowCheckedModeBanner: false,
+                home: const SplashScreen(),
+                routes: {
+                  '/home': (_) => const MainShell(),
+                  '/payment-shock': (_) => const PaymentShockScreen(),
+                  '/heloc-vs-cashout': (_) => const HelocVsCashoutScreen(),
+                },
+              ),
+            );
           },
         );
       },
