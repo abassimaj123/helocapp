@@ -715,11 +715,26 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
   Widget _buildResults(bool isEs) {
     final results = _results!;
     final optimal = _optimalIndex!;
+    final optimalResult = results[optimal];
     final allAtOnceTotal =
         results.firstWhere((r) => r.label == 'All at Once').totalInterest;
     final spreadTotal =
         results.firstWhere((r) => r.label == 'Spread Evenly').totalInterest;
     final savings = allAtOnceTotal - spreadTotal;
+
+    String _optimalLocalLabel() {
+      if (isEs) {
+        switch (optimalResult.label) {
+          case 'Your Plan':
+            return 'Tu Plan';
+          case 'All at Once':
+            return 'Todo a la Vez';
+          case 'Spread Evenly':
+            return 'Distribuido';
+        }
+      }
+      return optimalResult.label;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,6 +745,30 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
               fontWeight: FontWeight.bold, fontSize: AppTextSize.subtitle),
         ),
         const SizedBox(height: 12),
+
+        // Hero KPI — optimal strategy total interest
+        Semantics(
+          label:
+              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${_fmt.format(optimalResult.totalInterest)}',
+          child: CalcwiseHeroCard(
+            label: isEs ? 'Mejor Estrategia' : 'Best Strategy',
+            value: _fmt.format(optimalResult.totalInterest),
+            secondary: _optimalLocalLabel(),
+            stats: [
+              (
+                label: isEs ? 'Interés en disposición' : 'Draw Phase Interest',
+                value: _fmt.format(optimalResult.interestDuringDraw),
+              ),
+              (
+                label: isEs ? 'Plazo total' : 'Payoff Timeline',
+                value: isEs
+                    ? '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} años'
+                    : '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} yrs',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
 
         ...results.asMap().entries.map((entry) {
           final i = entry.key;
