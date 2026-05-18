@@ -346,7 +346,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     child: Row(children: [
                       const Icon(Icons.info_outline,
                           color: AppTheme.primary, size: 18),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           isEs
@@ -359,7 +359,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                       ),
                     ]),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // Parameters
                   Text(
@@ -368,20 +368,20 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                         fontWeight: FontWeight.bold,
                         fontSize: AppTextSize.bodyLg),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _buildField(
                     ctrl: _creditLimitCtrl,
                     label:
                         isEs ? 'Límite de crédito (\$)' : 'Credit Limit (\$)',
                     hint: '150000',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _buildField(
                     ctrl: _rateCtrl,
                     label: isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)',
                     hint: '8.5',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(children: [
                     Expanded(
                       child: _buildField(
@@ -393,7 +393,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                         intOnly: true,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _buildField(
                         ctrl: _repayYearsCtrl,
@@ -405,7 +405,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     ),
                   ]),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xxl),
 
                   // Planned draws
                   Row(children: [
@@ -428,7 +428,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                             foregroundColor: AppTheme.primary),
                       ),
                   ]),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
 
                   ..._draws.asMap().entries.map((entry) {
                     final i = entry.key;
@@ -448,7 +448,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     );
                   }),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xxl),
 
                   ElevatedButton.icon(
                     onPressed: _optimize,
@@ -458,11 +458,11 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                   ),
 
                   if (_results != null) ...[
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.xxlPlus),
                     _buildResults(isEs),
                   ],
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: AppSpacing.xxlPlus),
 
                   // ── Variable Rate Simulation (Premium) ─────────────────
                   ValueListenableBuilder<bool>(
@@ -479,7 +479,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 80), // intentional large scroll buffer
                 ],
               ),
             ),
@@ -503,7 +503,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
         // Section header
         Row(children: [
           const Icon(Icons.show_chart, color: AppTheme.primary, size: 18),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               isEs ? 'Simulación de Tasa Variable' : 'Variable Rate Simulation',
@@ -520,7 +520,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.star_rounded, color: CalcwiseSemanticColors.warnIcon, size: 12),
-              const SizedBox(width: 3),
+              const SizedBox(width: AppSpacing.xxs),
               const Text('Premium',
                   style: TextStyle(
                       fontSize: 10,
@@ -529,7 +529,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ]),
           ),
         ]),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           isEs
               ? 'Simula cómo cambios en la tasa prime afectan tu costo total.'
@@ -537,7 +537,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
           style: const TextStyle(
               fontSize: AppTextSize.sm, color: AppTheme.labelGray),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Base rate inputs: prime + margin
         Card(
@@ -551,7 +551,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: AppTextSize.body),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.smPlus),
                 Row(children: [
                   Expanded(
                     child: _buildField(
@@ -575,7 +575,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                       hint: '0.5',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   // Effective rate badge
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: _primeRateCtrl,
@@ -613,7 +613,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Rate change events
         Card(
@@ -644,7 +644,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 8)),
                     ),
                 ]),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 if (_rateSteps.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -678,7 +678,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Run simulation button
         ElevatedButton.icon(
@@ -692,7 +692,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
 
         // Results
         if (_varRateSchedule != null && _varRateExpanded) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           _VarRateResults(
             schedule: _varRateSchedule!,
             rateSteps: [
@@ -744,7 +744,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
           style: const TextStyle(
               fontWeight: FontWeight.bold, fontSize: AppTextSize.subtitle),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Hero KPI — optimal strategy total interest
         Semantics(
@@ -768,7 +768,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         ...results.asMap().entries.map((entry) {
           final i = entry.key;
@@ -783,7 +783,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
           );
         }),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Summary banner
         Container(
@@ -796,7 +796,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
           child: Row(children: [
             const Icon(Icons.savings_rounded,
                 color: AppTheme.success, size: 24),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 savings > 0
@@ -904,7 +904,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
   Widget build(BuildContext context) {
     final isEs = widget.isEs;
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: AppSpacing.smPlus),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.mdPlus),
         child: Column(
@@ -935,7 +935,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
                   onPressed: widget.onRemove,
                 ),
             ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.smPlus),
             TextFormField(
               controller: _nameCtrl,
               onChanged: (_) => _notify(),
@@ -945,7 +945,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
                     isEs ? 'ej. Remodelación cocina' : 'e.g. Kitchen Reno',
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.smPlus),
             Row(children: [
               Expanded(
                 flex: 2,
@@ -963,7 +963,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: TextFormField(
                   controller: _monthCtrl,
@@ -1049,7 +1049,7 @@ class _StrategyCard extends StatelessWidget {
                 ),
               ),
               if (isOptimal) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1068,7 +1068,7 @@ class _StrategyCard extends StatelessWidget {
                 ),
               ],
             ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.smPlus),
             Row(children: [
               _Metric(
                 label:
@@ -1076,21 +1076,21 @@ class _StrategyCard extends StatelessWidget {
                 value: fmt.format(result.interestDuringDraw),
                 color: AppTheme.labelGray,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               _Metric(
                 label: isEs ? 'Balance al final' : 'Balance at Draw End',
                 value: fmt.format(result.balanceAtDrawEnd),
                 color: AppTheme.primary,
               ),
             ]),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(children: [
               _Metric(
                 label: isEs ? 'Interés total' : 'Total Interest',
                 value: fmt.format(result.totalInterest),
                 color: CalcwiseSemanticColors.errorDark,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               _Metric(
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
                 value: isEs ? '$years años' : '$years yrs',
@@ -1123,7 +1123,7 @@ class _Metric extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.xxs),
           Text(value,
               style: TextStyle(
                   fontSize: AppTextSize.body,
@@ -1212,7 +1212,7 @@ class _RateStepCardState extends State<_RateStepCard> {
                 color: CalcwiseSemanticColors.warnIcon),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.smPlus),
         // Year field
         Expanded(
           child: TextFormField(
@@ -1257,7 +1257,7 @@ class _RateStepCardState extends State<_RateStepCard> {
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.xs),
         IconButton(
           icon: const Icon(Icons.close_rounded,
               size: 16, color: AppTheme.labelGray),
@@ -1368,7 +1368,7 @@ class _VarRateResults extends StatelessWidget {
                 Row(children: [
                   const Icon(Icons.summarize_rounded,
                       color: AppTheme.primary, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     isEs ? 'Resumen: Tasa Variable' : 'Variable Rate Summary',
                     style: const TextStyle(
@@ -1376,7 +1376,7 @@ class _VarRateResults extends StatelessWidget {
                         fontWeight: FontWeight.w600),
                   ),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 // Rate step legend
                 Wrap(
                   spacing: 8,
@@ -1409,7 +1409,7 @@ class _VarRateResults extends StatelessWidget {
                           ))
                       .toList(),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.mdPlus),
                 Row(children: [
                   Expanded(
                     child: _VarMetric(
@@ -1420,7 +1420,7 @@ class _VarRateResults extends StatelessWidget {
                       color: Colors.red.shade700,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _VarMetric(
                       label: isEs
@@ -1431,7 +1431,7 @@ class _VarRateResults extends StatelessWidget {
                     ),
                   ),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.smPlus),
                   decoration: BoxDecoration(
@@ -1451,7 +1451,7 @@ class _VarRateResults extends StatelessWidget {
                           : CalcwiseSemanticColors.successDark,
                       size: 18,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         diff > 0
@@ -1478,7 +1478,7 @@ class _VarRateResults extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Cumulative interest chart
         Card(
@@ -1494,7 +1494,7 @@ class _VarRateResults extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: AppTextSize.body),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   isEs
                       ? 'Las líneas naranjas indican cambios de tasa'
@@ -1502,7 +1502,7 @@ class _VarRateResults extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: AppTextSize.xs, color: AppTheme.labelGray),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final chartHeight =
@@ -1613,7 +1613,7 @@ class _VarRateResults extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Monthly payment table for first 24 months
         _VarRateMonthlyTable(
@@ -1639,7 +1639,7 @@ class _VarMetric extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label,
           style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
-      const SizedBox(height: 3),
+      const SizedBox(height: AppSpacing.xxs),
       Text(value,
           style: TextStyle(
               fontSize: AppTextSize.bodyMd,
@@ -1675,7 +1675,7 @@ class _VarRateMonthlyTable extends StatelessWidget {
               style: const TextStyle(
                   fontWeight: FontWeight.w600, fontSize: AppTextSize.body),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.smPlus),
             // Header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -1690,7 +1690,7 @@ class _VarRateMonthlyTable extends StatelessWidget {
                 _th(isEs ? 'Balance' : 'Balance', flex: 3),
               ]),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             ...schedule.map((row) {
               final month = row['month']!.toInt();
               final rate = row['rate']!;
