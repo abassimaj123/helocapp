@@ -512,14 +512,16 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm, vertical: 3),
             decoration: BoxDecoration(
               color: CalcwiseSemanticColors.warnBg,
               borderRadius: BorderRadius.circular(AppRadius.mdPlus),
               border: Border.all(color: CalcwiseSemanticColors.warnBorder),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.star_rounded, color: CalcwiseSemanticColors.warnIcon, size: 12),
+              const Icon(Icons.star_rounded,
+                  color: CalcwiseSemanticColors.warnIcon, size: 12),
               const SizedBox(width: AppSpacing.xxs),
               const Text('Premium',
                   style: TextStyle(
@@ -561,7 +563,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.smPlus),
                     child: Text('+',
                         style: TextStyle(
                             fontSize: AppTextSize.subtitle,
@@ -641,13 +644,15 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                           style: const TextStyle(fontSize: AppTextSize.sm)),
                       style: TextButton.styleFrom(
                           foregroundColor: AppTheme.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm)),
                     ),
                 ]),
                 const SizedBox(height: AppSpacing.xs),
                 if (_rateSteps.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                     child: Text(
                       isEs
                           ? 'Sin cambios de tasa — se usa la tasa base para todo el período.'
@@ -912,7 +917,8 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
           children: [
             Row(children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1051,8 +1057,8 @@ class _StrategyCard extends StatelessWidget {
               if (isOptimal) ...[
                 const SizedBox(width: AppSpacing.sm),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppTheme.success,
                     borderRadius: BorderRadius.circular(AppRadius.xxl),
@@ -1199,7 +1205,8 @@ class _RateStepCardState extends State<_RateStepCard> {
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
           decoration: BoxDecoration(
             color: CalcwiseSemanticColors.warnBg,
             borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1226,8 +1233,8 @@ class _RateStepCardState extends State<_RateStepCard> {
               labelText: isEs ? 'Año' : 'Year',
               hintText: '2',
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
             ),
           ),
         ),
@@ -1252,8 +1259,8 @@ class _RateStepCardState extends State<_RateStepCard> {
               labelText: isEs ? 'Nueva tasa (%)' : 'New Rate (%)',
               hintText: '9.5',
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
             ),
           ),
         ),
@@ -1339,7 +1346,8 @@ class _VarRateResults extends StatelessWidget {
         label: VerticalLineLabel(
           show: true,
           labelResolver: (_) => '${s.ratePct.toStringAsFixed(1)}%',
-          style: const TextStyle(fontSize: 9, color: CalcwiseSemanticColors.warnIcon),
+          style: const TextStyle(
+              fontSize: 9, color: CalcwiseSemanticColors.warnIcon),
         ),
       );
     }).toList();
@@ -1435,7 +1443,9 @@ class _VarRateResults extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.smPlus),
                   decoration: BoxDecoration(
-                    color: diff > 0 ? CalcwiseSemanticColors.errorBg : CalcwiseSemanticColors.successBg,
+                    color: diff > 0
+                        ? CalcwiseSemanticColors.errorBg
+                        : CalcwiseSemanticColors.successBg,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
                       color: diff > 0
@@ -1599,7 +1609,8 @@ class _VarRateResults extends StatelessWidget {
                                     dotData: const FlDotData(show: false),
                                     belowBarData: BarAreaData(
                                       show: true,
-                                      color: CalcwiseSemanticColors.errorDark.withValues(alpha: 0.07),
+                                      color: CalcwiseSemanticColors.errorDark
+                                          .withValues(alpha: 0.07),
                                     ),
                                   ),
                                 ],
@@ -1678,7 +1689,8 @@ class _VarRateMonthlyTable extends StatelessWidget {
             const SizedBox(height: AppSpacing.smPlus),
             // Header
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 6, horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1698,7 +1710,8 @@ class _VarRateMonthlyTable extends StatelessWidget {
               final balance = row['balance']!;
               final isDrawPhase = (row['phase'] ?? 0).toInt() == 0;
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 3, horizontal: AppSpacing.sm),
                 child: Row(children: [
                   Expanded(
                       flex: 1,

@@ -248,7 +248,8 @@ class SettingsScreen extends StatelessWidget {
                             'https://play.google.com/store/apps/developer?id=CalqWise'),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                            AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
                         child: Text(
                           isFr
                               ? AppStringsFR.disclaimer
@@ -282,7 +283,8 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 6),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 6),
         child: Text(
           title,
           style: const TextStyle(

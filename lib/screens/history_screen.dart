@@ -102,7 +102,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(isEs ? 'Borrar' : 'Clear',
-                style: const TextStyle(color: CalcwiseSemanticColors.errorDark)),
+                style:
+                    const TextStyle(color: CalcwiseSemanticColors.errorDark)),
           ),
         ],
       ),
@@ -128,7 +129,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                              AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
                           child: ValueListenableBuilder<bool>(
                             valueListenable: freemiumService.isPremiumNotifier,
                             builder: (_, isPremium, __) => Column(
@@ -149,11 +151,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     TextButton.icon(
                                       onPressed: _clearAll,
                                       icon: const Icon(Icons.delete_sweep,
-                                          size: 16, color: CalcwiseSemanticColors.errorDark),
+                                          size: 16,
+                                          color:
+                                              CalcwiseSemanticColors.errorDark),
                                       label: Text(
                                         isEs ? 'Borrar todo' : 'Clear all',
                                         style: const TextStyle(
-                                            color: CalcwiseSemanticColors.errorDark,
+                                            color: CalcwiseSemanticColors
+                                                .errorDark,
                                             fontSize: AppTextSize.md),
                                       ),
                                     ),
@@ -162,7 +167,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   const SizedBox(height: AppSpacing.xs),
                                   Row(children: [
                                     const Icon(Icons.lock_outline,
-                                        size: 13, color: CalcwiseSemanticColors.warnIcon),
+                                        size: 13,
+                                        color: CalcwiseSemanticColors.warnIcon),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
@@ -215,7 +221,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         )
                       else
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+                          padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
@@ -282,17 +289,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                       ),
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: AppSpacing.smPlus),
+                                      padding: const EdgeInsets.only(
+                                          bottom: AppSpacing.smPlus),
                                       child: Dismissible(
                                         key: ValueKey(id),
                                         direction: DismissDirection.endToStart,
                                         background: Container(
                                           alignment: Alignment.centerRight,
-                                          padding:
-                                              const EdgeInsets.only(right: AppSpacing.xl),
+                                          padding: const EdgeInsets.only(
+                                              right: AppSpacing.xl),
                                           decoration: BoxDecoration(
-                                            color: CalcwiseSemanticColors.errorBorder,
+                                            color: CalcwiseSemanticColors
+                                                .errorBorder,
                                             borderRadius: BorderRadius.circular(
                                                 AppRadius.xl),
                                           ),
@@ -327,7 +335,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                         ? 'Eliminar'
                                                         : 'Delete',
                                                     style: const TextStyle(
-                                                        color: CalcwiseSemanticColors.errorDark),
+                                                        color:
+                                                            CalcwiseSemanticColors
+                                                                .errorDark),
                                                   ),
                                                 ),
                                               ],
@@ -394,7 +404,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                         color:
                                                             AppTheme.labelGray),
                                                   ]),
-                                                  const SizedBox(height: AppSpacing.sm),
+                                                  const SizedBox(
+                                                      height: AppSpacing.sm),
                                                   _HistoryRow(
                                                     label: isEs
                                                         ? 'Hipoteca actual'

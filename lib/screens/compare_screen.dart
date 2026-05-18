@@ -630,7 +630,8 @@ class _CompareScreenState extends State<CompareScreen> {
     required Color winColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 5),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 5),
       decoration: BoxDecoration(
         color: isWinner ? winColor.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.sm),
