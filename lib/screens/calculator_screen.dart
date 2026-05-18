@@ -1930,7 +1930,8 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                   border: Border.all(color: CalcwiseSemanticColors.warnBorder),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.star_rounded, color: CalcwiseSemanticColors.warnIcon, size: 12),
+                  const Icon(Icons.star_rounded,
+                      color: CalcwiseSemanticColors.warnIcon, size: 12),
                   const SizedBox(width: 3),
                   Text('Premium',
                       style: const TextStyle(
