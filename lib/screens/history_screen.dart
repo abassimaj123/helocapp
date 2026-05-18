@@ -128,7 +128,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
                           child: ValueListenableBuilder<bool>(
                             valueListenable: freemiumService.isPremiumNotifier,
                             builder: (_, isPremium, __) => Column(
@@ -159,7 +159,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     ),
                                 ]),
                                 if (!isPremium) ...[
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Row(children: [
                                     const Icon(Icons.lock_outline,
                                         size: 13, color: CalcwiseSemanticColors.warnIcon),
@@ -215,7 +215,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         )
                       else
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
@@ -283,14 +283,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                     Padding(
                                       padding:
-                                          const EdgeInsets.only(bottom: 10),
+                                          const EdgeInsets.only(bottom: AppSpacing.smPlus),
                                       child: Dismissible(
                                         key: ValueKey(id),
                                         direction: DismissDirection.endToStart,
                                         background: Container(
                                           alignment: Alignment.centerRight,
                                           padding:
-                                              const EdgeInsets.only(right: 20),
+                                              const EdgeInsets.only(right: AppSpacing.xl),
                                           decoration: BoxDecoration(
                                             color: CalcwiseSemanticColors.errorBorder,
                                             borderRadius: BorderRadius.circular(
@@ -327,7 +327,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                         ? 'Eliminar'
                                                         : 'Delete',
                                                     style: const TextStyle(
-                                                        color: Colors.red),
+                                                        color: CalcwiseSemanticColors.errorDark),
                                                   ),
                                                 ),
                                               ],
@@ -394,7 +394,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                         color:
                                                             AppTheme.labelGray),
                                                   ]),
-                                                  const SizedBox(height: 8),
+                                                  const SizedBox(height: AppSpacing.sm),
                                                   _HistoryRow(
                                                     label: isEs
                                                         ? 'Hipoteca actual'
@@ -489,7 +489,7 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

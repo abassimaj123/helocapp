@@ -162,7 +162,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                       child: Row(children: [
                         const Icon(Icons.warning_amber_rounded,
                             color: _piColor, size: 18),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.smPlus),
                         Expanded(
                           child: Text(
                             isEs
@@ -174,20 +174,20 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                         ),
                       ]),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(isEs
                         ? 'Saldo al final del período'
                         : 'Balance at End of Draw'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                       ctrl: _balanceCtrl,
                       label: isEs ? 'Saldo (\$)' : 'Balance (\$)',
                       hint: '100000',
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     _sectionHeader(
                         isEs ? 'Período de pago' : 'Repayment Period'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     SegmentedButton<int>(
                       segments: const [
                         ButtonSegment(value: 10, label: Text('10 yr')),
@@ -200,19 +200,19 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                         _tryCompute();
                       }),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     _sectionHeader(isEs ? 'Tasa actual' : 'Current Rate'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                       ctrl: _currentRateCtrl,
                       label: isEs ? 'Tasa actual (%)' : 'Current Rate (%)',
                       hint: '8.5',
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     _sectionHeader(isEs
                         ? 'Tasa proyectada al final'
                         : 'Projected Rate at End of Draw'),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Row(children: [
                       Expanded(
                         child: Slider(
@@ -236,7 +236,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                         ),
                       ),
                     ]),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     ElevatedButton.icon(
                       onPressed: () => _compute(),
                       style: ElevatedButton.styleFrom(
@@ -247,7 +247,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                       icon: const Icon(Icons.bolt),
                       label: Text(isEs ? 'Calcular choque' : 'Calculate Shock'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     OutlinedButton(
                       onPressed: _reset,
                       style: OutlinedButton.styleFrom(
@@ -257,7 +257,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                       ),
                       child: Text(isEs ? 'Limpiar' : 'Reset'),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,
                       child: _result == null
@@ -309,7 +309,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                     height: 1.0,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.smPlus),
                 Text(
                   isEs
                       ? 'Tu pago pasa de ${_fmtDec.format(r.ioPayment)}/mes a ${_fmtDec.format(r.piPayment)}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
@@ -320,18 +320,18 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         Row(children: [
           Expanded(
               child: _metricCard(isEs ? 'Choque' : 'Shock',
                   '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
               child: _metricCard(isEs ? 'Aumento' : 'Increase',
                   '+${_fmtDec.format(r.dollarIncrease)}', _piColor)),
         ]),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         _metricCard(
           isEs
               ? 'Interés total durante el pago'
@@ -340,13 +340,13 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
           _ioColor,
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Text(
           isEs ? 'Comparación mensual' : 'Monthly payment comparison',
           style: const TextStyle(
               fontWeight: FontWeight.bold, fontSize: AppTextSize.body),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(height: 200, child: _buildBarChart(isEs, r)),
       ],
     );
@@ -375,7 +375,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                     ? (isEs ? 'Solo interés' : 'Interest-only')
                     : (isEs ? 'P + I' : 'P + I');
                 return Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
                   child: Text(label,
                       style: const TextStyle(fontSize: AppTextSize.xs)),
                 );

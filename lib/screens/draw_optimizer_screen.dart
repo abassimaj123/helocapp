@@ -512,7 +512,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
             decoration: BoxDecoration(
               color: CalcwiseSemanticColors.warnBg,
               borderRadius: BorderRadius.circular(AppRadius.mdPlus),
@@ -561,7 +561,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus),
                     child: Text('+',
                         style: TextStyle(
                             fontSize: AppTextSize.subtitle,
@@ -641,13 +641,13 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                           style: const TextStyle(fontSize: AppTextSize.sm)),
                       style: TextButton.styleFrom(
                           foregroundColor: AppTheme.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 8)),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm)),
                     ),
                 ]),
                 const SizedBox(height: AppSpacing.xs),
                 if (_rateSteps.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                     child: Text(
                       isEs
                           ? 'Sin cambios de tasa — se usa la tasa base para todo el período.'
@@ -912,7 +912,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
           children: [
             Row(children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1026,7 +1026,7 @@ class _StrategyCard extends StatelessWidget {
     final years = (result.payoffMonths / 12).toStringAsFixed(1);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: isOptimal
             ? AppTheme.success.withValues(alpha: 0.04)
@@ -1052,7 +1052,7 @@ class _StrategyCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppTheme.success,
                     borderRadius: BorderRadius.circular(AppRadius.xxl),
@@ -1190,7 +1190,7 @@ class _RateStepCardState extends State<_RateStepCard> {
   Widget build(BuildContext context) {
     final isEs = widget.isEs;
     return Container(
-      margin: const EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: CalcwiseSemanticColors.warnBg,
@@ -1199,7 +1199,7 @@ class _RateStepCardState extends State<_RateStepCard> {
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
           decoration: BoxDecoration(
             color: CalcwiseSemanticColors.warnBg,
             borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1227,12 +1227,12 @@ class _RateStepCardState extends State<_RateStepCard> {
               hintText: '2',
               isDense: true,
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           child: const Text('→',
               style: TextStyle(
                   fontSize: AppTextSize.bodyLg,
@@ -1253,7 +1253,7 @@ class _RateStepCardState extends State<_RateStepCard> {
               hintText: '9.5',
               isDense: true,
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.smPlus, vertical: AppSpacing.smPlus),
             ),
           ),
         ),
@@ -1333,13 +1333,13 @@ class _VarRateResults extends StatelessWidget {
       final month = (s.startYear - 1) * 12 + 1.0;
       return VerticalLine(
         x: month,
-        color: Colors.orange.withValues(alpha: 0.7),
+        color: CalcwiseSemanticColors.warnIcon.withValues(alpha: 0.7),
         strokeWidth: 1.5,
         dashArray: [4, 3],
         label: VerticalLineLabel(
           show: true,
           labelResolver: (_) => '${s.ratePct.toStringAsFixed(1)}%',
-          style: const TextStyle(fontSize: 9, color: Colors.orange),
+          style: const TextStyle(fontSize: 9, color: CalcwiseSemanticColors.warnIcon),
         ),
       );
     }).toList();
@@ -1355,8 +1355,8 @@ class _VarRateResults extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.xl),
             side: BorderSide(
               color: diff > 0
-                  ? Colors.red.withValues(alpha: 0.3)
-                  : Colors.green.withValues(alpha: 0.3),
+                  ? CalcwiseSemanticColors.errorDark.withValues(alpha: 0.3)
+                  : CalcwiseSemanticColors.successDeep.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -1388,12 +1388,12 @@ class _VarRateResults extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: s.startYear == 1
                                   ? AppTheme.primary.withValues(alpha: 0.1)
-                                  : Colors.orange.shade50,
+                                  : CalcwiseSemanticColors.alertText,
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               border: Border.all(
                                 color: s.startYear == 1
                                     ? AppTheme.primary.withValues(alpha: 0.3)
-                                    : Colors.orange.shade200,
+                                    : CalcwiseSemanticColors.alertText,
                               ),
                             ),
                             child: Text(
@@ -1403,7 +1403,7 @@ class _VarRateResults extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: s.startYear == 1
                                     ? AppTheme.primary
-                                    : Colors.orange.shade800,
+                                    : CalcwiseSemanticColors.alertText,
                               ),
                             ),
                           ))
@@ -1417,7 +1417,7 @@ class _VarRateResults extends StatelessWidget {
                           ? 'Interés total (variable)'
                           : 'Total Interest (Variable)',
                       value: fmt.format(totalInterest),
-                      color: Colors.red.shade700,
+                      color: CalcwiseSemanticColors.errorDark,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -1594,12 +1594,12 @@ class _VarRateResults extends StatelessWidget {
                                   LineChartBarData(
                                     spots: interestSpots,
                                     isCurved: true,
-                                    color: Colors.red.shade600,
+                                    color: CalcwiseSemanticColors.errorDark,
                                     barWidth: 2.5,
                                     dotData: const FlDotData(show: false),
                                     belowBarData: BarAreaData(
                                       show: true,
-                                      color: Colors.red.withValues(alpha: 0.07),
+                                      color: CalcwiseSemanticColors.errorDark.withValues(alpha: 0.07),
                                     ),
                                   ),
                                 ],
@@ -1678,7 +1678,7 @@ class _VarRateMonthlyTable extends StatelessWidget {
             const SizedBox(height: AppSpacing.smPlus),
             // Header
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1698,7 +1698,7 @@ class _VarRateMonthlyTable extends StatelessWidget {
               final balance = row['balance']!;
               final isDrawPhase = (row['phase'] ?? 0).toInt() == 0;
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: AppSpacing.sm),
                 child: Row(children: [
                   Expanded(
                       flex: 1,
