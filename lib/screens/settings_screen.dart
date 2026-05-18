@@ -58,7 +58,7 @@ class SettingsScreen extends StatelessWidget {
                               onTap: () => _setLanguage('en'),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: _LangButton(
                               label: 'Español',
@@ -66,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
                               onTap: () => _setLanguage('es'),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: _LangButton(
                               label: 'Français',
@@ -102,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
                           if (isPremium) {
                             return ListTile(
                               leading: const Icon(Icons.verified_rounded,
-                                  color: Colors.amber),
+                                  color: CalcwiseSemanticColors.warnIcon),
                               title: Text(isFr
                                   ? AppStringsFR.premiumActive
                                   : (isEs
@@ -179,7 +179,7 @@ class SettingsScreen extends StatelessWidget {
                                 if (kDebugMode)
                                   ListTile(
                                     leading: const Icon(Icons.bug_report,
-                                        color: Colors.orange),
+                                        color: CalcwiseSemanticColors.warnIcon),
                                     title: const Text('Force Premium (DEV)'),
                                     onTap: () =>
                                         freemiumService.debugUnlockPremium(),
@@ -248,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
                             'https://play.google.com/store/apps/developer?id=CalqWise'),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
                         child: Text(
                           isFr
                               ? AppStringsFR.disclaimer
@@ -262,7 +262,7 @@ class SettingsScreen extends StatelessWidget {
                                   ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
@@ -282,7 +282,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 6),
         child: Text(
           title,
           style: const TextStyle(
@@ -307,7 +307,7 @@ class _LangButton extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: AppDuration.fast,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           decoration: BoxDecoration(
             color: selected ? AppTheme.primary : Colors.transparent,
             border: Border.all(

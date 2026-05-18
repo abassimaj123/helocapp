@@ -284,7 +284,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                       child: Row(children: [
                         const Icon(Icons.info_outline,
                             color: _helocColor, size: 18),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.smPlus),
                         Expanded(
                           child: Text(
                             isEs
@@ -296,31 +296,31 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                         ),
                       ]),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(isEs ? 'Vivienda' : 'Home'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                         ctrl: _homeValueCtrl,
                         label: isEs
                             ? 'Valor de la vivienda (\$)'
                             : 'Home value (\$)',
                         hint: '500000'),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(
                         isEs ? 'Hipoteca existente' : 'Existing mortgage'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                         ctrl: _existingBalCtrl,
                         label: isEs ? 'Saldo (\$)' : 'Balance (\$)',
                         hint: '250000'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Row(children: [
                       Expanded(
                           child: _field(
                               ctrl: _existingRateCtrl,
                               label: isEs ? 'Tasa (%)' : 'Rate (%)',
                               hint: '4.0')),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                           child: _field(
                               ctrl: _existingYearsCtrl,
@@ -328,39 +328,39 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                               hint: '25',
                               intOnly: true)),
                     ]),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(isEs ? 'Efectivo necesario' : 'Cash needed'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                         ctrl: _cashCtrl,
                         label: isEs ? 'Monto (\$)' : 'Amount (\$)',
                         hint: '75000'),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(isEs ? 'Tasas' : 'Rates', color: _refiColor),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Row(children: [
                       Expanded(
                           child: _field(
                               ctrl: _helocRateCtrl,
                               label: isEs ? 'Tasa HELOC (%)' : 'HELOC rate (%)',
                               hint: '8.5')),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                           child: _field(
                               ctrl: _refiRateCtrl,
                               label: isEs ? 'Tasa Refi (%)' : 'Refi rate (%)',
                               hint: '6.5')),
                     ]),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(
                         isEs ? 'Costos de cierre Refi' : 'Refi closing costs',
                         color: _refiColor),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     _field(
                         ctrl: _closingPctCtrl,
                         label: isEs ? 'Porcentaje (%)' : 'Percent (%)',
                         hint: '3'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
@@ -375,7 +375,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                         _tryCompute();
                       }),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     ElevatedButton.icon(
                       onPressed: () => _compute(),
                       style: ElevatedButton.styleFrom(
@@ -386,7 +386,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                       icon: const Icon(Icons.compare_arrows),
                       label: Text(isEs ? 'Comparar' : 'Compare'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     OutlinedButton(
                       onPressed: _reset,
                       style: OutlinedButton.styleFrom(
@@ -396,7 +396,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                       ),
                       child: Text(isEs ? 'Limpiar' : 'Reset'),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,
                       child: _result == null
@@ -431,7 +431,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
           child: Row(children: [
             const Icon(Icons.emoji_events_rounded,
                 color: Colors.white, size: 24),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 isEs
@@ -449,7 +449,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
             ),
           ]),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         ComparisonView(
           title: isEs ? 'Comparación' : 'Comparison',
@@ -488,7 +488,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Breakeven
         if (r.breakevenMonths < 9999)
@@ -501,7 +501,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
             ),
             child: Row(children: [
               const Icon(Icons.timeline, color: _refiColor, size: 16),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   isEs

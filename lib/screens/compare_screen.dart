@@ -168,7 +168,7 @@ class _CompareScreenState extends State<CompareScreen> {
                     child: Row(children: [
                       const Icon(Icons.info_outline,
                           color: _helocColor, size: 18),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.smPlus),
                       Expanded(
                         child: Text(
                           isEs
@@ -180,12 +180,12 @@ class _CompareScreenState extends State<CompareScreen> {
                       ),
                     ]),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── Shared input ───────────────────────────────────────
                   _sectionHeader(
                       isEs ? 'Capital a financiar' : 'Amount to Finance'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _field(
                     ctrl: _drawCtrl,
                     label: isEs ? 'Monto (\$)' : 'Amount (\$)',
@@ -195,14 +195,14 @@ class _CompareScreenState extends State<CompareScreen> {
                         : null,
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── HELOC ──────────────────────────────────────────────
                   _sectionHeader(
                     isEs ? 'Opción A — HELOC' : 'Option A — HELOC',
                     color: _helocColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _field(
                     ctrl: _helocRateCtrl,
                     label: isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)',
@@ -211,7 +211,7 @@ class _CompareScreenState extends State<CompareScreen> {
                         ? (isEs ? 'Ingresa una tasa' : 'Enter rate')
                         : null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(children: [
                     Expanded(
                       child: _field(
@@ -225,7 +225,7 @@ class _CompareScreenState extends State<CompareScreen> {
                             (int.tryParse(v ?? '') ?? 0) <= 0 ? '?' : null,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _field(
                         ctrl: _repayYearsCtrl,
@@ -239,7 +239,7 @@ class _CompareScreenState extends State<CompareScreen> {
                     ),
                   ]),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── Cash-out Refi ──────────────────────────────────────
                   _sectionHeader(
@@ -248,7 +248,7 @@ class _CompareScreenState extends State<CompareScreen> {
                         : 'Option B — Cash-Out Refinance',
                     color: _refiColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(children: [
                     Expanded(
                       child: _field(
@@ -260,7 +260,7 @@ class _CompareScreenState extends State<CompareScreen> {
                             : null,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _field(
                         ctrl: _refiTermCtrl,
@@ -272,7 +272,7 @@ class _CompareScreenState extends State<CompareScreen> {
                       ),
                     ),
                   ]),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _field(
                     ctrl: _closingCtrl,
                     label:
@@ -281,7 +281,7 @@ class _CompareScreenState extends State<CompareScreen> {
                     validator: (v) => _parseN(v ?? '') < 0 ? '?' : null,
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── Personal Loan ──────────────────────────────────────
                   _sectionHeader(
@@ -290,7 +290,7 @@ class _CompareScreenState extends State<CompareScreen> {
                         : 'Option C — Personal Loan',
                     color: _loanColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(children: [
                     Expanded(
                       child: _field(
@@ -302,7 +302,7 @@ class _CompareScreenState extends State<CompareScreen> {
                             : null,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _field(
                         ctrl: _loanTermCtrl,
@@ -315,7 +315,7 @@ class _CompareScreenState extends State<CompareScreen> {
                     ),
                   ]),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xxl),
 
                   ElevatedButton.icon(
                     onPressed: _compare,
@@ -329,7 +329,7 @@ class _CompareScreenState extends State<CompareScreen> {
                         ? 'Comparar las 3 opciones'
                         : 'Compare All 3 Options'),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   OutlinedButton(
                     onPressed: _reset,
                     style: OutlinedButton.styleFrom(
@@ -342,7 +342,7 @@ class _CompareScreenState extends State<CompareScreen> {
 
                   // ── Results ────────────────────────────────────────────
                   if (_result != null) ...[
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.xxlPlus),
                     _buildResults(isEs, _result!),
                   ],
                   const SizedBox(height: 80),
@@ -392,11 +392,11 @@ class _CompareScreenState extends State<CompareScreen> {
       children: [
         // Best option banner
         _buildBestBanner(isEs, bestName, savingsVsMax, worstName),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // 3-column header
         _buildColumnHeader(isEs),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
 
         // Monthly payment (initial)
         _build3Row(
@@ -449,7 +449,7 @@ class _CompareScreenState extends State<CompareScreen> {
 
         // Refi break-even note
         if (r.refiBreakEvenMonths < 9999) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
@@ -459,7 +459,7 @@ class _CompareScreenState extends State<CompareScreen> {
             ),
             child: Row(children: [
               const Icon(Icons.timeline, color: _refiColor, size: 16),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   isEs
@@ -474,7 +474,7 @@ class _CompareScreenState extends State<CompareScreen> {
         ],
 
         // Guidance
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         _buildGuidance(isEs, cr),
       ],
     );
@@ -518,7 +518,7 @@ class _CompareScreenState extends State<CompareScreen> {
       ),
       child: Row(children: [
         const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 26),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -559,7 +559,7 @@ class _CompareScreenState extends State<CompareScreen> {
       {bool leftRound = false, bool rightRound = false}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.only(
@@ -596,7 +596,7 @@ class _CompareScreenState extends State<CompareScreen> {
     final vals = [val0, val1, val2];
     final notes = [note1, note2, note3];
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(
           width: 110,
@@ -630,7 +630,7 @@ class _CompareScreenState extends State<CompareScreen> {
     required Color winColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 5),
       decoration: BoxDecoration(
         color: isWinner ? winColor.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -680,7 +680,7 @@ class _CompareScreenState extends State<CompareScreen> {
             Text(isEs ? '💡 ¿Cuál elegir?' : '💡 How to choose',
                 style: const TextStyle(
                     fontWeight: FontWeight.bold, fontSize: AppTextSize.body)),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.smPlus),
             ...bullets.map((b) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(b,
