@@ -102,7 +102,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(isEs ? 'Borrar' : 'Clear',
-                style: const TextStyle(color: Colors.red)),
+                style: const TextStyle(color: CalcwiseSemanticColors.errorDark)),
           ),
         ],
       ),
@@ -149,11 +149,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     TextButton.icon(
                                       onPressed: _clearAll,
                                       icon: const Icon(Icons.delete_sweep,
-                                          size: 16, color: Colors.red),
+                                          size: 16, color: CalcwiseSemanticColors.errorDark),
                                       label: Text(
                                         isEs ? 'Borrar todo' : 'Clear all',
                                         style: const TextStyle(
-                                            color: Colors.red,
+                                            color: CalcwiseSemanticColors.errorDark,
                                             fontSize: AppTextSize.md),
                                       ),
                                     ),
@@ -162,7 +162,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   const SizedBox(height: 4),
                                   Row(children: [
                                     const Icon(Icons.lock_outline,
-                                        size: 13, color: Colors.amber),
+                                        size: 13, color: CalcwiseSemanticColors.warnIcon),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
@@ -199,32 +199,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       if (_history.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.history,
-                                    size: 64, color: const Color(0xFFCBD5E1)),
-                                const SizedBox(height: 16),
-                                Text(
-                                  isEs
-                                      ? AppStringsES.historyEmpty
-                                      : AppStringsEN.historyEmpty,
-                                  style: TextStyle(
-                                      color: Color(0xFF64748B),
-                                      fontSize: AppTextSize.bodyLg),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 20),
-                                FilledButton.icon(
-                                  onPressed: () => Navigator.pop(context),
-                                  icon: const Icon(Icons.calculate_rounded),
-                                  label: Text(isEs
-                                      ? 'Hacer mi primer cálculo'
-                                      : 'Run my first calculation'),
-                                ),
-                              ],
-                            ),
+                          child: CalcwiseEmptyState(
+                            icon: Icons.history_rounded,
+                            title: isEs
+                                ? AppStringsES.historyEmpty
+                                : AppStringsEN.historyEmpty,
+                            body: isEs
+                                ? 'Tus cálculos guardados aparecerán aquí.'
+                                : 'Your saved calculations will appear here.',
+                            actionLabel: isEs
+                                ? 'Hacer mi primer cálculo'
+                                : 'Run my first calculation',
+                            onAction: () => Navigator.pop(context),
                           ),
                         )
                       else
@@ -306,7 +292,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           padding:
                                               const EdgeInsets.only(right: 20),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.shade400,
+                                            color: CalcwiseSemanticColors.errorBorder,
                                             borderRadius: BorderRadius.circular(
                                                 AppRadius.xl),
                                           ),

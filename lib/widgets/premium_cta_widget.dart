@@ -12,7 +12,7 @@ class PremiumCtaWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(compact ? 8 : 16),
+      margin: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -62,7 +62,7 @@ class PremiumCtaWidget extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(AppRadius.xxl)),
                 child: Text(r'$2.99',
                     style: TextStyle(
                         color: AppTheme.primary,

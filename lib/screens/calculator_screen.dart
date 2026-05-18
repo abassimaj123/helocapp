@@ -1925,17 +1925,17 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
+                  color: CalcwiseSemanticColors.warnBg,
                   borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-                  border: Border.all(color: Colors.amber.shade300),
+                  border: Border.all(color: CalcwiseSemanticColors.warnBorder),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                  const Icon(Icons.star_rounded, color: CalcwiseSemanticColors.warnIcon, size: 12),
                   const SizedBox(width: 3),
                   Text('Premium',
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 10,
-                          color: Colors.amber.shade800,
+                          color: CalcwiseSemanticColors.warnIcon,
                           fontWeight: FontWeight.w600)),
                 ]),
               ),
@@ -2098,7 +2098,7 @@ class _QuickChip extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           border: Border.all(
             color: isSelected ? color : CalcwiseTheme.of(context).cardBorder,
           ),
@@ -2331,13 +2331,13 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: CalcwiseSemanticColors.warnBg,
                 borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-                border: Border.all(color: Colors.amber.shade300),
+                border: Border.all(color: CalcwiseSemanticColors.warnBorder),
               ),
               child: Row(children: [
-                Icon(Icons.lightbulb_outline,
-                    color: Colors.amber.shade700, size: 18),
+                const Icon(Icons.lightbulb_outline,
+                    color: CalcwiseSemanticColors.warnIcon, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -2346,9 +2346,9 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                             'pero cuesta ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "más" : "menos"} en total.'
                         : 'Interest-only saves ${fmt.format(monthlyDraw.abs())}/mo now, '
                             'costs ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "more" : "less"} total.',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: AppTextSize.sm,
-                        color: Colors.amber.shade900,
+                        color: CalcwiseSemanticColors.alertText,
                         height: 1.4),
                   ),
                 ),

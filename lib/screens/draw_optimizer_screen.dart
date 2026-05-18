@@ -514,17 +514,17 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: Colors.amber.shade50,
+              color: CalcwiseSemanticColors.warnBg,
               borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-              border: Border.all(color: Colors.amber.shade300),
+              border: Border.all(color: CalcwiseSemanticColors.warnBorder),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+              const Icon(Icons.star_rounded, color: CalcwiseSemanticColors.warnIcon, size: 12),
               const SizedBox(width: 3),
-              Text('Premium',
+              const Text('Premium',
                   style: TextStyle(
                       fontSize: 10,
-                      color: Colors.amber.shade800,
+                      color: CalcwiseSemanticColors.warnIcon,
                       fontWeight: FontWeight.w600)),
             ]),
           ),
@@ -767,9 +767,9 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     : (isEs
                         ? 'Retirar todo a la vez es igual de eficiente para tu plan.'
                         : 'Drawing all at once is equally efficient for your plan.'),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: AppTextSize.md,
-                  color: Colors.green.shade800,
+                  color: CalcwiseSemanticColors.successDeep,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1016,7 +1016,7 @@ class _StrategyCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppTheme.success,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadius.xxl),
                   ),
                   child: Text(
                     isEs ? 'ÓPTIMO' : 'OPTIMAL',
@@ -1049,7 +1049,7 @@ class _StrategyCard extends StatelessWidget {
               _Metric(
                 label: isEs ? 'Interés total' : 'Total Interest',
                 value: fmt.format(result.totalInterest),
-                color: Colors.red.shade700,
+                color: CalcwiseSemanticColors.errorDark,
               ),
               const SizedBox(width: 12),
               _Metric(
@@ -1154,23 +1154,23 @@ class _RateStepCardState extends State<_RateStepCard> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: CalcwiseSemanticColors.warnBg,
         borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(color: CalcwiseSemanticColors.warnBorder),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.orange.shade100,
+            color: CalcwiseSemanticColors.warnBg,
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           child: Text(
             '${isEs ? 'Cambio' : 'Change'} ${widget.index + 1}',
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: AppTextSize.xs,
                 fontWeight: FontWeight.w700,
-                color: Colors.orange.shade800),
+                color: CalcwiseSemanticColors.warnIcon),
           ),
         ),
         const SizedBox(width: 10),
@@ -1194,10 +1194,10 @@ class _RateStepCardState extends State<_RateStepCard> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text('→',
+          child: const Text('→',
               style: TextStyle(
                   fontSize: AppTextSize.bodyLg,
-                  color: Colors.orange.shade700,
+                  color: CalcwiseSemanticColors.warnIcon,
                   fontWeight: FontWeight.bold)),
         ),
         // Rate field
@@ -1396,20 +1396,20 @@ class _VarRateResults extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.smPlus),
                   decoration: BoxDecoration(
-                    color: diff > 0 ? Colors.red.shade50 : Colors.green.shade50,
+                    color: diff > 0 ? CalcwiseSemanticColors.errorBg : CalcwiseSemanticColors.successBg,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
                       color: diff > 0
-                          ? Colors.red.shade200
-                          : Colors.green.shade200,
+                          ? CalcwiseSemanticColors.errorBorder
+                          : CalcwiseSemanticColors.successBorder,
                     ),
                   ),
                   child: Row(children: [
                     Icon(
                       diff > 0 ? Icons.trending_up : Icons.trending_down,
                       color: diff > 0
-                          ? Colors.red.shade700
-                          : Colors.green.shade700,
+                          ? CalcwiseSemanticColors.errorDark
+                          : CalcwiseSemanticColors.successDark,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -1425,8 +1425,8 @@ class _VarRateResults extends StatelessWidget {
                         style: TextStyle(
                           fontSize: AppTextSize.sm,
                           color: diff > 0
-                              ? Colors.red.shade800
-                              : Colors.green.shade800,
+                              ? CalcwiseSemanticColors.errorDark
+                              : CalcwiseSemanticColors.successDeep,
                           fontWeight: FontWeight.w600,
                           height: 1.4,
                         ),
@@ -1671,14 +1671,14 @@ class _VarRateMonthlyTable extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
+                        color: CalcwiseSemanticColors.warnBg,
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Text(
                         '${rate.toStringAsFixed(1)}%',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 10,
-                            color: Colors.orange.shade800,
+                            color: CalcwiseSemanticColors.warnIcon,
                             fontWeight: FontWeight.w600),
                       ),
                     ),
