@@ -1,3 +1,0 @@
-dependency_overrides:
-  calcwise_core:
-    path: ../packages/calcwise_core
