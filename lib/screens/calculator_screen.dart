@@ -75,6 +75,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('calculator');
     _homeValueCtrl.addListener(_updateEquity);
     _mortgageCtrl.addListener(_updateEquity);
     for (final c in [
