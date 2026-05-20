@@ -69,10 +69,9 @@ Future<void> main() async {
     isFrenchNotifier.value = lang == 'fr';
   }
 
+  // statusBarIconBrightness is set dynamically in the shell build()
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    // systemNavigationBarColor is set dynamically in the shell build()
   ));
 
   await themeModeService.initialize();

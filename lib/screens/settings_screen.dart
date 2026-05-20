@@ -305,25 +305,30 @@ class _LangButton extends StatelessWidget {
       {required this.label, required this.selected, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppDuration.fast,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.primary : Colors.transparent,
-            border: Border.all(
-                color: selected ? AppTheme.primary : const Color(0xFFCBD5E1)),
-            borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+          child: AnimatedContainer(
+            duration: AppDuration.fast,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.primary : Colors.transparent,
+              border: Border.all(
+                  color: selected ? AppTheme.primary : const Color(0xFFCBD5E1)),
+              borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
         ),
