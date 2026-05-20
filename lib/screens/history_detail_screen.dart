@@ -483,7 +483,9 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               ),
             ],
           ),
-          body: Column(
+          body: SafeArea(
+            top: false, left: false, right: false,
+            child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
@@ -618,6 +620,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                 ),
               ),
             ],
+            ),
           ),
         );
       },
