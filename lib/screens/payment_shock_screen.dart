@@ -264,7 +264,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                           ? const SizedBox.shrink()
                           : _buildResults(isEs, _result!),
                     ),
-                    const SizedBox(height: 80),
+                    const SizedBox(height: AppSpacing.listBottomInset),
                   ],
                 ),
               ),

@@ -45,51 +45,6 @@ class SettingsScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      // Language
-                      _SectionHeader(headerLabel),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Row(children: [
-                          Expanded(
-                            child: _LangButton(
-                              label: 'English',
-                              selected: !isEs && !isFr,
-                              onTap: () => _setLanguage('en'),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: _LangButton(
-                              label: 'Español',
-                              selected: isEs,
-                              onTap: () => _setLanguage('es'),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: _LangButton(
-                              label: 'Français',
-                              selected: isFr,
-                              onTap: () => _setLanguage('fr'),
-                            ),
-                          ),
-                        ]),
-                      ),
-                      // Theme toggle
-                      ValueListenableBuilder<ThemeMode>(
-                        valueListenable: themeModeService.notifier,
-                        builder: (_, mode, __) => ListTile(
-                          leading: Icon(themeModeService.icon,
-                              color: AppTheme.primary),
-                          title: Text(themeModeService.label(isSpanish: isEs)),
-                          trailing: const Icon(Icons.chevron_right_rounded,
-                              color: AppTheme.labelGray),
-                          onTap: () => themeModeService.toggle(),
-                        ),
-                      ),
-                      const Divider(height: 1),
-
                       // Premium
                       _SectionHeader(isFr
                           ? AppStringsFR.premium.toUpperCase()
@@ -186,6 +141,51 @@ class SettingsScreen extends StatelessWidget {
                                   ),
                               ]);
                         },
+                      ),
+                      const Divider(height: 1),
+
+                      // Language
+                      _SectionHeader(headerLabel),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(children: [
+                          Expanded(
+                            child: _LangButton(
+                              label: 'English',
+                              selected: !isEs && !isFr,
+                              onTap: () => _setLanguage('en'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _LangButton(
+                              label: 'Español',
+                              selected: isEs,
+                              onTap: () => _setLanguage('es'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _LangButton(
+                              label: 'Français',
+                              selected: isFr,
+                              onTap: () => _setLanguage('fr'),
+                            ),
+                          ),
+                        ]),
+                      ),
+                      // Theme toggle
+                      ValueListenableBuilder<ThemeMode>(
+                        valueListenable: themeModeService.notifier,
+                        builder: (_, mode, __) => ListTile(
+                          leading: Icon(themeModeService.icon,
+                              color: AppTheme.primary),
+                          title: Text(themeModeService.label(isSpanish: isEs)),
+                          trailing: const Icon(Icons.chevron_right_rounded,
+                              color: AppTheme.labelGray),
+                          onTap: () => themeModeService.toggle(),
+                        ),
                       ),
                       const Divider(height: 1),
 

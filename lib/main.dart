@@ -50,11 +50,6 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await CrashlyticsService.init();
-  await CalcwiseRemoteConfig.initialize();
-  await CalcwiseRevenueCat.initialize(
-    androidKey: 'appl_REPLACE_WITH_YOUR_REVENUECAT_ANDROID_KEY',
-    iosKey:     'appl_REPLACE_WITH_YOUR_REVENUECAT_IOS_KEY',
-  );
   await AnalyticsService.instance.logAppOpen();
 
   final prefs = await SharedPreferences.getInstance();

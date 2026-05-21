@@ -743,6 +743,33 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Container(
+                            width: double.infinity,
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isEs ? 'Calculadora HELOC' : 'HELOC Calculator',
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  isEs
+                                      ? 'Calcula tu línea de crédito sobre el valor de tu hogar'
+                                      : 'Calculate your home equity line of credit',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             isEs
                                 ? 'Información de la Vivienda'
@@ -868,105 +895,89 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                           _buildPaymentModeToggle(isEs),
                           const SizedBox(height: 16),
 
-                          // ── More Tools — grouped expansion ─────────────────
-                          Card(
-                            margin: EdgeInsets.zero,
-                            child: ExpansionTile(
-                              leading: const Icon(Icons.build_rounded),
-                              title: Text(
-                                  isEs ? 'Más herramientas' : 'More tools'),
-                              childrenPadding:
-                                  const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const DrawOptimizerScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon: const Icon(
-                                      Icons.account_balance_wallet_rounded,
-                                      size: 18),
-                                  label: Text(
-                                      isEs
-                                          ? 'Draw Optimizer'
-                                          : 'Draw Optimizer',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const PaymentShockScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon:
-                                      const Icon(Icons.bolt_rounded, size: 18),
-                                  label: Text(
-                                      isEs ? 'Choque de Pago' : 'Payment Shock',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const HelocVsCashoutScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.swap_horiz_rounded,
-                                      size: 18),
-                                  label: Text(
-                                      isEs
-                                          ? 'HELOC vs Refi con Retiro'
-                                          : 'HELOC vs Cash-Out Refi',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
-                                ),
-                              ],
+                          // ── More Tools ─────────────────────────────────────
+                          Text(
+                            isEs ? 'Más herramientas' : 'More Tools',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const DrawOptimizerScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon: const Icon(
+                                Icons.account_balance_wallet_rounded,
+                                size: 18),
+                            label: Text(
+                                isEs ? 'Draw Optimizer' : 'Draw Optimizer',
+                                style: const TextStyle(
+                                    fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const PaymentShockScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon: const Icon(Icons.bolt_rounded, size: 18),
+                            label: Text(
+                                isEs ? 'Choque de Pago' : 'Payment Shock',
+                                style: const TextStyle(
+                                    fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const HelocVsCashoutScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon: const Icon(Icons.swap_horiz_rounded,
+                                size: 18),
+                            label: Text(
+                                isEs
+                                    ? 'HELOC vs Refi con Retiro'
+                                    : 'HELOC vs Cash-Out Refi',
+                                style: const TextStyle(
+                                    fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
                             ),
                           ),
                           const SizedBox(height: 8),

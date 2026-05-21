@@ -479,7 +479,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 80), // intentional large scroll buffer
+                  const SizedBox(height: AppSpacing.listBottomInset), // intentional large scroll buffer
                 ],
               ),
             ),

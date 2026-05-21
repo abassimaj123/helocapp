@@ -267,7 +267,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                         isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf),
                   ),
                 ],
-                const SizedBox(height: 80),
+                const SizedBox(height: AppSpacing.listBottomInset),
               ],
             ),
           ),

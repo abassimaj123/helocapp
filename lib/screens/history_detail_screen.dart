@@ -614,7 +614,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                           ],
                         ),
                       ),
-                      const SizedBox(height: 80),
+                      const SizedBox(height: AppSpacing.listBottomInset),
                     ],
                   ),
                 ),

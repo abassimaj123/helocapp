@@ -403,7 +403,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                           ? const SizedBox.shrink()
                           : _buildResults(isEs, _result!),
                     ),
-                    const SizedBox(height: 80),
+                    const SizedBox(height: AppSpacing.listBottomInset),
                   ],
                 ),
               ),

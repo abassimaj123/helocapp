@@ -345,7 +345,7 @@ class _CompareScreenState extends State<CompareScreen> {
                     const SizedBox(height: AppSpacing.xxlPlus),
                     _buildResults(isEs, _result!),
                   ],
-                  const SizedBox(height: 80),
+                  const SizedBox(height: AppSpacing.listBottomInset),
                 ],
               ),
             ),
