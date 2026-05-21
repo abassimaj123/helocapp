@@ -151,6 +151,20 @@ class HELOCApp extends StatelessWidget {
                 darkTheme: AppTheme.dark,
                 themeMode: themeMode,
                 debugShowCheckedModeBanner: false,
+                builder: (context, child) {
+                  if (!MediaQuery.of(context).disableAnimations) return child!;
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      pageTransitionsTheme: const PageTransitionsTheme(
+                        builders: {
+                          TargetPlatform.android: _NoAnimPageTransitionsBuilder(),
+                          TargetPlatform.iOS: _NoAnimPageTransitionsBuilder(),
+                        },
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
                 home: const SplashScreen(),
                 routes: {
                   '/home': (_) => const MainShell(),
@@ -293,4 +307,17 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+}
+
+class _NoAnimPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoAnimPageTransitionsBuilder();
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) =>
+      child;
 }
