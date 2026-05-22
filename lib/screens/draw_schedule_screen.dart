@@ -42,6 +42,15 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
   int? _repayYears;
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill draw amount and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _drawCtrl.text = h.creditLimit.toStringAsFixed(0);
+    _rateCtrl.text = h.rate.toStringAsFixed(1);
+  }
+
+  @override
   void dispose() {
     _drawCtrl.dispose();
     _rateCtrl.dispose();

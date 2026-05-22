@@ -104,6 +104,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill balance and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _existingBalCtrl.text = h.balance.toStringAsFixed(0);
+    _helocRateCtrl.text = h.rate.toStringAsFixed(1);
     for (final c in [
       _homeValueCtrl,
       _existingBalCtrl,

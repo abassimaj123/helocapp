@@ -67,6 +67,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill balance and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _balanceCtrl.text = h.balance.toStringAsFixed(0);
+    _currentRateCtrl.text = h.rate.toStringAsFixed(1);
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
       c.addListener(_tryCompute);
     }

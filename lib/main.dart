@@ -45,6 +45,11 @@ final adService = CalcwiseAdService(
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
 final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
 
+/// Last-calculated HELOC values for pre-filling secondary tools.
+final ValueNotifier<({double creditLimit, double balance, double rate})>
+    helocNotifier = ValueNotifier(
+        (creditLimit: 100000.0, balance: 100000.0, rate: 8.5));
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -249,6 +254,7 @@ class _MainShellState extends State<MainShell> {
               ),
             ),
             onRewardAd: () => CalcwiseRewardAdSheet.show(context),
+            onPremium: () => PaywallHard.show(context),
           ),
         ],
       ),

@@ -73,6 +73,15 @@ class _CompareScreenState extends State<CompareScreen> {
   _CompareResult? _result;
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill draw amount and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _drawCtrl.text = h.creditLimit.toStringAsFixed(0);
+    _helocRateCtrl.text = h.rate.toStringAsFixed(1);
+  }
+
+  @override
   void dispose() {
     for (final c in [
       _drawCtrl,

@@ -153,6 +153,15 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
   List<Map<String, double>>? _varRateSchedule;
   bool _varRateExpanded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill credit limit and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _creditLimitCtrl.text = h.creditLimit.toStringAsFixed(0);
+    _rateCtrl.text = h.rate.toStringAsFixed(1);
+  }
+
   double _parseCtrl(TextEditingController c) {
     final s = c.text.replaceAll(',', '');
     return double.tryParse(s) ?? 0;

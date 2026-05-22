@@ -158,6 +158,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           drawYears: drawYears,
           repayYears: repayYears);
     });
+    // Update global notifier so secondary tools can pre-fill from latest values.
+    helocNotifier.value =
+        (creditLimit: draw, balance: draw, rate: rate);
   }
 
   /// Computes rate scenario rows without touching the widget tree.
