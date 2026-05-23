@@ -160,6 +160,9 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
     final h = helocNotifier.value;
     _creditLimitCtrl.text = h.creditLimit.toStringAsFixed(0);
     _rateCtrl.text = h.rate.toStringAsFixed(1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _optimize();
+    });
   }
 
   double _parseCtrl(TextEditingController c) {

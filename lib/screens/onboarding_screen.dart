@@ -43,6 +43,21 @@ class OnboardingScreen extends StatelessWidget {
                 'Modela retiros de solo intereses vs pago acelerado — lado a lado.',
             pillsEs: ['Solo intereses', 'Pago anticipado', 'Tasa variable'],
           ),
+          OnboardingPage(
+            icon: Icons.history_rounded,
+            title: 'Save & Compare\nStrategies',
+            subtitle:
+                'Your HELOC scenarios are saved automatically. Revisit and compare anytime.',
+            pills: ['History', 'PDF Export', 'Share'],
+            titleFr: 'Sauvegardez et\ncomparez vos stratégies',
+            subtitleFr:
+                'Vos scénarios HELOC sont sauvegardés. Retrouvez-les et comparez à tout moment.',
+            pillsFr: ['Historique', 'Export PDF', 'Partager'],
+            titleEs: 'Guarda y compara\nestrategias',
+            subtitleEs:
+                'Tus escenarios HELOC se guardan automáticamente. Compáralos cuando quieras.',
+            pillsEs: ['Historial', 'Exportar PDF', 'Compartir'],
+          ),
         ],
       );
 }
