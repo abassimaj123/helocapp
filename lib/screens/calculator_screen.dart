@@ -170,7 +170,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     required int drawYears,
     required int repayYears,
   }) {
-    const offsets = [-1, 0, 1];
+    const offsets = [-1, 0, 1, 2];
     return offsets.map((offset) {
       final scenarioRate = (baseRate + offset).clamp(0.01, 100.0);
       return {
@@ -1376,6 +1376,9 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                           const SizedBox(height: 24),
                                           _buildRateScenarios(isEs),
                                           const SizedBox(height: 24),
+                                          // HELOC vs Home Equity Loan comparison
+                                          _buildHelVsHeloc(isEs),
+                                          const SizedBox(height: 24),
                                           // Feature 3 — Interest-Only vs Fully Amortizing
                                           _IoVsFullyAmortizingCard(
                                             draw: (_results!['draw']
@@ -1584,134 +1587,275 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
     final fmtShort =
         NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
 
+    // Color per offset: -1=green, 0=primary, +1=amber, +2=red
+    Color cardColorForOffset(int offset) {
+      if (offset < 0) return AppTheme.successDark;
+      if (offset == 0) return AppTheme.primary;
+      if (offset == 1) return const Color(0xFFF9A825);
+      return AppTheme.errorDark;
+    }
+
+    String labelForOffset(int offset, bool es) {
+      if (offset < 0) return es ? 'Bajan ${-offset}%' : 'Rates drop ${-offset}%';
+      if (offset == 0) return es ? 'Tasa actual' : 'Current rate';
+      return es ? 'Suben $offset%' : 'Rates rise $offset%';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.show_chart_rounded, size: 18, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: AppTextSize.bodyMd, fontWeight: FontWeight.w600)),
+        ]),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 152,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            itemCount: _cachedScenarios!.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) {
+              final scenario = _cachedScenarios![i];
+              final offset = scenario['offset'] as int;
+              final scenarioRate = scenario['scenarioRate'] as double;
+              final drawPmt = scenario['drawPmt'] as double;
+              final repayPmt = scenario['repayPmt'] as double;
+              final isCurrent = offset == 0;
+              final cardColor = cardColorForOffset(offset);
+
+              return Container(
+                width: 148,
+                padding: const EdgeInsets.all(AppSpacing.mdPlus),
+                decoration: BoxDecoration(
+                  color: isCurrent
+                      ? cardColor
+                      : cardColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  border: Border.all(
+                      color: cardColor.withValues(alpha: isCurrent ? 0 : 0.4),
+                      width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      labelForOffset(offset, isEs),
+                      style: TextStyle(
+                        fontSize: AppTextSize.xs,
+                        fontWeight: FontWeight.w600,
+                        color: isCurrent
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : cardColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${scenarioRate.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: AppTextSize.subtitle,
+                        fontWeight: FontWeight.w900,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Draw payment
+                    Text(
+                      isEs ? 'Interés' : 'Draw pmt',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isCurrent
+                            ? Colors.white70
+                            : CalcwiseTheme.of(ctx).textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '${fmtShort.format(drawPmt)}/mo',
+                      style: TextStyle(
+                        fontSize: AppTextSize.sm,
+                        fontWeight: FontWeight.w700,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Repayment
+                    Text(
+                      isEs ? 'Amortizado' : 'Repay pmt',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isCurrent
+                            ? Colors.white70
+                            : CalcwiseTheme.of(ctx).textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '${fmtShort.format(repayPmt)}/mo',
+                      style: TextStyle(
+                        fontSize: AppTextSize.sm,
+                        fontWeight: FontWeight.w700,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// HELOC vs Home Equity Loan comparison section.
+  Widget _buildHelVsHeloc(bool isEs) {
+    if (_results == null) return const SizedBox.shrink();
+    final draw = (_results!['draw'] as double?) ?? 0;
+    final helocRate = (_results!['rate'] as double?) ?? 0;
+    final drawYears = (_results!['drawYears'] as int?) ?? 10;
+    final repayYears = (_results!['repayYears'] as int?) ?? 20;
+    if (draw <= 0 || helocRate <= 0) return const SizedBox.shrink();
+
+    // HEL: fixed rate — assume same principal, rate +0.5% (typical HEL spread)
+    final helRate = helocRate + 0.5;
+    final helTermYears = repayYears; // same repayment horizon
+    final helMonthly = HelocEngine.amortizedPayment(draw, helRate, helTermYears);
+    final helTotalInterest = helMonthly * helTermYears * 12 - draw;
+
+    // HELOC: total interest across both phases
+    final helocTotalInterest = HelocEngine.totalInterestPaid(
+        draw, helocRate, drawYears, repayYears);
+    final helocDrawPmt = HelocEngine.interestOnlyPayment(draw, helocRate);
+    final helocRepayPmt = HelocEngine.amortizedPayment(draw, helocRate, repayYears);
+
+    final fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+    final fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+
+    final helocCheaper = helocTotalInterest < helTotalInterest;
+    final verdictColor = helocCheaper ? AppTheme.successDark : const Color(0xFFB71C1C);
+
+    Widget _row(String left, String center, String right, {bool header = false}) {
+      final style = TextStyle(
+        fontSize: header ? AppTextSize.xs : AppTextSize.sm,
+        fontWeight: header ? FontWeight.w700 : FontWeight.w500,
+        color: header ? AppTheme.primary : null,
+      );
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(children: [
+          Expanded(flex: 3, child: Text(left, style: style)),
+          Expanded(flex: 2, child: Text(center, textAlign: TextAlign.center, style: style)),
+          Expanded(flex: 2, child: Text(right, textAlign: TextAlign.right, style: style)),
+        ]),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title
             Row(children: [
-              const Icon(Icons.compare_arrows,
-                  size: 18, color: AppTheme.primary),
+              const Icon(Icons.balance_rounded, size: 18, color: AppTheme.primary),
               const SizedBox(width: 8),
-              Text(title,
+              Expanded(
+                child: Text(
+                  isEs ? 'HELOC vs Préstamo Sobre Valor' : 'HELOC vs Home Equity Loan',
                   style: const TextStyle(
-                      fontSize: AppTextSize.bodyMd,
-                      fontWeight: FontWeight.w600)),
+                      fontSize: AppTextSize.bodyMd, fontWeight: FontWeight.w600),
+                ),
+              ),
             ]),
+            const SizedBox(height: 4),
+            Text(
+              isEs
+                  ? 'HELOC: línea revolvente tasa variable. HEL: monto fijo, tasa fija.'
+                  : 'HELOC: revolving variable-rate line. HEL: lump-sum fixed-rate loan.',
+              style: const TextStyle(
+                  fontSize: AppTextSize.xs, color: AppTheme.labelGray, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+
+            // Comparison table
+            _row(
+              '',
+              'HELOC',
+              isEs ? 'HEL (fijo)' : 'HEL (fixed)',
+              header: true,
+            ),
+            const Divider(height: 10),
+            _row(
+              isEs ? 'Tasa' : 'Rate',
+              '${helocRate.toStringAsFixed(2)}% (var)',
+              '${helRate.toStringAsFixed(2)}% (fixed)',
+            ),
+            _row(
+              isEs ? 'Pago fase disponer' : 'Draw phase pmt',
+              '${fmtDec.format(helocDrawPmt)}/mo',
+              '${fmtDec.format(helMonthly)}/mo',
+            ),
+            _row(
+              isEs ? 'Pago amortización' : 'Repay phase pmt',
+              '${fmtDec.format(helocRepayPmt)}/mo',
+              '${fmtDec.format(helMonthly)}/mo',
+            ),
+            _row(
+              isEs ? 'Interés total est.' : 'Total interest est.',
+              fmt.format(helocTotalInterest),
+              fmt.format(helTotalInterest),
+            ),
+            _row(
+              isEs ? 'Flexibilidad' : 'Flexibility',
+              isEs ? 'Alta' : 'High',
+              isEs ? 'Baja' : 'Low',
+            ),
             const SizedBox(height: 12),
-            // Header row
-            Row(children: [
-              Expanded(
-                flex: 2,
-                child: Text(isEs ? 'Tasa' : 'Rate',
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
+
+            // Verdict banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: verdictColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(color: verdictColor.withValues(alpha: 0.35)),
               ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Interés' : 'Draw Pmt',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Amortizado' : 'Repay Pmt',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Int. Total' : 'Total Int.',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-            ]),
-            const SizedBox(height: 8),
-            ..._cachedScenarios!.map((scenario) {
-              final offset = scenario['offset'] as int;
-              final scenarioRate = scenario['scenarioRate'] as double;
-              final drawPmt = scenario['drawPmt'] as double;
-              final repayPmt = scenario['repayPmt'] as double;
-              final totalInt = scenario['totalInt'] as double;
-              final isCurrent = offset == 0;
-              final isBelow = offset < 0;
-              final textColor = isCurrent
-                  ? AppTheme.primary
-                  : isBelow
-                      ? AppTheme.successDark
-                      : AppTheme.errorDark;
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 2),
-                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                decoration: isCurrent
-                    ? BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      )
-                    : null,
-                child: Row(children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${scenarioRate.toStringAsFixed(1)}%${isCurrent ? " ✦" : ""}',
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.w500,
-                          color: textColor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    helocCheaper
+                        ? (isEs
+                            ? '✅ Para tu escenario, el HELOC tiene menor interés total'
+                            : '✅ For your scenario, HELOC costs less total interest')
+                        : (isEs
+                            ? '💡 Para tu escenario, el HEL tiene menor interés total'
+                            : '💡 For your scenario, the HEL costs less total interest'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: AppTextSize.sm,
+                      color: verdictColor,
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(drawPmt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
+                  const SizedBox(height: 6),
+                  Text(
+                    isEs
+                        ? 'Elige HELOC si necesitas acceso flexible a fondos. Elige HEL para pagos fijos y predecibles.'
+                        : 'Choose HELOC if you need flexible access to funds. Choose HEL for predictable fixed payments.',
+                    style: TextStyle(
+                      fontSize: AppTextSize.xs,
+                      color: verdictColor.withValues(alpha: 0.8),
+                      height: 1.4,
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(repayPmt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(totalInt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
-                    ),
-                  ),
-                ]),
-              );
-            }),
+                ],
+              ),
+            ),
           ],
         ),
       ),
