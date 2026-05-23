@@ -13,16 +13,16 @@ class OnboardingScreen extends StatelessWidget {
             icon: Icons.account_balance_rounded,
             title: 'Unlock Your\nHome Equity',
             subtitle:
-                'See how much you can borrow and what it costs month by month.',
-            pills: ['Credit Line', 'Draw Period', 'Repayment'],
+                'Draw Optimizer, rate stress test, and HELOC vs HEL comparison — all built in.',
+            pills: ['Draw Optimizer', 'Rate Stress Test', 'HELOC vs HEL', 'Canadian Ready'],
             titleFr: 'Libérez votre\nvaleur nette',
             subtitleFr:
-                'Découvrez combien vous pouvez emprunter et ce que cela coûte chaque mois.',
-            pillsFr: ['Marge de crédit', 'Période de retrait', 'Remboursement'],
+                'Optimiseur de retraits, test de stress de taux et HELOC vs HEL — tout inclus.',
+            pillsFr: ['Optimiseur retraits', 'Test de stress', 'HELOC vs MFVP', 'Canada'],
             titleEs: 'Libera el valor\nde tu hogar',
             subtitleEs:
-                'Descubre cuánto puedes pedir prestado y lo que cuesta mes a mes.',
-            pillsEs: ['Línea de crédito', 'Período de retiro', 'Reembolso'],
+                'Optimizador de retiros, prueba de estrés de tasa y HELOC vs HEL — todo incluido.',
+            pillsEs: ['Optimizador retiros', 'Test de estrés', 'HELOC vs HEL', 'Canadá'],
           ),
           OnboardingPage(
             icon: Icons.trending_up_rounded,
