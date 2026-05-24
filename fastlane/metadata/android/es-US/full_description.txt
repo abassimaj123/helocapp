@@ -1,0 +1,9 @@
+La única calculadora HELOC diseñada alrededor de cómo los propietarios realmente usan su línea de crédito sobre el valor acumulado de la vivienda. Modela ambas fases de tu HELOC en detalle: el período de retiro (pagos solo de intereses sobre el saldo pendiente) y el período de reembolso (capital + intereses totalmente amortizados). Ve exactamente cómo cambia tu pago cuando pasas del retiro al reembolso, y prepárate para el shock de pago antes de que llegue.
+
+El programa de tasa variable te permite ingresar tu tasa preferencial actual y margen, luego ejecutar escenarios de estrés (+1%, +2%, +3%) para ver tu pago en entornos de tasa en el peor caso. La herramienta optimizadora de retiros es única: ingresa tu presupuesto y cronograma de proyecto, y la app calcula el programa de retiro óptimo para minimizar el interés total pagado. La calculadora LTV confirma tu crédito disponible basado en el valor de tasación actual de tu vivienda y el saldo de tu hipoteca principal.
+
+Compara HELOC vs. Préstamo sobre Capital (HEL) lado a lado con una comparación de costo completa. Compara HELOC vs. Refinanciamiento con Extracción de Efectivo para determinar cuál opción es más conveniente. Estimador de ahorro fiscal para intereses deducibles cuando los fondos se usan para mejoras del hogar.
+
+Soporte bilingüe completo en español e inglés (ES+EN). Modo oscuro, historial de cálculos y exportación PDF. Funciona sin conexión, sin cuenta requerida.
+
+Palabras clave: calculadora HELOC, línea de crédito hipotecaria, optimizador de retiros, pago HELOC, pago solo de intereses, calculadora de capital de vivienda, HELOC vs préstamo de capital, HELOC vs refinanciamiento, tasa variable HELOC, calculadora LTV.
