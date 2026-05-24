@@ -14,15 +14,30 @@ class OnboardingScreen extends StatelessWidget {
             title: 'Unlock Your\nHome Equity',
             subtitle:
                 'Draw Optimizer, rate stress test, and HELOC vs HEL comparison — all built in.',
-            pills: ['Draw Optimizer', 'Rate Stress Test', 'HELOC vs HEL', 'Canadian Ready'],
+            pills: [
+              'Draw Optimizer',
+              'Rate Stress Test',
+              'HELOC vs HEL',
+              'Canadian Ready'
+            ],
             titleFr: 'Libérez votre\nvaleur nette',
             subtitleFr:
                 'Optimiseur de retraits, test de stress de taux et HELOC vs HEL — tout inclus.',
-            pillsFr: ['Optimiseur retraits', 'Test de stress', 'HELOC vs MFVP', 'Canada'],
+            pillsFr: [
+              'Optimiseur retraits',
+              'Test de stress',
+              'HELOC vs MFVP',
+              'Canada'
+            ],
             titleEs: 'Libera el valor\nde tu hogar',
             subtitleEs:
                 'Optimizador de retiros, prueba de estrés de tasa y HELOC vs HEL — todo incluido.',
-            pillsEs: ['Optimizador retiros', 'Test de estrés', 'HELOC vs HEL', 'Canadá'],
+            pillsEs: [
+              'Optimizador retiros',
+              'Test de estrés',
+              'HELOC vs HEL',
+              'Canadá'
+            ],
           ),
           OnboardingPage(
             icon: Icons.trending_up_rounded,

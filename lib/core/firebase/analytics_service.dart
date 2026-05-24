@@ -45,13 +45,13 @@ class AnalyticsService extends CalcwiseAnalytics {
   Future<void> logScreenView(String screenName) =>
       log('screen_view', {'screen_name': screenName});
   Future<void> logOnboardingComplete() => log('onboarding_complete');
-  Future<void> logOnboardingSkipped()  => log('onboarding_skipped');
-  Future<void> logFirstCalculate()     => log('first_calculate');
+  Future<void> logOnboardingSkipped() => log('onboarding_skipped');
+  Future<void> logFirstCalculate() => log('first_calculate');
   Future<void> logDarkModeToggled(bool enabled) =>
       log('dark_mode_toggled', {'enabled': '$enabled'});
   Future<void> logLanguageChanged(String lang) =>
       log('language_changed', {'language': lang});
-  Future<void> logShareTapped()   => log('share_tapped');
+  Future<void> logShareTapped() => log('share_tapped');
   Future<void> logExportStarted() => log('export_started');
   Future<void> logUpgradeButtonTapped(String source) =>
       log('upgrade_tapped', {'source': source});
@@ -60,10 +60,11 @@ class AnalyticsService extends CalcwiseAnalytics {
 
   // ── HELOCApp domain events (Phase 2) ─────────────────────────────────────
 
-  Future<void> logDrawPeriodCalculated()    => log('draw_period_calculated');
-  Future<void> logRepaymentPhaseCalculated() => log('repayment_phase_calculated');
-  Future<void> logHelocComparatorUsed()     => log('heloc_comparator_used');
-  Future<void> logLtvCalculated()           => log('ltv_calculated');
+  Future<void> logDrawPeriodCalculated() => log('draw_period_calculated');
+  Future<void> logRepaymentPhaseCalculated() =>
+      log('repayment_phase_calculated');
+  Future<void> logHelocComparatorUsed() => log('heloc_comparator_used');
+  Future<void> logLtvCalculated() => log('ltv_calculated');
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

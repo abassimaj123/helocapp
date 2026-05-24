@@ -494,35 +494,45 @@ class _HistorySkeleton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
-        children: List.generate(3, (i) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.smPlus),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(children: [
-                    _ShimmerBox(width: 120, height: 26, radius: AppRadius.md),
-                    const Spacer(),
-                    _ShimmerBox(width: 70, height: 22, radius: AppRadius.sm),
-                  ]),
-                  const SizedBox(height: 12),
-                  ...List.generate(4, (_) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _ShimmerBox(width: 100, height: 13, radius: 4),
-                        _ShimmerBox(width: 70, height: 13, radius: 4),
-                      ],
+        children: List.generate(
+            3,
+            (i) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.smPlus),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            _ShimmerBox(
+                                width: 120, height: 26, radius: AppRadius.md),
+                            const Spacer(),
+                            _ShimmerBox(
+                                width: 70, height: 22, radius: AppRadius.sm),
+                          ]),
+                          const SizedBox(height: 12),
+                          ...List.generate(
+                              4,
+                              (_) => Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 5),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _ShimmerBox(
+                                            width: 100, height: 13, radius: 4),
+                                        _ShimmerBox(
+                                            width: 70, height: 13, radius: 4),
+                                      ],
+                                    ),
+                                  )),
+                        ],
+                      ),
                     ),
-                  )),
-                ],
-              ),
-            ),
-          ),
-        )),
+                  ),
+                )),
       ),
     );
   }
@@ -530,7 +540,8 @@ class _HistorySkeleton extends StatelessWidget {
 
 class _ShimmerBox extends StatelessWidget {
   final double width, height, radius;
-  const _ShimmerBox({required this.width, required this.height, required this.radius});
+  const _ShimmerBox(
+      {required this.width, required this.height, required this.radius});
 
   @override
   Widget build(BuildContext context) {

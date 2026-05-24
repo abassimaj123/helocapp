@@ -484,142 +484,147 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
             ],
           ),
           body: SafeArea(
-            top: false, left: false, right: false,
+            top: false,
+            left: false,
+            right: false,
             child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Inputs card ─────────────────────────────────────
-                      _SectionHeader(
-                        icon: Icons.input_rounded,
-                        title: isEs ? 'Datos de Entrada' : 'Input Parameters',
-                      ),
-                      const SizedBox(height: 8),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Column(children: [
-                            _DetailRow(
-                              label:
-                                  isEs ? 'Valor de la vivienda' : 'Home Value',
-                              value: _fmtCur.format(_homeValue),
-                              valueColor: AppTheme.primary,
-                              bold: true,
-                            ),
-                            const Divider(height: 16),
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Saldo hipotecario'
-                                  : 'Mortgage Balance',
-                              value: _fmtCur.format(_balance),
-                            ),
-                            _DetailRow(
-                              label: isEs ? 'Monto a disponer' : 'Draw Amount',
-                              value: _fmtCur.format(_draw),
-                            ),
-                            _DetailRow(
-                              label: isEs ? 'Tasa HELOC' : 'HELOC Rate',
-                              value: '${_rate.toStringAsFixed(2)}%',
-                            ),
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Período disposición / pago'
-                                  : 'Draw / Repayment Period',
-                              value: '${_drawYears}yr / ${_repayYears}yr',
-                            ),
-                          ]),
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Inputs card ─────────────────────────────────────
+                        _SectionHeader(
+                          icon: Icons.input_rounded,
+                          title: isEs ? 'Datos de Entrada' : 'Input Parameters',
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(children: [
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Valor de la vivienda'
+                                    : 'Home Value',
+                                value: _fmtCur.format(_homeValue),
+                                valueColor: AppTheme.primary,
+                                bold: true,
+                              ),
+                              const Divider(height: 16),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Saldo hipotecario'
+                                    : 'Mortgage Balance',
+                                value: _fmtCur.format(_balance),
+                              ),
+                              _DetailRow(
+                                label:
+                                    isEs ? 'Monto a disponer' : 'Draw Amount',
+                                value: _fmtCur.format(_draw),
+                              ),
+                              _DetailRow(
+                                label: isEs ? 'Tasa HELOC' : 'HELOC Rate',
+                                value: '${_rate.toStringAsFixed(2)}%',
+                              ),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Período disposición / pago'
+                                    : 'Draw / Repayment Period',
+                                value: '${_drawYears}yr / ${_repayYears}yr',
+                              ),
+                            ]),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                      // ── Results card ────────────────────────────────────
-                      _SectionHeader(
-                        icon: Icons.bar_chart_rounded,
-                        title: isEs ? 'Resultados' : 'Results',
-                      ),
-                      const SizedBox(height: 8),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Column(children: [
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Pago solo interés'
-                                  : 'Interest-Only Payment',
-                              value: '${_fmtDec.format(_interestOnly)}/mo',
-                              valueColor: AppTheme.primary,
-                              bold: true,
-                            ),
-                            const Divider(height: 16),
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Pago amortizado'
-                                  : 'Repayment Payment',
-                              value: '${_fmtDec.format(_repayment)}/mo',
-                            ),
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Capital disponible'
-                                  : 'Available Equity',
-                              value: _fmtCur.format(_equity),
-                              valueColor: AppTheme.success,
-                            ),
-                            _DetailRow(
-                              label: 'LTV',
-                              value: '${_fmtPct.format(_ltv)}%',
-                              valueColor: _ltv > 85 ? Colors.red : null,
-                            ),
-                            _DetailRow(
-                              label: isEs
-                                  ? 'Ahorro fiscal est. (22%)'
-                                  : 'Est. Tax Savings (22%)',
-                              value: '${_fmtDec.format(_taxSavings)}/yr',
-                              valueColor: Colors.blue.shade700,
-                            ),
-                          ]),
+                        // ── Results card ────────────────────────────────────
+                        _SectionHeader(
+                          icon: Icons.bar_chart_rounded,
+                          title: isEs ? 'Resultados' : 'Results',
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(children: [
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Pago solo interés'
+                                    : 'Interest-Only Payment',
+                                value: '${_fmtDec.format(_interestOnly)}/mo',
+                                valueColor: AppTheme.primary,
+                                bold: true,
+                              ),
+                              const Divider(height: 16),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Pago amortizado'
+                                    : 'Repayment Payment',
+                                value: '${_fmtDec.format(_repayment)}/mo',
+                              ),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Capital disponible'
+                                    : 'Available Equity',
+                                value: _fmtCur.format(_equity),
+                                valueColor: AppTheme.success,
+                              ),
+                              _DetailRow(
+                                label: 'LTV',
+                                value: '${_fmtPct.format(_ltv)}%',
+                                valueColor: _ltv > 85 ? Colors.red : null,
+                              ),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Ahorro fiscal est. (22%)'
+                                    : 'Est. Tax Savings (22%)',
+                                value: '${_fmtDec.format(_taxSavings)}/yr',
+                                valueColor: Colors.blue.shade700,
+                              ),
+                            ]),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-                      // Tax info banner
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.info_outline_rounded,
-                                color: Colors.blue.shade700, size: 16),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                isEs
-                                    ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
-                                    : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
-                                style: TextStyle(
-                                  fontSize: AppTextSize.xs,
-                                  color: Colors.blue.shade800,
-                                  height: 1.4,
+                        // Tax info banner
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.mdPlus),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  color: Colors.blue.shade700, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  isEs
+                                      ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
+                                      : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
+                                  style: TextStyle(
+                                    fontSize: AppTextSize.xs,
+                                    color: Colors.blue.shade800,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.listBottomInset),
-                    ],
+                        const SizedBox(height: AppSpacing.listBottomInset),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
             ),
           ),
         );

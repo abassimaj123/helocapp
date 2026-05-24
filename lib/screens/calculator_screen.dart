@@ -159,8 +159,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           repayYears: repayYears);
     });
     // Update global notifier so secondary tools can pre-fill from latest values.
-    helocNotifier.value =
-        (creditLimit: draw, balance: draw, rate: rate);
+    helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
   }
 
   /// Computes rate scenario rows without touching the widget tree.
@@ -748,26 +747,41 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                         children: [
                           Container(
                             width: double.infinity,
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+                            color:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                                AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  isEs ? 'Calculadora HELOC' : 'HELOC Calculator',
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  isEs
+                                      ? 'Calculadora HELOC'
+                                      : 'HELOC Calculator',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   isEs
                                       ? 'Calcula tu línea de crédito sobre el valor de tu hogar'
                                       : 'Calculate your home equity line of credit',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                            .withValues(alpha: 0.8),
+                                      ),
                                 ),
                               ],
                             ),
@@ -901,10 +915,13 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                           // ── More Tools ─────────────────────────────────────
                           Text(
                             isEs ? 'Más herramientas' : 'More Tools',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           OutlinedButton.icon(
@@ -923,8 +940,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                 size: 18),
                             label: Text(
                                 isEs ? 'Draw Optimizer' : 'Draw Optimizer',
-                                style: const TextStyle(
-                                    fontSize: AppTextSize.md)),
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 44),
                               shape: RoundedRectangleBorder(
@@ -947,8 +964,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                             icon: const Icon(Icons.bolt_rounded, size: 18),
                             label: Text(
                                 isEs ? 'Choque de Pago' : 'Payment Shock',
-                                style: const TextStyle(
-                                    fontSize: AppTextSize.md)),
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 44),
                               shape: RoundedRectangleBorder(
@@ -968,14 +985,14 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                 transitionDuration: AppDuration.base,
                               ),
                             ),
-                            icon: const Icon(Icons.swap_horiz_rounded,
-                                size: 18),
+                            icon:
+                                const Icon(Icons.swap_horiz_rounded, size: 18),
                             label: Text(
                                 isEs
                                     ? 'HELOC vs Refi con Retiro'
                                     : 'HELOC vs Cash-Out Refi',
-                                style: const TextStyle(
-                                    fontSize: AppTextSize.md)),
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 44),
                               shape: RoundedRectangleBorder(
@@ -1596,7 +1613,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
     }
 
     String labelForOffset(int offset, bool es) {
-      if (offset < 0) return es ? 'Bajan ${-offset}%' : 'Rates drop ${-offset}%';
+      if (offset < 0)
+        return es ? 'Bajan ${-offset}%' : 'Rates drop ${-offset}%';
       if (offset == 0) return es ? 'Tasa actual' : 'Current rate';
       return es ? 'Suben $offset%' : 'Rates rise $offset%';
     }
@@ -1605,7 +1623,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          const Icon(Icons.show_chart_rounded, size: 18, color: AppTheme.primary),
+          const Icon(Icons.show_chart_rounded,
+              size: 18, color: AppTheme.primary),
           const SizedBox(width: 8),
           Text(title,
               style: const TextStyle(
@@ -1632,9 +1651,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                 width: 148,
                 padding: const EdgeInsets.all(AppSpacing.mdPlus),
                 decoration: BoxDecoration(
-                  color: isCurrent
-                      ? cardColor
-                      : cardColor.withValues(alpha: 0.08),
+                  color:
+                      isCurrent ? cardColor : cardColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(
                       color: cardColor.withValues(alpha: isCurrent ? 0 : 0.4),
@@ -1722,22 +1740,28 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
     // HEL: fixed rate — assume same principal, rate +0.5% (typical HEL spread)
     final helRate = helocRate + 0.5;
     final helTermYears = repayYears; // same repayment horizon
-    final helMonthly = HelocEngine.amortizedPayment(draw, helRate, helTermYears);
+    final helMonthly =
+        HelocEngine.amortizedPayment(draw, helRate, helTermYears);
     final helTotalInterest = helMonthly * helTermYears * 12 - draw;
 
     // HELOC: total interest across both phases
-    final helocTotalInterest = HelocEngine.totalInterestPaid(
-        draw, helocRate, drawYears, repayYears);
+    final helocTotalInterest =
+        HelocEngine.totalInterestPaid(draw, helocRate, drawYears, repayYears);
     final helocDrawPmt = HelocEngine.interestOnlyPayment(draw, helocRate);
-    final helocRepayPmt = HelocEngine.amortizedPayment(draw, helocRate, repayYears);
+    final helocRepayPmt =
+        HelocEngine.amortizedPayment(draw, helocRate, repayYears);
 
-    final fmt = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-    final fmtDec = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+    final fmt =
+        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+    final fmtDec =
+        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
     final helocCheaper = helocTotalInterest < helTotalInterest;
-    final verdictColor = helocCheaper ? AppTheme.successDark : const Color(0xFFB71C1C);
+    final verdictColor =
+        helocCheaper ? AppTheme.successDark : const Color(0xFFB71C1C);
 
-    Widget _row(String left, String center, String right, {bool header = false}) {
+    Widget _row(String left, String center, String right,
+        {bool header = false}) {
       final style = TextStyle(
         fontSize: header ? AppTextSize.xs : AppTextSize.sm,
         fontWeight: header ? FontWeight.w700 : FontWeight.w500,
@@ -1747,8 +1771,12 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(children: [
           Expanded(flex: 3, child: Text(left, style: style)),
-          Expanded(flex: 2, child: Text(center, textAlign: TextAlign.center, style: style)),
-          Expanded(flex: 2, child: Text(right, textAlign: TextAlign.right, style: style)),
+          Expanded(
+              flex: 2,
+              child: Text(center, textAlign: TextAlign.center, style: style)),
+          Expanded(
+              flex: 2,
+              child: Text(right, textAlign: TextAlign.right, style: style)),
         ]),
       );
     }
@@ -1761,13 +1789,17 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
           children: [
             // Title
             Row(children: [
-              const Icon(Icons.balance_rounded, size: 18, color: AppTheme.primary),
+              const Icon(Icons.balance_rounded,
+                  size: 18, color: AppTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isEs ? 'HELOC vs Préstamo Sobre Valor' : 'HELOC vs Home Equity Loan',
+                  isEs
+                      ? 'HELOC vs Préstamo Sobre Valor'
+                      : 'HELOC vs Home Equity Loan',
                   style: const TextStyle(
-                      fontSize: AppTextSize.bodyMd, fontWeight: FontWeight.w600),
+                      fontSize: AppTextSize.bodyMd,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ]),
@@ -1777,7 +1809,9 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                   ? 'HELOC: línea revolvente tasa variable. HEL: monto fijo, tasa fija.'
                   : 'HELOC: revolving variable-rate line. HEL: lump-sum fixed-rate loan.',
               style: const TextStyle(
-                  fontSize: AppTextSize.xs, color: AppTheme.labelGray, height: 1.4),
+                  fontSize: AppTextSize.xs,
+                  color: AppTheme.labelGray,
+                  height: 1.4),
             ),
             const SizedBox(height: 14),
 

@@ -47,8 +47,8 @@ final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
 
 /// Last-calculated HELOC values for pre-filling secondary tools.
 final ValueNotifier<({double creditLimit, double balance, double rate})>
-    helocNotifier = ValueNotifier(
-        (creditLimit: 100000.0, balance: 100000.0, rate: 8.5));
+    helocNotifier =
+    ValueNotifier((creditLimit: 100000.0, balance: 100000.0, rate: 8.5));
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -162,7 +162,8 @@ class HELOCApp extends StatelessWidget {
                     data: Theme.of(context).copyWith(
                       pageTransitionsTheme: const PageTransitionsTheme(
                         builders: {
-                          TargetPlatform.android: _NoAnimPageTransitionsBuilder(),
+                          TargetPlatform.android:
+                              _NoAnimPageTransitionsBuilder(),
                           TargetPlatform.iOS: _NoAnimPageTransitionsBuilder(),
                         },
                       ),
