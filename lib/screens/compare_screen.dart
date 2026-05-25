@@ -658,7 +658,7 @@ class _CompareScreenState extends State<CompareScreen> {
         if (note != null)
           Text(note,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: AppTheme.labelGray)),
+              style: const TextStyle(fontSize: AppTextSize.xxs, color: AppTheme.labelGray)),
       ]),
     );
   }

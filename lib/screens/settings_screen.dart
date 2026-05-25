@@ -317,7 +317,7 @@ class _LangButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected ? AppTheme.primary : Colors.transparent,
               border: Border.all(
-                  color: selected ? AppTheme.primary : const Color(0xFFCBD5E1)),
+                  color: selected ? AppTheme.primary : Theme.of(context).colorScheme.outline),
               borderRadius: BorderRadius.circular(AppRadius.mdPlus),
             ),
             alignment: Alignment.center,

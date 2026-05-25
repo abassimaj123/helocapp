@@ -539,7 +539,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
               const SizedBox(width: AppSpacing.xxs),
               const Text('Premium',
                   style: TextStyle(
-                      fontSize: 10,
+                      fontSize: AppTextSize.xs,
                       color: CalcwiseSemanticColors.warnIcon,
                       fontWeight: FontWeight.w600)),
             ]),
@@ -612,7 +612,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
                           Text(
                             isEs ? 'Efectiva' : 'Effective',
                             style: const TextStyle(
-                                fontSize: 9, color: AppTheme.labelGray),
+                                fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
                           ),
                           Text(
                             '${_effectiveBaseRate.toStringAsFixed(2)}%',
@@ -1081,7 +1081,7 @@ class _StrategyCard extends StatelessWidget {
                     isEs ? 'ÓPTIMO' : 'OPTIMAL',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: AppTextSize.xs,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1142,7 +1142,7 @@ class _Metric extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
+              style: const TextStyle(fontSize: AppTextSize.xs, color: AppTheme.labelGray)),
           const SizedBox(height: AppSpacing.xxs),
           Text(value,
               style: TextStyle(
@@ -1361,7 +1361,7 @@ class _VarRateResults extends StatelessWidget {
           show: true,
           labelResolver: (_) => '${s.ratePct.toStringAsFixed(1)}%',
           style: const TextStyle(
-              fontSize: 9, color: CalcwiseSemanticColors.warnIcon),
+              fontSize: AppTextSize.xxs, color: CalcwiseSemanticColors.warnIcon),
         ),
       );
     }).toList();
@@ -1572,7 +1572,7 @@ class _VarRateResults extends StatelessWidget {
                                       getTitlesWidget: (v, _) => Text(
                                         '\$${(v / 1000).toStringAsFixed(0)}k',
                                         style: const TextStyle(
-                                            fontSize: 9,
+                                            fontSize: AppTextSize.xxs,
                                             color: AppTheme.labelGray),
                                       ),
                                     ),
@@ -1584,7 +1584,7 @@ class _VarRateResults extends StatelessWidget {
                                       getTitlesWidget: (v, _) => Text(
                                         '${v ~/ 12}y',
                                         style: const TextStyle(
-                                            fontSize: 9,
+                                            fontSize: AppTextSize.xxs,
                                             color: AppTheme.labelGray),
                                       ),
                                     ),
@@ -1609,7 +1609,7 @@ class _VarRateResults extends StatelessWidget {
                                       labelResolver: (_) =>
                                           isEs ? 'Fin disp.' : 'Draw End',
                                       style: const TextStyle(
-                                          fontSize: 8, color: AppTheme.primary),
+                                          fontSize: AppTextSize.xxs, color: AppTheme.primary),
                                     ),
                                   ),
                                   ...rateChangeLines,
@@ -1663,7 +1663,7 @@ class _VarMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label,
-          style: const TextStyle(fontSize: 10, color: AppTheme.labelGray)),
+          style: const TextStyle(fontSize: AppTextSize.xs, color: AppTheme.labelGray)),
       const SizedBox(height: AppSpacing.xxs),
       Text(value,
           style: TextStyle(
@@ -1743,7 +1743,7 @@ class _VarRateMonthlyTable extends StatelessWidget {
                       child: Text(
                         '${rate.toStringAsFixed(1)}%',
                         style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: AppTextSize.xs,
                             color: CalcwiseSemanticColors.warnIcon,
                             fontWeight: FontWeight.w600),
                       ),
