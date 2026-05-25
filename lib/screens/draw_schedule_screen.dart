@@ -370,7 +370,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             getTitlesWidget: (v, _) => Text(
                               '\$${(v / 1000).toStringAsFixed(0)}k',
                               style: const TextStyle(
-                                  fontSize: 10, color: AppTheme.labelGray),
+                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
                             ),
                           ),
                         ),
@@ -381,7 +381,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             getTitlesWidget: (v, _) => Text(
                               '${v ~/ 12}y',
                               style: const TextStyle(
-                                  fontSize: 10, color: AppTheme.labelGray),
+                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
                             ),
                           ),
                         ),
@@ -402,7 +402,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             labelResolver: (_) =>
                                 isEs ? 'Fin disposición' : 'Draw End',
                             style: const TextStyle(
-                                fontSize: 9, color: Colors.orange),
+                                fontSize: AppTextSize.xxs, color: Colors.orange),
                           ),
                         ),
                       ]),
@@ -584,7 +584,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             ? (isEs ? 'Disposición' : 'Draw')
                             : (isEs ? 'Pago' : 'Repay'),
                         style: TextStyle(
-                            fontSize: 10,
+                            fontSize: AppTextSize.xs,
                             color: isDrawPhase
                                 ? AppTheme.primary
                                 : AppTheme.success,

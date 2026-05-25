@@ -1679,7 +1679,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                     Text(
                       isEs ? 'Interés' : 'Draw pmt',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: AppTextSize.xs,
                         color: isCurrent
                             ? Colors.white70
                             : CalcwiseTheme.of(ctx).textSecondary,
@@ -1698,7 +1698,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                     Text(
                       isEs ? 'Amortizado' : 'Repay pmt',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: AppTextSize.xs,
                         color: isCurrent
                             ? Colors.white70
                             : CalcwiseTheme.of(ctx).textSecondary,
@@ -2122,7 +2122,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                   const SizedBox(width: 3),
                   Text('Premium',
                       style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: AppTextSize.xs,
                           color: CalcwiseSemanticColors.warnIcon,
                           fontWeight: FontWeight.w600)),
                 ]),
@@ -2341,7 +2341,7 @@ class _SensRow extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text(
           isEs ? 'Cambio' : 'Change',
-          style: const TextStyle(fontSize: 10, color: AppTheme.labelGray),
+          style: const TextStyle(fontSize: AppTextSize.xs, color: AppTheme.labelGray),
         ),
         Text(
           '$sign${fmtDelta.format(delta)}',
