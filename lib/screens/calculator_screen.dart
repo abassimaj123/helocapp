@@ -1989,7 +1989,7 @@ class _EquityCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ltvFraction,
                   minHeight: 7,
-                  backgroundColor: const Color(0xFFE2E8F0),
+                  backgroundColor: CalcwiseTheme.of(context).cardBorder,
                   valueColor: AlwaysStoppedAnimation<Color>(ltvColor),
                 ),
               ),

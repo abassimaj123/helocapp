@@ -258,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
                                   : AppStringsEN.disclaimer),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF475569),
+                                    color: CalcwiseTheme.of(context).textSecondary,
                                     fontStyle: FontStyle.italic,
                                   ),
                         ),
