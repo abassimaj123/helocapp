@@ -49,7 +49,7 @@ class PaymentShockScreen extends StatefulWidget {
   State<PaymentShockScreen> createState() => _PaymentShockScreenState();
 }
 
-class _PaymentShockScreenState extends State<PaymentShockScreen> {
+class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _balanceCtrl = TextEditingController(text: '100000');
@@ -72,7 +72,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
     _balanceCtrl.text = h.balance.toStringAsFixed(0);
     _currentRateCtrl.text = h.rate.toStringAsFixed(1);
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
-      c.addListener(_tryCompute);
+      c.addListener(() => scheduleCalc(_tryCompute));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
   }

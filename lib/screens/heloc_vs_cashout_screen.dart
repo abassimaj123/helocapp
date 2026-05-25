@@ -80,7 +80,7 @@ class HelocVsCashoutScreen extends StatefulWidget {
   State<HelocVsCashoutScreen> createState() => _HelocVsCashoutScreenState();
 }
 
-class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
+class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _homeValueCtrl = TextEditingController(text: '500000');
@@ -118,7 +118,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
       _refiRateCtrl,
       _closingPctCtrl,
     ]) {
-      c.addListener(_tryCompute);
+      c.addListener(() => scheduleCalc(_tryCompute));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
   }

@@ -46,7 +46,7 @@ double _parseNum(String v) {
 /// Payment mode selected by the IO vs P&I toggle.
 enum _PaymentMode { interestOnly, fullPI }
 
-class _CalculatorScreenState extends State<CalculatorScreen> {
+class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _homeValueCtrl = TextEditingController(text: '400000');
@@ -86,7 +86,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       _drawYearsCtrl,
       _repayYearsCtrl
     ]) {
-      c.addListener(_tryCalculate);
+      c.addListener(() => scheduleCalc(_tryCalculate));
     }
     _updateEquity();
     // Run initial calculation with default values
@@ -188,16 +188,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   void dispose() {
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);
-    for (final c in [
-      _homeValueCtrl,
-      _mortgageCtrl,
-      _drawCtrl,
-      _rateCtrl,
-      _drawYearsCtrl,
-      _repayYearsCtrl
-    ]) {
-      c.removeListener(_tryCalculate);
-    }
     _homeValueCtrl.dispose();
     _mortgageCtrl.dispose();
     _drawCtrl.dispose();
@@ -427,6 +417,8 @@ LTV actual: ${_fmtPct.format(ltv)}%
 Ahorro fiscal estimado: ${_fmtDec.format(taxSavings)}/año
 
 ⚠ Consulta a un asesor fiscal. Los intereses del HELOC pueden ser deducibles si se usan para mejoras del hogar.
+
+📄 Exporta el reporte completo en PDF →
 ''';
     }
     return '''
@@ -445,6 +437,8 @@ Current LTV: ${_fmtPct.format(ltv)}%
 Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
 
 ⚠ Consult a tax advisor. HELOC interest may be deductible if used for home improvements.
+
+📄 Export the full PDF report in the app →
 ''';
   }
 
