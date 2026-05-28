@@ -456,21 +456,6 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                 tooltip: isEs ? 'Compartir' : 'Share',
                 onPressed: () => _share(context, isEs),
               ),
-              ValueListenableBuilder<bool>(
-                valueListenable: freemiumService.hasFullAccessNotifier,
-                builder: (_, isPremium, __) => IconButton(
-                  icon: Icon(
-                    Icons.picture_as_pdf_rounded,
-                    color: isPremium ? Colors.white : Colors.white60,
-                  ),
-                  tooltip: isPremium
-                      ? (isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf)
-                      : (isEs
-                          ? AppStringsES.exportLocked
-                          : AppStringsEN.exportLocked),
-                  onPressed: () => _exportPdf(context, isEs),
-                ),
-              ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                 tooltip: isEs ? 'Eliminar' : 'Delete',
@@ -617,6 +602,66 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                         const SizedBox(height: AppSpacing.listBottomInset),
                       ],
                     ),
+                  ),
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: freemiumService.hasFullAccessNotifier,
+                  builder: (_, isPremium, __) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: isPremium
+                                  ? AppTheme.primary
+                                  : CalcwiseTheme.of(context).surfaceHigh,
+                              foregroundColor: isPremium
+                                  ? Colors.white
+                                  : CalcwiseTheme.of(context).textSecondary,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                              side: isPremium
+                                  ? BorderSide.none
+                                  : BorderSide(
+                                      color: CalcwiseTheme.of(context)
+                                          .cardBorder),
+                            ),
+                            icon: Icon(
+                              isPremium
+                                  ? Icons.picture_as_pdf_rounded
+                                  : Icons.lock_rounded,
+                              size: 20,
+                            ),
+                            label: Text(
+                              isEs
+                                  ? AppStringsES.exportPdf
+                                  : AppStringsEN.exportPdf,
+                              style: const TextStyle(
+                                  fontSize: AppTextSize.body,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            onPressed: () async {
+                              if (!isPremium) {
+                                if (context.mounted) {
+                                  await PaywallHard.show(context);
+                                }
+                                return;
+                              }
+                              if (!context.mounted) return;
+                              await _exportPdf(context, isEs);
+                            },
+                          ),
+                        ),
+                      ),
+                      if (!isPremium) const CalcwiseAdFooter(),
+                    ],
                   ),
                 ),
               ],
