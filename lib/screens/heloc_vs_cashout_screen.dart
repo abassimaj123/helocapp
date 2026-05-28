@@ -1,11 +1,8 @@
 import 'dart:math' show pow;
 
-import 'package:calcwise_core/calcwise_core.dart'
-    show CalcwiseAdFooter, ComparisonScenario, ComparisonView, PaywallTrigger;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
@@ -80,7 +77,7 @@ class HelocVsCashoutScreen extends StatefulWidget {
   State<HelocVsCashoutScreen> createState() => _HelocVsCashoutScreenState();
 }
 
-class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
+class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _homeValueCtrl = TextEditingController(text: '500000');
@@ -94,16 +91,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
 
   bool _financeClosing = true;
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
   _CompareCashoutResult? _result;
 
   @override
   void initState() {
     super.initState();
+    // Pre-fill balance and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _existingBalCtrl.text = h.balance.toStringAsFixed(0);
+    _helocRateCtrl.text = h.rate.toStringAsFixed(1);
     for (final c in [
       _homeValueCtrl,
       _existingBalCtrl,
@@ -114,7 +110,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
       _refiRateCtrl,
       _closingPctCtrl,
     ]) {
-      c.addListener(_tryCompute);
+      c.addListener(() => scheduleCalc(_tryCompute));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
   }
@@ -403,7 +399,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
                           ? const SizedBox.shrink()
                           : _buildResults(isEs, _result!),
                     ),
-                    const SizedBox(height: 80),
+                    const SizedBox(height: AppSpacing.listBottomInset),
                   ],
                 ),
               ),
@@ -460,14 +456,14 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
               accentColor: _helocColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    _fmtDec.format(r.scenarioATotalMonthly),
+                    AmountFormatter.ui(r.scenarioATotalMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    _fmtDec.format(r.existingMortgagePI + r.helocPI),
+                    AmountFormatter.ui(r.existingMortgagePI + r.helocPI, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'): r'$0',
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    _fmt.format(r.scenarioATotalInterest30y),
+                    AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    _fmt.format(r.scenarioATotalInterest30y),
+                    AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
               },
             ),
             ComparisonScenario(
@@ -475,15 +471,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> {
               accentColor: _refiColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    _fmtDec.format(r.refiMonthly),
+                    AmountFormatter.ui(r.refiMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    _fmtDec.format(r.refiMonthly),
+                    AmountFormatter.ui(r.refiMonthly, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'):
-                    _financeClosing ? r'$0' : _fmt.format(r.refiClosingCosts),
+                    _financeClosing ? r'$0' : AmountFormatter.ui(r.refiClosingCosts, 'USD'),
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    _fmt.format(r.scenarioBTotalInterest30y),
+                    AmountFormatter.ui(r.scenarioBTotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    _fmt.format(r.scenarioBTotalCost),
+                    AmountFormatter.ui(r.scenarioBTotalCost, 'USD'),
               },
             ),
           ],

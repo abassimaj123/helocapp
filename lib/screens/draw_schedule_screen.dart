@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -30,16 +30,27 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
   List<Map<String, double>>? _schedule;
   double? _draw;
   double? _rate;
   int? _drawYears;
   int? _repayYears;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill draw amount and rate from the last calculator result.
+    final h = helocNotifier.value;
+    if (h.creditLimit > 0) {
+      _drawCtrl.text = h.creditLimit.toStringAsFixed(0);
+    }
+    if (h.rate > 0) {
+      _rateCtrl.text = h.rate.toStringAsFixed(1);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _generate();
+    });
+  }
 
   @override
   void dispose() {
@@ -107,9 +118,6 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
         ? 'Generado: ${dateFmt.format(now)}'
         : 'Generated: ${dateFmt.format(now)}';
 
-    final fmtCur =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -118,8 +126,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               style: pw.TextStyle(
                   fontSize: AppTextSize.title, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 12),
-          pw.Text('$homeLabel: ${fmtCur.format(draw)}'),
-          pw.Text('$creditLabel: ${fmtCur.format(draw)}'),
+          pw.Text('$homeLabel: ${AmountFormatter.ui(draw, 'USD')}'),
+          pw.Text('$creditLabel: ${AmountFormatter.ui(draw, 'USD')}'),
           pw.Text('$drawLabel: ${drawYears}y'),
           pw.Text('$repayLabel: ${repayYears}y'),
           pw.Text('$rateLabel: ${rate.toStringAsFixed(2)}%'),
@@ -146,10 +154,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   (balance - principal).clamp(0.0, double.infinity);
               return [
                 '$month',
-                fmtCur.format(balance),
-                fmtCur.format(interest),
-                fmtCur.format(principal),
-                fmtCur.format(remaining),
+                AmountFormatter.ui(balance, 'USD'),
+                AmountFormatter.ui(interest, 'USD'),
+                AmountFormatter.ui(principal, 'USD'),
+                AmountFormatter.ui(remaining, 'USD'),
               ];
             }).toList(),
             headerStyle:
@@ -226,7 +234,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
 
                   // Rate scenarios + Export — single premium gate
                   ValueListenableBuilder<bool>(
-                    valueListenable: freemiumService.isPremiumNotifier,
+                    valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
                         return PremiumCtaWidget(
@@ -267,7 +275,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                         isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf),
                   ),
                 ],
-                const SizedBox(height: 80),
+                const SizedBox(height: AppSpacing.listBottomInset),
               ],
             ),
           ),
@@ -361,7 +369,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             getTitlesWidget: (v, _) => Text(
                               '\$${(v / 1000).toStringAsFixed(0)}k',
                               style: const TextStyle(
-                                  fontSize: 10, color: AppTheme.labelGray),
+                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
                             ),
                           ),
                         ),
@@ -372,7 +380,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             getTitlesWidget: (v, _) => Text(
                               '${v ~/ 12}y',
                               style: const TextStyle(
-                                  fontSize: 10, color: AppTheme.labelGray),
+                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
                             ),
                           ),
                         ),
@@ -393,7 +401,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             labelResolver: (_) =>
                                 isEs ? 'Fin disposición' : 'Draw End',
                             style: const TextStyle(
-                                fontSize: 9, color: Colors.orange),
+                                fontSize: AppTextSize.xxs, color: Colors.orange),
                           ),
                         ),
                       ]),
@@ -482,20 +490,20 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                 ),
                 _scenarioRow(
                     '${baseRate.toStringAsFixed(1)}%',
-                    _fmtDec.format(baseInterestOnly),
-                    _fmtDec.format(baseRepay),
-                    _fmt.format(baseTotal),
+                    AmountFormatter.ui(baseInterestOnly, 'USD'),
+                    AmountFormatter.ui(baseRepay, 'USD'),
+                    AmountFormatter.ui(baseTotal, 'USD'),
                     isBase: true),
                 _scenarioRow(
                     '+1% (${(baseRate + 1).toStringAsFixed(1)}%)',
-                    _fmtDec.format(base1InterestOnly),
-                    _fmtDec.format(base1Repay),
-                    _fmt.format(base1Total)),
+                    AmountFormatter.ui(base1InterestOnly, 'USD'),
+                    AmountFormatter.ui(base1Repay, 'USD'),
+                    AmountFormatter.ui(base1Total, 'USD')),
                 _scenarioRow(
                     '+2% (${(baseRate + 2).toStringAsFixed(1)}%)',
-                    _fmtDec.format(base2InterestOnly),
-                    _fmtDec.format(base2Repay),
-                    _fmt.format(base2Total)),
+                    AmountFormatter.ui(base2InterestOnly, 'USD'),
+                    AmountFormatter.ui(base2Repay, 'USD'),
+                    AmountFormatter.ui(base2Total, 'USD')),
               ],
             ),
           ],
@@ -575,7 +583,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                             ? (isEs ? 'Disposición' : 'Draw')
                             : (isEs ? 'Pago' : 'Repay'),
                         style: TextStyle(
-                            fontSize: 10,
+                            fontSize: AppTextSize.xs,
                             color: isDrawPhase
                                 ? AppTheme.primary
                                 : AppTheme.success,
@@ -585,11 +593,11 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   ),
                   Expanded(
                       flex: 2,
-                      child: Text(_fmtDec.format(row['payment']!),
+                      child: Text(AmountFormatter.ui(row['payment']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                   Expanded(
                       flex: 2,
-                      child: Text(_fmt.format(row['balance']!),
+                      child: Text(AmountFormatter.ui(row['balance']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                 ]),
               );

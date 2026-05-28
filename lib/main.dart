@@ -1,5 +1,5 @@
 import 'package:calcwise_core/calcwise_core.dart'
-    hide CrashlyticsService, iapErrorNotifier;
+    hide CrashlyticsService, iapErrorNotifier, PaywallHard;
 import 'core/ads/ad_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -28,7 +28,10 @@ import 'screens/splash_screen.dart';
 import 'widgets/paywall_hard.dart';
 import 'widgets/paywall_soft.dart';
 
-final paywallSession = PaywallSessionService(appKey: 'helocapp');
+final paywallSession = PaywallSessionService(
+  appKey: 'helocapp',
+  hasFullAccess: () => freemiumService.hasFullAccess,
+);
 
 final adService = CalcwiseAdService(
   config: CalcwiseAdConfig(
@@ -44,6 +47,11 @@ final adService = CalcwiseAdService(
 
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
 final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
+
+/// Last-calculated HELOC values for pre-filling secondary tools.
+final ValueNotifier<({double creditLimit, double balance, double rate})>
+    helocNotifier =
+    ValueNotifier((creditLimit: 100000.0, balance: 100000.0, rate: 8.5));
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,10 +72,9 @@ Future<void> main() async {
     isFrenchNotifier.value = lang == 'fr';
   }
 
+  // statusBarIconBrightness is set dynamically in the shell build()
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    // systemNavigationBarColor is set dynamically in the shell build()
   ));
 
   await themeModeService.initialize();
@@ -152,6 +159,21 @@ class HELOCApp extends StatelessWidget {
                 darkTheme: AppTheme.dark,
                 themeMode: themeMode,
                 debugShowCheckedModeBanner: false,
+                builder: (context, child) {
+                  if (!MediaQuery.of(context).disableAnimations) return child!;
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      pageTransitionsTheme: const PageTransitionsTheme(
+                        builders: {
+                          TargetPlatform.android:
+                              _NoAnimPageTransitionsBuilder(),
+                          TargetPlatform.iOS: _NoAnimPageTransitionsBuilder(),
+                        },
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
                 home: const SplashScreen(),
                 routes: {
                   '/home': (_) => const MainShell(),
@@ -236,6 +258,7 @@ class _MainShellState extends State<MainShell> {
               ),
             ),
             onRewardAd: () => CalcwiseRewardAdSheet.show(context),
+            onPremium: () => PaywallHard.show(context),
           ),
         ],
       ),
@@ -294,4 +317,17 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+}
+
+class _NoAnimPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoAnimPageTransitionsBuilder();
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) =>
+      child;
 }

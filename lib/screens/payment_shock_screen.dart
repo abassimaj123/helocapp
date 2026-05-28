@@ -1,12 +1,9 @@
 import 'dart:math' show pow;
 
-import 'package:calcwise_core/calcwise_core.dart'
-    show CalcwiseAdFooter, PaywallTrigger;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
@@ -49,7 +46,7 @@ class PaymentShockScreen extends StatefulWidget {
   State<PaymentShockScreen> createState() => _PaymentShockScreenState();
 }
 
-class _PaymentShockScreenState extends State<PaymentShockScreen> {
+class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _balanceCtrl = TextEditingController(text: '100000');
@@ -57,18 +54,17 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
   int _repayYears = 20;
   double _projectedRate = 9.5;
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
   _ShockResult? _result;
 
   @override
   void initState() {
     super.initState();
+    // Pre-fill balance and rate from the last calculator result.
+    final h = helocNotifier.value;
+    _balanceCtrl.text = h.balance.toStringAsFixed(0);
+    _currentRateCtrl.text = h.rate.toStringAsFixed(1);
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
-      c.addListener(_tryCompute);
+      c.addListener(() => scheduleCalc(_tryCompute));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
   }
@@ -264,7 +260,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                           ? const SizedBox.shrink()
                           : _buildResults(isEs, _result!),
                     ),
-                    const SizedBox(height: 80),
+                    const SizedBox(height: AppSpacing.listBottomInset),
                   ],
                 ),
               ),
@@ -301,7 +297,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _fmtDec.format(r.piPayment),
+                  AmountFormatter.ui(r.piPayment, 'USD'),
                   style: const TextStyle(
                     fontSize: AppTextSize.hero,
                     fontWeight: FontWeight.bold,
@@ -312,8 +308,8 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
                 const SizedBox(height: AppSpacing.smPlus),
                 Text(
                   isEs
-                      ? 'Tu pago pasa de ${_fmtDec.format(r.ioPayment)}/mes a ${_fmtDec.format(r.piPayment)}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
-                      : 'Your payment goes from ${_fmtDec.format(r.ioPayment)}/mo to ${_fmtDec.format(r.piPayment)}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
+                      ? 'Tu pago pasa de ${AmountFormatter.ui(r.ioPayment, 'USD')}/mes a ${AmountFormatter.ui(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
+                      : 'Your payment goes from ${AmountFormatter.ui(r.ioPayment, 'USD')}/mo to ${AmountFormatter.ui(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
                   style: const TextStyle(fontSize: AppTextSize.md),
                 ),
               ],
@@ -329,14 +325,14 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> {
           const SizedBox(width: AppSpacing.md),
           Expanded(
               child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                  '+${_fmtDec.format(r.dollarIncrease)}', _piColor)),
+                  '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
         ]),
         const SizedBox(height: AppSpacing.md),
         _metricCard(
           isEs
               ? 'Interés total durante el pago'
               : 'Total interest over repayment',
-          _fmt.format(r.totalInterest),
+          AmountFormatter.ui(r.totalInterest, 'USD'),
           _ioColor,
         ),
 

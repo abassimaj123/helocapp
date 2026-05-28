@@ -1,8 +1,6 @@
-import 'package:calcwise_core/calcwise_core.dart'
-    show PaywallTrigger, MonetizationConfig, CalcwiseAdFooter;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 
 import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
@@ -27,10 +25,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
 
-  final _fmtCur =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
   final _fmtPct = NumberFormat('##0.0#');
 
@@ -122,7 +116,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       children: [
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const _HistorySkeleton()
               : RefreshIndicator(
                   onRefresh: _load,
                   child: CustomScrollView(
@@ -132,7 +126,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
                               AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
                           child: ValueListenableBuilder<bool>(
-                            valueListenable: freemiumService.isPremiumNotifier,
+                            valueListenable: freemiumService.hasFullAccessNotifier,
                             builder: (_, isPremium, __) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -410,14 +404,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Hipoteca actual'
                                                         : 'Mortgage Balance',
-                                                    value:
-                                                        _fmtCur.format(balance),
+                                                    value: AmountFormatter.ui(balance, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label: isEs
                                                         ? 'Monto dispuesto'
                                                         : 'Draw Amount',
-                                                    value: _fmtCur.format(draw),
+                                                    value: AmountFormatter.ui(draw, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label:
@@ -437,8 +430,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Capital disponible'
                                                         : 'Available Equity',
-                                                    value:
-                                                        _fmtCur.format(equity),
+                                                    value: AmountFormatter.ui(equity, 'USD'),
                                                     color: AppTheme.success,
                                                   ),
                                                   _HistoryRow(
@@ -450,8 +442,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago solo interés'
                                                         : 'Interest-Only Payment',
-                                                    value: _fmtDec
-                                                        .format(interestOnly),
+                                                    value: AmountFormatter.ui(interestOnly, 'USD'),
                                                     bold: true,
                                                     color: AppTheme.primary,
                                                   ),
@@ -459,8 +450,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago amortizado'
                                                         : 'Repayment Payment',
-                                                    value: _fmtDec
-                                                        .format(repayment),
+                                                    value: AmountFormatter.ui(repayment, 'USD'),
                                                   ),
                                                 ],
                                               ),
@@ -482,6 +472,79 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         const CalcwiseAdFooter(),
       ],
+    );
+  }
+}
+
+class _HistorySkeleton extends StatelessWidget {
+  const _HistorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: List.generate(
+            3,
+            (i) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.smPlus),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            _ShimmerBox(
+                                width: 120, height: 26, radius: AppRadius.md),
+                            const Spacer(),
+                            _ShimmerBox(
+                                width: 70, height: 22, radius: AppRadius.sm),
+                          ]),
+                          const SizedBox(height: 12),
+                          ...List.generate(
+                              4,
+                              (_) => Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 5),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _ShimmerBox(
+                                            width: 100, height: 13, radius: 4),
+                                        _ShimmerBox(
+                                            width: 70, height: 13, radius: 4),
+                                      ],
+                                    ),
+                                  )),
+                        ],
+                      ),
+                    ),
+                  ),
+                )),
+      ),
+    );
+  }
+}
+
+class _ShimmerBox extends StatelessWidget {
+  final double width, height, radius;
+  const _ShimmerBox(
+      {required this.width, required this.height, required this.radius});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(radius),
+      ),
     );
   }
 }

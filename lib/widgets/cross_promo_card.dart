@@ -60,6 +60,7 @@ class _CrossPromoCardState extends State<CrossPromoCard> {
   Widget build(BuildContext context) {
     if (!_checked || _dismissed || widget.isPremium)
       return const SizedBox.shrink();
+    final ct = CalcwiseTheme.of(context);
     return Container(
       margin:
           const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 6),
@@ -94,7 +95,7 @@ class _CrossPromoCardState extends State<CrossPromoCard> {
               child: const Text('CalqWise',
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: AppTextSize.xs,
                       fontWeight: FontWeight.bold)),
             ),
             const SizedBox(width: 6),
@@ -102,28 +103,31 @@ class _CrossPromoCardState extends State<CrossPromoCard> {
                 isSpanishNotifier.value
                     ? 'También de nosotros'
                     : 'Also from us',
-                style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                style: TextStyle(fontSize: AppTextSize.xs, color: ct.textSecondary)),
           ]),
           const SizedBox(height: AppSpacing.xxs),
-          const Text(_targetName,
+          Text(_targetName,
               style: TextStyle(
                   fontSize: AppTextSize.md,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B))),
+                  color: ct.textPrimary)),
           Text(isSpanishNotifier.value ? _targetTaglineEs : _targetTagline,
-              style: const TextStyle(
-                  fontSize: AppTextSize.xs, color: Color(0xFF64748B))),
+              style: TextStyle(
+                  fontSize: AppTextSize.xs, color: ct.textSecondary)),
         ])),
         const SizedBox(width: AppSpacing.sm),
         Column(children: [
-          GestureDetector(
-            onTap: _dismiss,
-            child: const Icon(Icons.close_rounded,
-                size: 16, color: Color(0xFF94A3B8)),
+          IconButton(
+            onPressed: _dismiss,
+            tooltip: 'Dismiss',
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: EdgeInsets.zero,
+            icon: Icon(Icons.close_rounded, size: 16, color: ct.textSecondary),
           ),
           const SizedBox(height: AppSpacing.sm),
-          GestureDetector(
+          InkWell(
             onTap: _open,
+            borderRadius: BorderRadius.circular(AppRadius.md),
             child: Container(
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.smPlus, vertical: 5),

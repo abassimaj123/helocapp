@@ -1,9 +1,9 @@
 import 'dart:math' show pow;
 
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -46,7 +46,7 @@ double _parseNum(String v) {
 /// Payment mode selected by the IO vs P&I toggle.
 enum _PaymentMode { interestOnly, fullPI }
 
-class _CalculatorScreenState extends State<CalculatorScreen> {
+class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _homeValueCtrl = TextEditingController(text: '400000');
@@ -56,10 +56,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final _fmtPct = NumberFormat('##0.0#');
 
   // Live computed equity
@@ -75,6 +71,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('calculator');
     _homeValueCtrl.addListener(_updateEquity);
     _mortgageCtrl.addListener(_updateEquity);
     for (final c in [
@@ -85,7 +82,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       _drawYearsCtrl,
       _repayYearsCtrl
     ]) {
-      c.addListener(_tryCalculate);
+      c.addListener(() => scheduleCalc(_tryCalculate));
     }
     _updateEquity();
     // Run initial calculation with default values
@@ -157,6 +154,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           drawYears: drawYears,
           repayYears: repayYears);
     });
+    // Update global notifier so secondary tools can pre-fill from latest values.
+    helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
   }
 
   /// Computes rate scenario rows without touching the widget tree.
@@ -166,7 +165,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     required int drawYears,
     required int repayYears,
   }) {
-    const offsets = [-1, 0, 1];
+    const offsets = [-1, 0, 1, 2];
     return offsets.map((offset) {
       final scenarioRate = (baseRate + offset).clamp(0.01, 100.0);
       return {
@@ -185,16 +184,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   void dispose() {
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);
-    for (final c in [
-      _homeValueCtrl,
-      _mortgageCtrl,
-      _drawCtrl,
-      _rateCtrl,
-      _drawYearsCtrl,
-      _repayYearsCtrl
-    ]) {
-      c.removeListener(_tryCalculate);
-    }
     _homeValueCtrl.dispose();
     _mortgageCtrl.dispose();
     _drawCtrl.dispose();
@@ -411,37 +400,41 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       return '''
 HELOC Calculator — Resultado
 
-Valor vivienda: ${_fmt.format(homeValue)}
-Saldo hipoteca: ${_fmt.format(mortgage)}
-Monto dispuesto: ${_fmt.format(draw)}
+Valor vivienda: ${AmountFormatter.ui(homeValue, 'USD')}
+Saldo hipoteca: ${AmountFormatter.ui(mortgage, 'USD')}
+Monto dispuesto: ${AmountFormatter.ui(draw, 'USD')}
 Tasa HELOC: ${rate.toStringAsFixed(2)}%
 Período: ${drawYears}a disposición / ${repayYears}a pago
 
-Pago solo interés: ${_fmtDec.format(interestOnly)}/mes
-Pago amortizado: ${_fmtDec.format(repayment)}/mes
-Capital disponible: ${_fmt.format(equity)}
+Pago solo interés: ${AmountFormatter.ui(interestOnly, 'USD')}/mes
+Pago amortizado: ${AmountFormatter.ui(repayment, 'USD')}/mes
+Capital disponible: ${AmountFormatter.ui(equity, 'USD')}
 LTV actual: ${_fmtPct.format(ltv)}%
-Ahorro fiscal estimado: ${_fmtDec.format(taxSavings)}/año
+Ahorro fiscal estimado: ${AmountFormatter.ui(taxSavings, 'USD')}/año
 
 ⚠ Consulta a un asesor fiscal. Los intereses del HELOC pueden ser deducibles si se usan para mejoras del hogar.
+
+📄 Exporta el reporte completo en PDF →
 ''';
     }
     return '''
 HELOC Calculator — Results
 
-Home Value: ${_fmt.format(homeValue)}
-Mortgage Balance: ${_fmt.format(mortgage)}
-Draw Amount: ${_fmt.format(draw)}
+Home Value: ${AmountFormatter.ui(homeValue, 'USD')}
+Mortgage Balance: ${AmountFormatter.ui(mortgage, 'USD')}
+Draw Amount: ${AmountFormatter.ui(draw, 'USD')}
 HELOC Rate: ${rate.toStringAsFixed(2)}%
 Period: ${drawYears}yr draw / ${repayYears}yr repayment
 
-Interest-Only Payment: ${_fmtDec.format(interestOnly)}/mo
-Repayment Payment: ${_fmtDec.format(repayment)}/mo
-Available Equity: ${_fmt.format(equity)}
+Interest-Only Payment: ${AmountFormatter.ui(interestOnly, 'USD')}/mo
+Repayment Payment: ${AmountFormatter.ui(repayment, 'USD')}/mo
+Available Equity: ${AmountFormatter.ui(equity, 'USD')}
 Current LTV: ${_fmtPct.format(ltv)}%
-Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
+Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
 
 ⚠ Consult a tax advisor. HELOC interest may be deductible if used for home improvements.
+
+📄 Export the full PDF report in the app →
 ''';
   }
 
@@ -545,17 +538,17 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
               _pdfTable(
                 isEs
                     ? [
-                        ['Valor de la vivienda', _fmt.format(homeValue)],
-                        ['Saldo hipotecario', _fmt.format(mortgage)],
-                        ['Monto a disponer', _fmt.format(draw)],
+                        ['Valor de la vivienda', AmountFormatter.ui(homeValue, 'USD')],
+                        ['Saldo hipotecario', AmountFormatter.ui(mortgage, 'USD')],
+                        ['Monto a disponer', AmountFormatter.ui(draw, 'USD')],
                         ['Tasa HELOC', '${rate.toStringAsFixed(2)}%'],
                         ['Período de disposición', '$drawYears años'],
                         ['Período de pago', '$repayYears años'],
                       ]
                     : [
-                        ['Home Value', _fmt.format(homeValue)],
-                        ['Mortgage Balance', _fmt.format(mortgage)],
-                        ['Draw Amount', _fmt.format(draw)],
+                        ['Home Value', AmountFormatter.ui(homeValue, 'USD')],
+                        ['Mortgage Balance', AmountFormatter.ui(mortgage, 'USD')],
+                        ['Draw Amount', AmountFormatter.ui(draw, 'USD')],
                         ['HELOC Rate', '${rate.toStringAsFixed(2)}%'],
                         ['Draw Period', '$drawYears years'],
                         ['Repayment Period', '$repayYears years'],
@@ -571,33 +564,33 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                     ? [
                         [
                           'Pago solo interés (período disposición)',
-                          _fmtDec.format(interestOnly)
+                          AmountFormatter.ui(interestOnly, 'USD')
                         ],
                         [
                           'Pago amortizado (período de pago)',
-                          _fmtDec.format(repayment)
+                          AmountFormatter.ui(repayment, 'USD')
                         ],
-                        ['Capital disponible (85% LTV)', _fmt.format(equity)],
+                        ['Capital disponible (85% LTV)', AmountFormatter.ui(equity, 'USD')],
                         ['LTV actual', '${_fmtPct.format(ltv)}%'],
                         [
                           'Ahorro fiscal estimado (22%)',
-                          '${_fmtDec.format(taxSavings)}/año'
+                          '${AmountFormatter.ui(taxSavings, 'USD')}/año'
                         ],
                       ]
                     : [
                         [
                           'Interest-Only Payment (Draw Period)',
-                          _fmtDec.format(interestOnly)
+                          AmountFormatter.ui(interestOnly, 'USD')
                         ],
                         [
                           'Repayment Payment (After Draw)',
-                          _fmtDec.format(repayment)
+                          AmountFormatter.ui(repayment, 'USD')
                         ],
-                        ['Available Equity (85% LTV)', _fmt.format(equity)],
+                        ['Available Equity (85% LTV)', AmountFormatter.ui(equity, 'USD')],
                         ['Current LTV', '${_fmtPct.format(ltv)}%'],
                         [
                           'Est. Tax Savings (22% bracket)',
-                          '${_fmtDec.format(taxSavings)}/year'
+                          '${AmountFormatter.ui(taxSavings, 'USD')}/year'
                         ],
                       ],
                 highlightFirst: true,
@@ -742,6 +735,48 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Container(
+                            width: double.infinity,
+                            color:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                                AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isEs
+                                      ? 'Calculadora HELOC'
+                                      : 'HELOC Calculator',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  isEs
+                                      ? 'Calcula tu línea de crédito sobre el valor de tu hogar'
+                                      : 'Calculate your home equity line of credit',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                            .withValues(alpha: 0.8),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             isEs
                                 ? 'Información de la Vivienda'
@@ -783,7 +818,6 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                             availableEquity: _availableEquity,
                             ltvPct: _ltvPct,
                             isEs: isEs,
-                            fmt: _fmt,
                             fmtPct: _fmtPct,
                           ),
 
@@ -867,105 +901,92 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                           _buildPaymentModeToggle(isEs),
                           const SizedBox(height: 16),
 
-                          // ── More Tools — grouped expansion ─────────────────
-                          Card(
-                            margin: EdgeInsets.zero,
-                            child: ExpansionTile(
-                              leading: const Icon(Icons.build_rounded),
-                              title: Text(
-                                  isEs ? 'Más herramientas' : 'More tools'),
-                              childrenPadding:
-                                  const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const DrawOptimizerScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon: const Icon(
-                                      Icons.account_balance_wallet_rounded,
-                                      size: 18),
-                                  label: Text(
-                                      isEs
-                                          ? 'Draw Optimizer'
-                                          : 'Draw Optimizer',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
+                          // ── More Tools ─────────────────────────────────────
+                          Text(
+                            isEs ? 'Más herramientas' : 'More Tools',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const PaymentShockScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon:
-                                      const Icon(Icons.bolt_rounded, size: 18),
-                                  label: Text(
-                                      isEs ? 'Choque de Pago' : 'Payment Shock',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (_, __, ___) =>
-                                          const HelocVsCashoutScreen(),
-                                      transitionsBuilder:
-                                          (_, anim, __, child) =>
-                                              FadeTransition(
-                                                  opacity: anim, child: child),
-                                      transitionDuration: AppDuration.base,
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.swap_horiz_rounded,
-                                      size: 18),
-                                  label: Text(
-                                      isEs
-                                          ? 'HELOC vs Refi con Retiro'
-                                          : 'HELOC vs Cash-Out Refi',
-                                      style: const TextStyle(
-                                          fontSize: AppTextSize.md)),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize:
-                                        const Size(double.infinity, 44),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            AppRadius.lg)),
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const DrawOptimizerScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon: const Icon(
+                                Icons.account_balance_wallet_rounded,
+                                size: 18),
+                            label: Text(
+                                isEs ? 'Draw Optimizer' : 'Draw Optimizer',
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const PaymentShockScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon: const Icon(Icons.bolt_rounded, size: 18),
+                            label: Text(
+                                isEs ? 'Choque de Pago' : 'Payment Shock',
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const HelocVsCashoutScreen(),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    FadeTransition(opacity: anim, child: child),
+                                transitionDuration: AppDuration.base,
+                              ),
+                            ),
+                            icon:
+                                const Icon(Icons.swap_horiz_rounded, size: 18),
+                            label: Text(
+                                isEs
+                                    ? 'HELOC vs Refi con Retiro'
+                                    : 'HELOC vs Cash-Out Refi',
+                                style:
+                                    const TextStyle(fontSize: AppTextSize.md)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -1030,7 +1051,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                               // PDF export button
                                               ValueListenableBuilder<bool>(
                                                 valueListenable: freemiumService
-                                                    .isPremiumNotifier,
+                                                    .hasFullAccessNotifier,
                                                 builder: (_, isPremium, __) =>
                                                     IconButton(
                                                   icon: Icon(
@@ -1094,7 +1115,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                       ? 'Pago P&I'
                                                       : 'P&I Payment'),
                                               value:
-                                                  '\$${_fmtDec.format(drawPayment)}',
+                                                  AmountFormatter.ui(drawPayment, 'USD'),
                                               secondary: isIO
                                                   ? (isEs
                                                       ? '$drawYears años de disposición'
@@ -1108,13 +1129,13 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                   label: isEs
                                                       ? 'Interés total'
                                                       : 'Total Interest',
-                                                  value: _fmt.format(totalInt)
+                                                  value: AmountFormatter.ui(totalInt, 'USD')
                                                 ),
                                                 (
                                                   label: isEs
                                                       ? 'Capital disponible'
                                                       : 'Available Equity',
-                                                  value: _fmt.format(equity)
+                                                  value: AmountFormatter.ui(equity, 'USD')
                                                 ),
                                               ],
                                             );
@@ -1129,8 +1150,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                   label: isEs
                                                       ? 'Capital disponible (85% LTV)'
                                                       : 'Available Equity (85% LTV)',
-                                                  value: _fmt.format(
-                                                      _results!['equity']),
+                                                  value: AmountFormatter.ui(
+                                                      (_results!['equity'] as double?) ?? 0.0, 'USD'),
                                                   valueColor: AppTheme.success,
                                                 ),
                                                 const Divider(height: 16),
@@ -1138,8 +1159,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                   label: isEs
                                                       ? 'Capacidad máx. préstamo (85%)'
                                                       : 'Max Borrow Capacity (85%)',
-                                                  value: _fmt.format(
-                                                      _results!['maxBorrow85']),
+                                                  value: AmountFormatter.ui(
+                                                      (_results!['maxBorrow85'] as double?) ?? 0.0, 'USD'),
                                                   valueColor: AppTheme.primary,
                                                 ),
                                                 const Divider(height: 16),
@@ -1233,14 +1254,13 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                       : (isEs
                                                           ? 'Interés total (P&I completo)'
                                                           : 'Total Interest (Full P&I)'),
-                                                  value: _fmt.format(
-                                                    _paymentMode ==
+                                                  value: AmountFormatter.ui(
+                                                    (_paymentMode ==
                                                             _PaymentMode
                                                                 .interestOnly
-                                                        ? _results![
-                                                            'totalInterest']
-                                                        : _results![
-                                                            'totalInterestFullPI'],
+                                                        ? _results!['totalInterest']
+                                                        : _results!['totalInterestFullPI']) as double? ?? 0.0,
+                                                    'USD',
                                                   ),
                                                   valueColor:
                                                       AppTheme.errorDark,
@@ -1304,8 +1324,8 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                                               height: 8),
                                                           Text(
                                                             isSpanish
-                                                                ? 'Ahorro fiscal estimado (22%): ${_fmtDec.format(_results!['taxSavings'])}/año'
-                                                                : 'Est. tax savings (22% bracket): ${_fmtDec.format(_results!['taxSavings'])}/year',
+                                                                ? 'Ahorro fiscal estimado (22%): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/año'
+                                                                : 'Est. tax savings (22% bracket): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/year',
                                                             style: TextStyle(
                                                                 fontSize:
                                                                     AppTextSize
@@ -1361,6 +1381,9 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                           const SizedBox(height: 24),
                                           _buildRateScenarios(isEs),
                                           const SizedBox(height: 24),
+                                          // HELOC vs Home Equity Loan comparison
+                                          _buildHelVsHeloc(isEs),
+                                          const SizedBox(height: 24),
                                           // Feature 3 — Interest-Only vs Fully Amortizing
                                           _IoVsFullyAmortizingCard(
                                             draw: (_results!['draw']
@@ -1381,7 +1404,7 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
                                           // Feature 1 — Rate Sensitivity sliders
                                           ValueListenableBuilder<bool>(
                                             valueListenable: freemiumService
-                                                .isPremiumNotifier,
+                                                .hasFullAccessNotifier,
                                             builder: (_, isPremium, __) {
                                               if (!isPremium) {
                                                 return PremiumCtaWidget(
@@ -1566,8 +1589,178 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
     if (baseRate <= 0) return const SizedBox.shrink();
 
     final title = isEs ? 'Escenarios de Tasa' : 'Rate Scenarios';
-    final fmtShort =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+
+    // Color per offset: -1=green, 0=primary, +1=amber, +2=red
+    Color cardColorForOffset(int offset) {
+      if (offset < 0) return AppTheme.successDark;
+      if (offset == 0) return AppTheme.primary;
+      if (offset == 1) return const Color(0xFFF9A825);
+      return AppTheme.errorDark;
+    }
+
+    String labelForOffset(int offset, bool es) {
+      if (offset < 0)
+        return es ? 'Bajan ${-offset}%' : 'Rates drop ${-offset}%';
+      if (offset == 0) return es ? 'Tasa actual' : 'Current rate';
+      return es ? 'Suben $offset%' : 'Rates rise $offset%';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.show_chart_rounded,
+              size: 18, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: AppTextSize.bodyMd, fontWeight: FontWeight.w600)),
+        ]),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 152,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            itemCount: _cachedScenarios!.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) {
+              final scenario = _cachedScenarios![i];
+              final offset = scenario['offset'] as int;
+              final scenarioRate = scenario['scenarioRate'] as double;
+              final drawPmt = scenario['drawPmt'] as double;
+              final repayPmt = scenario['repayPmt'] as double;
+              final isCurrent = offset == 0;
+              final cardColor = cardColorForOffset(offset);
+
+              return Container(
+                width: 148,
+                padding: const EdgeInsets.all(AppSpacing.mdPlus),
+                decoration: BoxDecoration(
+                  color:
+                      isCurrent ? cardColor : cardColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  border: Border.all(
+                      color: cardColor.withValues(alpha: isCurrent ? 0 : 0.4),
+                      width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      labelForOffset(offset, isEs),
+                      style: TextStyle(
+                        fontSize: AppTextSize.xs,
+                        fontWeight: FontWeight.w600,
+                        color: isCurrent
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : cardColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${scenarioRate.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: AppTextSize.subtitle,
+                        fontWeight: FontWeight.w900,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Draw payment
+                    Text(
+                      isEs ? 'Interés' : 'Draw pmt',
+                      style: TextStyle(
+                        fontSize: AppTextSize.xs,
+                        color: isCurrent
+                            ? Colors.white70
+                            : CalcwiseTheme.of(ctx).textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '${AmountFormatter.ui(drawPmt, 'USD')}/mo',
+                      style: TextStyle(
+                        fontSize: AppTextSize.sm,
+                        fontWeight: FontWeight.w700,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Repayment
+                    Text(
+                      isEs ? 'Amortizado' : 'Repay pmt',
+                      style: TextStyle(
+                        fontSize: AppTextSize.xs,
+                        color: isCurrent
+                            ? Colors.white70
+                            : CalcwiseTheme.of(ctx).textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '${AmountFormatter.ui(repayPmt, 'USD')}/mo',
+                      style: TextStyle(
+                        fontSize: AppTextSize.sm,
+                        fontWeight: FontWeight.w700,
+                        color: isCurrent ? Colors.white : cardColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// HELOC vs Home Equity Loan comparison section.
+  Widget _buildHelVsHeloc(bool isEs) {
+    if (_results == null) return const SizedBox.shrink();
+    final draw = (_results!['draw'] as double?) ?? 0;
+    final helocRate = (_results!['rate'] as double?) ?? 0;
+    final drawYears = (_results!['drawYears'] as int?) ?? 10;
+    final repayYears = (_results!['repayYears'] as int?) ?? 20;
+    if (draw <= 0 || helocRate <= 0) return const SizedBox.shrink();
+
+    // HEL: fixed rate — assume same principal, rate +0.5% (typical HEL spread)
+    final helRate = helocRate + 0.5;
+    final helTermYears = repayYears; // same repayment horizon
+    final helMonthly =
+        HelocEngine.amortizedPayment(draw, helRate, helTermYears);
+    final helTotalInterest = helMonthly * helTermYears * 12 - draw;
+
+    // HELOC: total interest across both phases
+    final helocTotalInterest =
+        HelocEngine.totalInterestPaid(draw, helocRate, drawYears, repayYears);
+    final helocDrawPmt = HelocEngine.interestOnlyPayment(draw, helocRate);
+    final helocRepayPmt =
+        HelocEngine.amortizedPayment(draw, helocRate, repayYears);
+
+    final helocCheaper = helocTotalInterest < helTotalInterest;
+    final verdictColor =
+        helocCheaper ? AppTheme.successDark : const Color(0xFFB71C1C);
+
+    Widget _row(String left, String center, String right,
+        {bool header = false}) {
+      final style = TextStyle(
+        fontSize: header ? AppTextSize.xs : AppTextSize.sm,
+        fontWeight: header ? FontWeight.w700 : FontWeight.w500,
+        color: header ? AppTheme.primary : null,
+      );
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(children: [
+          Expanded(flex: 3, child: Text(left, style: style)),
+          Expanded(
+              flex: 2,
+              child: Text(center, textAlign: TextAlign.center, style: style)),
+          Expanded(
+              flex: 2,
+              child: Text(right, textAlign: TextAlign.right, style: style)),
+        ]),
+      );
+    }
 
     return Card(
       child: Padding(
@@ -1575,128 +1768,109 @@ Est. Tax Savings: ${_fmtDec.format(taxSavings)}/yr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title
             Row(children: [
-              const Icon(Icons.compare_arrows,
+              const Icon(Icons.balance_rounded,
                   size: 18, color: AppTheme.primary),
               const SizedBox(width: 8),
-              Text(title,
+              Expanded(
+                child: Text(
+                  isEs
+                      ? 'HELOC vs Préstamo Sobre Valor'
+                      : 'HELOC vs Home Equity Loan',
                   style: const TextStyle(
                       fontSize: AppTextSize.bodyMd,
-                      fontWeight: FontWeight.w600)),
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
             ]),
+            const SizedBox(height: 4),
+            Text(
+              isEs
+                  ? 'HELOC: línea revolvente tasa variable. HEL: monto fijo, tasa fija.'
+                  : 'HELOC: revolving variable-rate line. HEL: lump-sum fixed-rate loan.',
+              style: const TextStyle(
+                  fontSize: AppTextSize.xs,
+                  color: AppTheme.labelGray,
+                  height: 1.4),
+            ),
+            const SizedBox(height: 14),
+
+            // Comparison table
+            _row(
+              '',
+              'HELOC',
+              isEs ? 'HEL (fijo)' : 'HEL (fixed)',
+              header: true,
+            ),
+            const Divider(height: 10),
+            _row(
+              isEs ? 'Tasa' : 'Rate',
+              '${helocRate.toStringAsFixed(2)}% (var)',
+              '${helRate.toStringAsFixed(2)}% (fixed)',
+            ),
+            _row(
+              isEs ? 'Pago fase disponer' : 'Draw phase pmt',
+              '${AmountFormatter.ui(helocDrawPmt, 'USD')}/mo',
+              '${AmountFormatter.ui(helMonthly, 'USD')}/mo',
+            ),
+            _row(
+              isEs ? 'Pago amortización' : 'Repay phase pmt',
+              '${AmountFormatter.ui(helocRepayPmt, 'USD')}/mo',
+              '${AmountFormatter.ui(helMonthly, 'USD')}/mo',
+            ),
+            _row(
+              isEs ? 'Interés total est.' : 'Total interest est.',
+              AmountFormatter.ui(helocTotalInterest, 'USD'),
+              AmountFormatter.ui(helTotalInterest, 'USD'),
+            ),
+            _row(
+              isEs ? 'Flexibilidad' : 'Flexibility',
+              isEs ? 'Alta' : 'High',
+              isEs ? 'Baja' : 'Low',
+            ),
             const SizedBox(height: 12),
-            // Header row
-            Row(children: [
-              Expanded(
-                flex: 2,
-                child: Text(isEs ? 'Tasa' : 'Rate',
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
+
+            // Verdict banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: verdictColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(color: verdictColor.withValues(alpha: 0.35)),
               ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Interés' : 'Draw Pmt',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Amortizado' : 'Repay Pmt',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(isEs ? 'Int. Total' : 'Total Int.',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.labelGray)),
-              ),
-            ]),
-            const SizedBox(height: 8),
-            ..._cachedScenarios!.map((scenario) {
-              final offset = scenario['offset'] as int;
-              final scenarioRate = scenario['scenarioRate'] as double;
-              final drawPmt = scenario['drawPmt'] as double;
-              final repayPmt = scenario['repayPmt'] as double;
-              final totalInt = scenario['totalInt'] as double;
-              final isCurrent = offset == 0;
-              final isBelow = offset < 0;
-              final textColor = isCurrent
-                  ? AppTheme.primary
-                  : isBelow
-                      ? AppTheme.successDark
-                      : AppTheme.errorDark;
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 2),
-                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                decoration: isCurrent
-                    ? BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      )
-                    : null,
-                child: Row(children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${scenarioRate.toStringAsFixed(1)}%${isCurrent ? " ✦" : ""}',
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.w500,
-                          color: textColor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    helocCheaper
+                        ? (isEs
+                            ? '✅ Para tu escenario, el HELOC tiene menor interés total'
+                            : '✅ For your scenario, HELOC costs less total interest')
+                        : (isEs
+                            ? '💡 Para tu escenario, el HEL tiene menor interés total'
+                            : '💡 For your scenario, the HEL costs less total interest'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: AppTextSize.sm,
+                      color: verdictColor,
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(drawPmt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
+                  const SizedBox(height: 6),
+                  Text(
+                    isEs
+                        ? 'Elige HELOC si necesitas acceso flexible a fondos. Elige HEL para pagos fijos y predecibles.'
+                        : 'Choose HELOC if you need flexible access to funds. Choose HEL for predictable fixed payments.',
+                    style: TextStyle(
+                      fontSize: AppTextSize.xs,
+                      color: verdictColor.withValues(alpha: 0.8),
+                      height: 1.4,
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(repayPmt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      fmtShort.format(totalInt),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: AppTextSize.sm,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.normal,
-                          color: textColor),
-                    ),
-                  ),
-                ]),
-              );
-            }),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1732,14 +1906,12 @@ class _EquityCard extends StatelessWidget {
   final double availableEquity;
   final double ltvPct;
   final bool isEs;
-  final NumberFormat fmt;
   final NumberFormat fmtPct;
 
   const _EquityCard({
     required this.availableEquity,
     required this.ltvPct,
     required this.isEs,
-    required this.fmt,
     required this.fmtPct,
   });
 
@@ -1786,8 +1958,8 @@ class _EquityCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isEs
-                ? 'Máx. disponible (85%): ${fmt.format(availableEquity)}'
-                : 'Max available (85% LTV): ${fmt.format(availableEquity)}',
+                ? 'Máx. disponible (85%): ${AmountFormatter.ui(availableEquity, 'USD')}'
+                : 'Max available (85% LTV): ${AmountFormatter.ui(availableEquity, 'USD')}',
             style: TextStyle(
               fontSize: AppTextSize.title,
               fontWeight: FontWeight.w800,
@@ -1802,7 +1974,7 @@ class _EquityCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ltvFraction,
                   minHeight: 7,
-                  backgroundColor: const Color(0xFFE2E8F0),
+                  backgroundColor: CalcwiseTheme.of(context).cardBorder,
                   valueColor: AlwaysStoppedAnimation<Color>(ltvColor),
                 ),
               ),
@@ -1870,11 +2042,6 @@ class _RateSensitivityWidget extends StatefulWidget {
 class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
   double _delta = 0.0; // -3.0 .. +3.0 in 0.25 steps
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-  final _fmtInt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-
   double get _scenarioRate => (widget.baseRate + _delta).clamp(0.01, 50.0);
 
   double get _baseMonthly =>
@@ -1935,7 +2102,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                   const SizedBox(width: 3),
                   Text('Premium',
                       style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: AppTextSize.xs,
                           color: CalcwiseSemanticColors.warnIcon,
                           fontWeight: FontWeight.w600)),
                 ]),
@@ -2035,7 +2202,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                     label: isEs
                         ? 'Nuevo pago mensual (interés)'
                         : 'New monthly payment (interest)',
-                    value: _fmt.format(_newMonthly),
+                    value: AmountFormatter.ui(_newMonthly, 'USD'),
                     delta: paymentDelta,
                     color: arrowColor,
                     isEs: isEs,
@@ -2044,7 +2211,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                   _SensRow(
                     label:
                         isEs ? 'Delta interés total' : 'Total interest delta',
-                    value: _fmtInt.format(_newTotal),
+                    value: AmountFormatter.ui(_newTotal, 'USD'),
                     delta: totalDelta,
                     color: arrowColor,
                     isEs: isEs,
@@ -2135,8 +2302,6 @@ class _SensRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sign = delta >= 0 ? '+' : '';
-    final fmtDelta =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
     return Row(children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2154,10 +2319,10 @@ class _SensRow extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text(
           isEs ? 'Cambio' : 'Change',
-          style: const TextStyle(fontSize: 10, color: AppTheme.labelGray),
+          style: const TextStyle(fontSize: AppTextSize.xs, color: AppTheme.labelGray),
         ),
         Text(
-          '$sign${fmtDelta.format(delta)}',
+          '$sign${AmountFormatter.ui(delta, 'USD')}',
           style: TextStyle(
             fontSize: AppTextSize.md,
             fontWeight: FontWeight.w700,
@@ -2218,10 +2383,6 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
         ioTotalInterest; // +ve means FA costs more overall... actually IO costs more
 
     // IO: lower monthly during draw but higher total; FA: higher monthly but lower total
-    final fmt =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-    final fmtInt =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
 
     return Card(
       child: Padding(
@@ -2300,29 +2461,29 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
               label: isEs
                   ? 'Pago mensual\n(fase disposición)'
                   : 'Monthly payment\n(draw phase)',
-              val1: fmt.format(ioDrawPayment),
-              val2: fmt.format(faMonthly),
+              val1: AmountFormatter.ui(ioDrawPayment, 'USD'),
+              val2: AmountFormatter.ui(faMonthly, 'USD'),
               winner: ioDrawPayment < faMonthly ? 0 : 1,
             ),
             _CompRow(
               label: isEs
                   ? 'Pago mensual\n(fase de pago)'
                   : 'Monthly payment\n(repay phase)',
-              val1: fmt.format(ioRepayPayment),
-              val2: fmt.format(faMonthly),
+              val1: AmountFormatter.ui(ioRepayPayment, 'USD'),
+              val2: AmountFormatter.ui(faMonthly, 'USD'),
               winner: ioRepayPayment < faMonthly ? 0 : 1,
             ),
             _CompRow(
               label: isEs ? 'Interés total' : 'Total interest',
-              val1: fmtInt.format(ioTotalInterest),
-              val2: fmtInt.format(faTotalInterest),
+              val1: AmountFormatter.ui(ioTotalInterest, 'USD'),
+              val2: AmountFormatter.ui(faTotalInterest, 'USD'),
               highlight: true,
               winner: ioTotalInterest < faTotalInterest ? 0 : 1,
             ),
             _CompRow(
               label: isEs ? 'Total pagado' : 'Total paid',
-              val1: fmtInt.format(ioTotalPaid),
-              val2: fmtInt.format(faTotalPaid),
+              val1: AmountFormatter.ui(ioTotalPaid, 'USD'),
+              val2: AmountFormatter.ui(faTotalPaid, 'USD'),
               winner: ioTotalPaid < faTotalPaid ? 0 : 1,
             ),
 
@@ -2343,10 +2504,10 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isEs
-                        ? 'Solo interés ahorra ${fmt.format(monthlyDraw.abs())}/mes ahora, '
-                            'pero cuesta ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "más" : "menos"} en total.'
-                        : 'Interest-only saves ${fmt.format(monthlyDraw.abs())}/mo now, '
-                            'costs ${fmtInt.format(totalDiff.abs())} ${totalDiff > 0 ? "more" : "less"} total.',
+                        ? 'Solo interés ahorra ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mes ahora, '
+                            'pero cuesta ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "más" : "menos"} en total.'
+                        : 'Interest-only saves ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mo now, '
+                            'costs ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "more" : "less"} total.',
                     style: const TextStyle(
                         fontSize: AppTextSize.sm,
                         color: CalcwiseSemanticColors.alertText,

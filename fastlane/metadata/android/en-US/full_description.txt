@@ -1,0 +1,9 @@
+The only HELOC calculator built around how homeowners actually use their home equity line of credit. Model both phases of your HELOC in detail: the draw period (interest-only payments on your outstanding balance) and the repayment period (fully amortized principal + interest). See exactly how your payment changes when you transition from draw to repayment — and prepare for payment shock before it hits.
+
+Variable rate schedule lets you input your current prime rate and margin, then run rate stress scenarios (+1%, +2%, +3%) to see your payment under worst-case rate environments. The draw optimizer tool is unique: enter your project budget and timeline, and the app calculates the optimal draw schedule to minimize total interest paid while keeping cash available when you need it. LTV calculator confirms your available credit based on your home's current appraised value and your outstanding first mortgage balance.
+
+Compare HELOC vs. Home Equity Loan (HEL) side-by-side with a complete cost comparison over your desired term — when fixed-rate certainty beats the HELOC's variable risk. Compare HELOC vs. Cash-Out Refinance to determine whether tapping equity through a new first mortgage or a second lien makes more financial sense at current rates. Tax savings estimator calculates potential deductible interest when funds are used for home improvement (consult your tax advisor for your specific situation).
+
+Full bilingual support in English and Spanish (EN+ES). Dark mode, calculation history, and PDF export for sharing with your lender or financial advisor. Works offline — no account required.
+
+Keywords: HELOC calculator, home equity line of credit, draw optimizer, HELOC payment calculator, interest only payment HELOC, home equity calculator, HELOC vs home equity loan, HELOC vs cash out refinance, variable rate HELOC, payment shock calculator, LTV calculator, draw period repayment period.

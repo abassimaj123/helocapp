@@ -45,51 +45,6 @@ class SettingsScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      // Language
-                      _SectionHeader(headerLabel),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Row(children: [
-                          Expanded(
-                            child: _LangButton(
-                              label: 'English',
-                              selected: !isEs && !isFr,
-                              onTap: () => _setLanguage('en'),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: _LangButton(
-                              label: 'Español',
-                              selected: isEs,
-                              onTap: () => _setLanguage('es'),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: _LangButton(
-                              label: 'Français',
-                              selected: isFr,
-                              onTap: () => _setLanguage('fr'),
-                            ),
-                          ),
-                        ]),
-                      ),
-                      // Theme toggle
-                      ValueListenableBuilder<ThemeMode>(
-                        valueListenable: themeModeService.notifier,
-                        builder: (_, mode, __) => ListTile(
-                          leading: Icon(themeModeService.icon,
-                              color: AppTheme.primary),
-                          title: Text(themeModeService.label(isSpanish: isEs)),
-                          trailing: const Icon(Icons.chevron_right_rounded,
-                              color: AppTheme.labelGray),
-                          onTap: () => themeModeService.toggle(),
-                        ),
-                      ),
-                      const Divider(height: 1),
-
                       // Premium
                       _SectionHeader(isFr
                           ? AppStringsFR.premium.toUpperCase()
@@ -97,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                               ? AppStringsES.premium.toUpperCase()
                               : AppStringsEN.premium.toUpperCase())),
                       ValueListenableBuilder<bool>(
-                        valueListenable: freemiumService.isPremiumNotifier,
+                        valueListenable: freemiumService.hasFullAccessNotifier,
                         builder: (_, isPremium, __) {
                           if (isPremium) {
                             return ListTile(
@@ -189,6 +144,51 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const Divider(height: 1),
 
+                      // Language
+                      _SectionHeader(headerLabel),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(children: [
+                          Expanded(
+                            child: _LangButton(
+                              label: 'English',
+                              selected: !isEs && !isFr,
+                              onTap: () => _setLanguage('en'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _LangButton(
+                              label: 'Español',
+                              selected: isEs,
+                              onTap: () => _setLanguage('es'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _LangButton(
+                              label: 'Français',
+                              selected: isFr,
+                              onTap: () => _setLanguage('fr'),
+                            ),
+                          ),
+                        ]),
+                      ),
+                      // Theme toggle
+                      ValueListenableBuilder<ThemeMode>(
+                        valueListenable: themeModeService.notifier,
+                        builder: (_, mode, __) => ListTile(
+                          leading: Icon(themeModeService.icon,
+                              color: AppTheme.primary),
+                          title: Text(themeModeService.label(isSpanish: isEs)),
+                          trailing: const Icon(Icons.chevron_right_rounded,
+                              color: AppTheme.labelGray),
+                          onTap: () => themeModeService.toggle(),
+                        ),
+                      ),
+                      const Divider(height: 1),
+
                       // Support
                       _SectionHeader(
                           isFr ? 'SUPPORT' : (isEs ? 'SOPORTE' : 'SUPPORT')),
@@ -258,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
                                   : AppStringsEN.disclaimer),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF475569),
+                                    color: CalcwiseTheme.of(context).textSecondary,
                                     fontStyle: FontStyle.italic,
                                   ),
                         ),
@@ -305,25 +305,30 @@ class _LangButton extends StatelessWidget {
       {required this.label, required this.selected, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppDuration.fast,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.primary : Colors.transparent,
-            border: Border.all(
-                color: selected ? AppTheme.primary : const Color(0xFFCBD5E1)),
-            borderRadius: BorderRadius.circular(AppRadius.mdPlus),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+          child: AnimatedContainer(
+            duration: AppDuration.fast,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.primary : Colors.transparent,
+              border: Border.all(
+                  color: selected ? AppTheme.primary : Theme.of(context).colorScheme.outline),
+              borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
         ),

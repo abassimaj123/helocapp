@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../freemium/iap_service.dart';
 import '../theme/app_theme.dart';
 import '../../main.dart';
@@ -31,6 +33,7 @@ class PdfExportService {
     required double interestOnlyPayment,
     required double repaymentPayment,
     required double totalInterest,
+    bool isEs = false,
   }) async {
     final pdf = pw.Document();
     pdf.addPage(pw.Page(
@@ -47,13 +50,16 @@ class PdfExportService {
         interestOnlyPayment: interestOnlyPayment,
         repaymentPayment: repaymentPayment,
         totalInterest: totalInterest,
+        isEs: isEs,
       ),
     ));
-    await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename:
-          'HELOC_${creditLine.round()}_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
+    final pdfBytes = await pdf.save();
+    final tmpDir = await getTemporaryDirectory();
+    final pdfFile = File(
+        '${tmpDir.path}/HELOC_${creditLine.round()}_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    await pdfFile.writeAsBytes(pdfBytes);
+    await Share.shareXFiles(
+        [XFile(pdfFile.path, mimeType: 'application/pdf')]);
   }
 
   static pw.Widget _buildPage({
@@ -67,9 +73,44 @@ class PdfExportService {
     required double interestOnlyPayment,
     required double repaymentPayment,
     required double totalInterest,
+    bool isEs = false,
   }) {
     final now = DateTime.now();
     final ltv = homeValue > 0 ? (mortgageBalance / homeValue * 100) : 0.0;
+    final drawYears = (drawPhaseMonths / 12).ceil().clamp(1, 10);
+
+    // Build draw schedule rows (Year 1-5 interest-only during draw phase)
+    final drawScheduleRows = <pw.TableRow>[];
+    for (int yr = 1; yr <= drawYears.clamp(1, 5); yr++) {
+      final annualInterest = creditLine * (rate / 100);
+      drawScheduleRows.add(pw.TableRow(
+        decoration: pw.BoxDecoration(
+            color: yr.isOdd ? _light : PdfColors.white),
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: pw.Text('${isEs ? "Año" : "Year"} $yr',
+                style: const pw.TextStyle(fontSize: 8)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: pw.Text(_cur2.format(interestOnlyPayment),
+                style: const pw.TextStyle(fontSize: 8)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: pw.Text(_cur0.format(annualInterest),
+                style: const pw.TextStyle(fontSize: 8)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: pw.Text(_cur0.format(creditLine),
+                style: const pw.TextStyle(fontSize: 8, color: _teal)),
+          ),
+        ],
+      ));
+    }
+
     return pw
         .Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
       pw.Row(
@@ -79,12 +120,18 @@ class PdfExportService {
             pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('HELOC Calculator',
+                  pw.Text(
+                      isEs
+                          ? 'Calculadora HELOC'
+                          : 'HELOC Calculator',
                       style: pw.TextStyle(
                           fontSize: AppTextSize.title,
                           fontWeight: pw.FontWeight.bold,
                           color: _teal)),
-                  pw.Text('Home Equity Line of Credit Report',
+                  pw.Text(
+                      isEs
+                          ? 'Informe: Línea de Crédito sobre Valor Inmobiliario'
+                          : 'Home Equity Line of Credit Report',
                       style: const pw.TextStyle(
                           fontSize: AppTextSize.xs, color: PdfColors.grey700)),
                 ]),
@@ -99,38 +146,112 @@ class PdfExportService {
       pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
         pw.Expanded(
             child: pw.Column(children: [
-          _sectionBox('HOME EQUITY', [
-            _row2('Home Value', _cur0.format(homeValue)),
-            _row2('Mortgage Balance', _cur0.format(mortgageBalance)),
-            _row2('Home Equity', _cur0.format(homeEquity),
+          _sectionBox(isEs ? 'VALOR INMOBILIARIO' : 'HOME EQUITY', [
+            _row2(isEs ? 'Valor de la vivienda' : 'Home Value',
+                _cur0.format(homeValue)),
+            _row2(isEs ? 'Saldo hipotecario' : 'Mortgage Balance',
+                _cur0.format(mortgageBalance)),
+            _row2(isEs ? 'Capital disponible' : 'Home Equity',
+                _cur0.format(homeEquity),
                 bold: true, color: _teal),
-            _row2('LTV Ratio', '${ltv.toStringAsFixed(1)}%'),
+            _row2(isEs ? 'Ratio LTV' : 'LTV Ratio',
+                '${ltv.toStringAsFixed(1)}%'),
           ]),
           pw.SizedBox(height: 10),
-          _sectionBox('HELOC TERMS', [
-            _row2('Credit Line', _cur0.format(creditLine)),
-            _row2('Interest Rate', '${rate.toStringAsFixed(2)}%'),
-            _row2('Draw Phase', '${drawPhaseMonths.toStringAsFixed(0)} months'),
-            _row2('Repayment Phase',
-                '${repaymentMonths.toStringAsFixed(0)} months'),
+          _sectionBox(isEs ? 'CONDICIONES DEL HELOC' : 'HELOC TERMS', [
+            _row2(isEs ? 'Línea de crédito' : 'Credit Line',
+                _cur0.format(creditLine)),
+            _row2(isEs ? 'Tasa de interés' : 'Interest Rate',
+                '${rate.toStringAsFixed(2)}%'),
+            _row2(isEs ? 'Período de disposición' : 'Draw Period',
+                '${drawPhaseMonths.toStringAsFixed(0)} ${isEs ? "meses" : "months"}'),
+            _row2(isEs ? 'Período de pago' : 'Repayment Period',
+                '${repaymentMonths.toStringAsFixed(0)} ${isEs ? "meses" : "months"}'),
           ]),
         ])),
         pw.SizedBox(width: 14),
         pw.Expanded(
             child: pw.Column(children: [
-          _sectionBox('PAYMENT BREAKDOWN', [
-            _row2('Draw Phase Payment', _cur2.format(interestOnlyPayment)),
-            _row2('Monthly Repayment', _cur2.format(repaymentPayment),
+          _sectionBox(
+              isEs ? 'DESGLOSE DE PAGOS' : 'PAYMENT BREAKDOWN', [
+            _row2(isEs ? 'Pago solo interés (disposición)' : 'Draw Phase Payment',
+                _cur2.format(interestOnlyPayment)),
+            _row2(isEs ? 'Pago mensual (amortización)' : 'Monthly Repayment',
+                _cur2.format(repaymentPayment),
                 bold: true, color: _navy),
-            _row2('Total Interest', _cur0.format(totalInterest)),
+            _row2(isEs ? 'Interés total' : 'Total Interest',
+                _cur0.format(totalInterest)),
           ]),
+          pw.SizedBox(height: 10),
+          _sectionBox(
+              isEs
+                  ? 'CALENDARIO DE DISPOSICIÓN (AÑOS 1-5)'
+                  : 'DRAW SCHEDULE (YEARS 1-5)',
+              [
+                pw.Table(
+                  border: pw.TableBorder.all(
+                      color: PdfColors.grey300, width: 0.5),
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(36),
+                    1: const pw.FlexColumnWidth(),
+                    2: const pw.FlexColumnWidth(),
+                    3: const pw.FlexColumnWidth(),
+                  },
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(color: _navy),
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
+                          child: pw.Text(isEs ? 'Año' : 'Year',
+                              style: pw.TextStyle(
+                                  fontSize: 7,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.white)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
+                          child: pw.Text(isEs ? 'Pago/mes' : 'Payment/mo',
+                              style: pw.TextStyle(
+                                  fontSize: 7,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.white)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
+                          child: pw.Text(isEs ? 'Interés/año' : 'Interest/yr',
+                              style: pw.TextStyle(
+                                  fontSize: 7,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.white)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
+                          child: pw.Text(isEs ? 'Saldo' : 'Balance',
+                              style: pw.TextStyle(
+                                  fontSize: 7,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.white)),
+                        ),
+                      ],
+                    ),
+                    ...drawScheduleRows,
+                  ],
+                ),
+              ]),
         ])),
       ]),
       pw.Spacer(),
       pw.Column(children: [
         pw.Divider(color: PdfColors.grey300, height: 12),
         pw.Text(
-            'Generated by HELOC Calculator · For illustration purposes only. Not financial advice.',
+            isEs
+                ? 'Generado por HELOC Calculator · Solo para ilustración. No es consejo financiero.'
+                : 'Generated by HELOC Calculator · For illustration purposes only. Not financial advice.',
             style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
       ]),
     ]);
