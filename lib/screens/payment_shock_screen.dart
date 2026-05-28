@@ -297,7 +297,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  AmountFormatter.format(r.piPayment, 'USD'),
+                  AmountFormatter.ui(r.piPayment, 'USD'),
                   style: const TextStyle(
                     fontSize: AppTextSize.hero,
                     fontWeight: FontWeight.bold,
@@ -308,8 +308,8 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 const SizedBox(height: AppSpacing.smPlus),
                 Text(
                   isEs
-                      ? 'Tu pago pasa de ${AmountFormatter.format(r.ioPayment, 'USD')}/mes a ${AmountFormatter.format(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
-                      : 'Your payment goes from ${AmountFormatter.format(r.ioPayment, 'USD')}/mo to ${AmountFormatter.format(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
+                      ? 'Tu pago pasa de ${AmountFormatter.ui(r.ioPayment, 'USD')}/mes a ${AmountFormatter.ui(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
+                      : 'Your payment goes from ${AmountFormatter.ui(r.ioPayment, 'USD')}/mo to ${AmountFormatter.ui(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
                   style: const TextStyle(fontSize: AppTextSize.md),
                 ),
               ],
@@ -325,14 +325,14 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           const SizedBox(width: AppSpacing.md),
           Expanded(
               child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                  '+${AmountFormatter.format(r.dollarIncrease, 'USD')}', _piColor)),
+                  '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
         ]),
         const SizedBox(height: AppSpacing.md),
         _metricCard(
           isEs
               ? 'Interés total durante el pago'
               : 'Total interest over repayment',
-          AmountFormatter.format(r.totalInterest, 'USD'),
+          AmountFormatter.ui(r.totalInterest, 'USD'),
           _ioColor,
         ),
 

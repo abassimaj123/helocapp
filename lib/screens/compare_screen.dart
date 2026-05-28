@@ -409,9 +409,9 @@ class _CompareScreenState extends State<CompareScreen> {
         // Monthly payment (initial)
         _build3Row(
           isEs ? 'Pago mensual inicial' : 'Monthly (initial)',
-          AmountFormatter.format(r.helocDrawPayment, 'USD'),
-          AmountFormatter.format(r.refiMonthlyPayment, 'USD'),
-          AmountFormatter.format(cr.loanMonthlyPayment, 'USD'),
+          AmountFormatter.ui(r.helocDrawPayment, 'USD'),
+          AmountFormatter.ui(r.refiMonthlyPayment, 'USD'),
+          AmountFormatter.ui(cr.loanMonthlyPayment, 'USD'),
           note1: isEs ? 'Solo interés' : 'Interest-only',
           note2: isEs ? 'P + I' : 'P + I',
           note3: isEs ? 'P + I' : 'P + I',
@@ -421,9 +421,9 @@ class _CompareScreenState extends State<CompareScreen> {
         // Monthly payment (repayment phase)
         _build3Row(
           isEs ? 'Pago mensual (fase pago)' : 'Monthly (repayment)',
-          AmountFormatter.format(r.helocRepayPayment, 'USD'),
-          AmountFormatter.format(r.refiMonthlyPayment, 'USD'),
-          AmountFormatter.format(cr.loanMonthlyPayment, 'USD'),
+          AmountFormatter.ui(r.helocRepayPayment, 'USD'),
+          AmountFormatter.ui(r.refiMonthlyPayment, 'USD'),
+          AmountFormatter.ui(cr.loanMonthlyPayment, 'USD'),
           winner: _winnerOf(
               r.helocRepayPayment, r.refiMonthlyPayment, cr.loanMonthlyPayment),
         ),
@@ -431,7 +431,7 @@ class _CompareScreenState extends State<CompareScreen> {
         _build3Row(
           isEs ? 'Costos iniciales' : 'Upfront costs',
           '\$0',
-          r.refiClosingCosts > 0 ? AmountFormatter.format(r.refiClosingCosts, 'USD') : '\$0',
+          r.refiClosingCosts > 0 ? AmountFormatter.ui(r.refiClosingCosts, 'USD') : '\$0',
           '\$0',
           winner: 0,
         ),
@@ -439,9 +439,9 @@ class _CompareScreenState extends State<CompareScreen> {
         // Total interest 10 years
         _build3Row(
           isEs ? 'Interés total (10 años)' : 'Total cost (10 years)',
-          AmountFormatter.format(r.helocInterestOver10Yrs, 'USD'),
-          AmountFormatter.format(r.refiInterestOver10Yrs, 'USD'),
-          AmountFormatter.format(_loanInterestOver10(cr), 'USD'),
+          AmountFormatter.ui(r.helocInterestOver10Yrs, 'USD'),
+          AmountFormatter.ui(r.refiInterestOver10Yrs, 'USD'),
+          AmountFormatter.ui(_loanInterestOver10(cr), 'USD'),
           highlight: true,
           winner: _winnerOf(r.helocInterestOver10Yrs, r.refiInterestOver10Yrs,
               _loanInterestOver10(cr)),
@@ -449,9 +449,9 @@ class _CompareScreenState extends State<CompareScreen> {
         // Total interest full term
         _build3Row(
           isEs ? 'Interés total (vida útil)' : 'Total interest (full term)',
-          AmountFormatter.format(helocTotal, 'USD'),
-          AmountFormatter.format(refiTotal, 'USD'),
-          AmountFormatter.format(loanTotal, 'USD'),
+          AmountFormatter.ui(helocTotal, 'USD'),
+          AmountFormatter.ui(refiTotal, 'USD'),
+          AmountFormatter.ui(loanTotal, 'USD'),
           winner: _winnerOf(helocTotal, refiTotal, loanTotal),
         ),
 
@@ -540,8 +540,8 @@ class _CompareScreenState extends State<CompareScreen> {
             if (savings > 0)
               Text(
                 isEs
-                    ? '$bestName ahorra ${AmountFormatter.format(savings, 'USD')} vs $worstName'
-                    : '$bestName saves ${AmountFormatter.format(savings, 'USD')} vs $worstName',
+                    ? '$bestName ahorra ${AmountFormatter.ui(savings, 'USD')} vs $worstName'
+                    : '$bestName saves ${AmountFormatter.ui(savings, 'USD')} vs $worstName',
                 style: const TextStyle(
                     color: Colors.white70, fontSize: AppTextSize.sm),
               ),

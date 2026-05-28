@@ -456,14 +456,14 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
               accentColor: _helocColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    AmountFormatter.format(r.scenarioATotalMonthly, 'USD'),
+                    AmountFormatter.ui(r.scenarioATotalMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    AmountFormatter.format(r.existingMortgagePI + r.helocPI, 'USD'),
+                    AmountFormatter.ui(r.existingMortgagePI + r.helocPI, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'): r'$0',
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    AmountFormatter.format(r.scenarioATotalInterest30y, 'USD'),
+                    AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    AmountFormatter.format(r.scenarioATotalInterest30y, 'USD'),
+                    AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
               },
             ),
             ComparisonScenario(
@@ -471,15 +471,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
               accentColor: _refiColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    AmountFormatter.format(r.refiMonthly, 'USD'),
+                    AmountFormatter.ui(r.refiMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    AmountFormatter.format(r.refiMonthly, 'USD'),
+                    AmountFormatter.ui(r.refiMonthly, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'):
-                    _financeClosing ? r'$0' : AmountFormatter.format(r.refiClosingCosts, 'USD'),
+                    _financeClosing ? r'$0' : AmountFormatter.ui(r.refiClosingCosts, 'USD'),
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    AmountFormatter.format(r.scenarioBTotalInterest30y, 'USD'),
+                    AmountFormatter.ui(r.scenarioBTotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    AmountFormatter.format(r.scenarioBTotalCost, 'USD'),
+                    AmountFormatter.ui(r.scenarioBTotalCost, 'USD'),
               },
             ),
           ],

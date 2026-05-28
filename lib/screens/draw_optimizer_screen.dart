@@ -472,7 +472,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
 
                   // ── Variable Rate Simulation (Premium) ─────────────────
                   ValueListenableBuilder<bool>(
-                    valueListenable: freemiumService.isPremiumNotifier,
+                    valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
                         return PremiumCtaWidget(
@@ -760,15 +760,15 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
         // Hero KPI — optimal strategy total interest
         Semantics(
           label:
-              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${AmountFormatter.format(optimalResult.totalInterest, 'USD')}',
+              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${AmountFormatter.ui(optimalResult.totalInterest, 'USD')}',
           child: CalcwiseHeroCard(
             label: isEs ? 'Mejor Estrategia' : 'Best Strategy',
-            value: AmountFormatter.format(optimalResult.totalInterest, 'USD'),
+            value: AmountFormatter.ui(optimalResult.totalInterest, 'USD'),
             secondary: _optimalLocalLabel(),
             stats: [
               (
                 label: isEs ? 'Interés en disposición' : 'Draw Phase Interest',
-                value: AmountFormatter.format(optimalResult.interestDuringDraw, 'USD'),
+                value: AmountFormatter.ui(optimalResult.interestDuringDraw, 'USD'),
               ),
               (
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
@@ -810,8 +810,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
               child: Text(
                 savings > 0
                     ? (isEs
-                        ? 'Distribuir las disposiciones ahorra ${AmountFormatter.format(savings, 'USD')} vs retirar todo a la vez.'
-                        : 'Spreading draws saves ${AmountFormatter.format(savings, 'USD')} vs drawing all at once.')
+                        ? 'Distribuir las disposiciones ahorra ${AmountFormatter.ui(savings, 'USD')} vs retirar todo a la vez.'
+                        : 'Spreading draws saves ${AmountFormatter.ui(savings, 'USD')} vs drawing all at once.')
                     : (isEs
                         ? 'Retirar todo a la vez es igual de eficiente para tu plan.'
                         : 'Drawing all at once is equally efficient for your plan.'),
@@ -1079,13 +1079,13 @@ class _StrategyCard extends StatelessWidget {
               _Metric(
                 label:
                     isEs ? 'Interés fase disposición' : 'Draw Phase Interest',
-                value: AmountFormatter.format(result.interestDuringDraw, 'USD'),
+                value: AmountFormatter.ui(result.interestDuringDraw, 'USD'),
                 color: AppTheme.labelGray,
               ),
               const SizedBox(width: AppSpacing.md),
               _Metric(
                 label: isEs ? 'Balance al final' : 'Balance at Draw End',
-                value: AmountFormatter.format(result.balanceAtDrawEnd, 'USD'),
+                value: AmountFormatter.ui(result.balanceAtDrawEnd, 'USD'),
                 color: AppTheme.primary,
               ),
             ]),
@@ -1093,7 +1093,7 @@ class _StrategyCard extends StatelessWidget {
             Row(children: [
               _Metric(
                 label: isEs ? 'Interés total' : 'Total Interest',
-                value: AmountFormatter.format(result.totalInterest, 'USD'),
+                value: AmountFormatter.ui(result.totalInterest, 'USD'),
                 color: CalcwiseSemanticColors.errorDark,
               ),
               const SizedBox(width: AppSpacing.md),
@@ -1420,7 +1420,7 @@ class _VarRateResults extends StatelessWidget {
                       label: isEs
                           ? 'Interés total (variable)'
                           : 'Total Interest (Variable)',
-                      value: AmountFormatter.format(totalInterest, 'USD'),
+                      value: AmountFormatter.ui(totalInterest, 'USD'),
                       color: CalcwiseSemanticColors.errorDark,
                     ),
                   ),
@@ -1430,7 +1430,7 @@ class _VarRateResults extends StatelessWidget {
                       label: isEs
                           ? 'Interés total (tasa fija ${baseRate.toStringAsFixed(1)}%)'
                           : 'Total Interest (Fixed ${baseRate.toStringAsFixed(1)}%)',
-                      value: AmountFormatter.format(fixedTotalInterest, 'USD'),
+                      value: AmountFormatter.ui(fixedTotalInterest, 'USD'),
                       color: AppTheme.primary,
                     ),
                   ),
@@ -1462,11 +1462,11 @@ class _VarRateResults extends StatelessWidget {
                       child: Text(
                         diff > 0
                             ? (isEs
-                                ? 'Las subidas de tasa añaden ${AmountFormatter.format(diff.abs(), 'USD')} en interés vs tasa fija.'
-                                : 'Rate increases add ${AmountFormatter.format(diff.abs(), 'USD')} in interest vs fixed rate.')
+                                ? 'Las subidas de tasa añaden ${AmountFormatter.ui(diff.abs(), 'USD')} en interés vs tasa fija.'
+                                : 'Rate increases add ${AmountFormatter.ui(diff.abs(), 'USD')} in interest vs fixed rate.')
                             : (isEs
-                                ? 'Las bajadas de tasa ahorran ${AmountFormatter.format(diff.abs(), 'USD')} vs tasa fija.'
-                                : 'Rate decreases save ${AmountFormatter.format(diff.abs(), 'USD')} vs fixed rate.'),
+                                ? 'Las bajadas de tasa ahorran ${AmountFormatter.ui(diff.abs(), 'USD')} vs tasa fija.'
+                                : 'Rate decreases save ${AmountFormatter.ui(diff.abs(), 'USD')} vs fixed rate.'),
                         style: TextStyle(
                           fontSize: AppTextSize.sm,
                           color: diff > 0
@@ -1730,12 +1730,12 @@ class _VarRateMonthlyTable extends StatelessWidget {
                   ),
                   Expanded(
                       flex: 3,
-                      child: Text(AmountFormatter.format(payment, 'USD'),
+                      child: Text(AmountFormatter.ui(payment, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.xs))),
                   Expanded(
                     flex: 3,
                     child: Text(
-                      AmountFormatter.format(balance, 'USD'),
+                      AmountFormatter.ui(balance, 'USD'),
                       style: TextStyle(
                         fontSize: AppTextSize.xs,
                         color:

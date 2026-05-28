@@ -126,8 +126,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               style: pw.TextStyle(
                   fontSize: AppTextSize.title, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 12),
-          pw.Text('$homeLabel: ${AmountFormatter.format(draw, 'USD')}'),
-          pw.Text('$creditLabel: ${AmountFormatter.format(draw, 'USD')}'),
+          pw.Text('$homeLabel: ${AmountFormatter.ui(draw, 'USD')}'),
+          pw.Text('$creditLabel: ${AmountFormatter.ui(draw, 'USD')}'),
           pw.Text('$drawLabel: ${drawYears}y'),
           pw.Text('$repayLabel: ${repayYears}y'),
           pw.Text('$rateLabel: ${rate.toStringAsFixed(2)}%'),
@@ -154,10 +154,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   (balance - principal).clamp(0.0, double.infinity);
               return [
                 '$month',
-                AmountFormatter.format(balance, 'USD'),
-                AmountFormatter.format(interest, 'USD'),
-                AmountFormatter.format(principal, 'USD'),
-                AmountFormatter.format(remaining, 'USD'),
+                AmountFormatter.ui(balance, 'USD'),
+                AmountFormatter.ui(interest, 'USD'),
+                AmountFormatter.ui(principal, 'USD'),
+                AmountFormatter.ui(remaining, 'USD'),
               ];
             }).toList(),
             headerStyle:
@@ -234,7 +234,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
 
                   // Rate scenarios + Export — single premium gate
                   ValueListenableBuilder<bool>(
-                    valueListenable: freemiumService.isPremiumNotifier,
+                    valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
                         return PremiumCtaWidget(
@@ -490,20 +490,20 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                 ),
                 _scenarioRow(
                     '${baseRate.toStringAsFixed(1)}%',
-                    AmountFormatter.format(baseInterestOnly, 'USD'),
-                    AmountFormatter.format(baseRepay, 'USD'),
-                    AmountFormatter.format(baseTotal, 'USD'),
+                    AmountFormatter.ui(baseInterestOnly, 'USD'),
+                    AmountFormatter.ui(baseRepay, 'USD'),
+                    AmountFormatter.ui(baseTotal, 'USD'),
                     isBase: true),
                 _scenarioRow(
                     '+1% (${(baseRate + 1).toStringAsFixed(1)}%)',
-                    AmountFormatter.format(base1InterestOnly, 'USD'),
-                    AmountFormatter.format(base1Repay, 'USD'),
-                    AmountFormatter.format(base1Total, 'USD')),
+                    AmountFormatter.ui(base1InterestOnly, 'USD'),
+                    AmountFormatter.ui(base1Repay, 'USD'),
+                    AmountFormatter.ui(base1Total, 'USD')),
                 _scenarioRow(
                     '+2% (${(baseRate + 2).toStringAsFixed(1)}%)',
-                    AmountFormatter.format(base2InterestOnly, 'USD'),
-                    AmountFormatter.format(base2Repay, 'USD'),
-                    AmountFormatter.format(base2Total, 'USD')),
+                    AmountFormatter.ui(base2InterestOnly, 'USD'),
+                    AmountFormatter.ui(base2Repay, 'USD'),
+                    AmountFormatter.ui(base2Total, 'USD')),
               ],
             ),
           ],
@@ -593,11 +593,11 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   ),
                   Expanded(
                       flex: 2,
-                      child: Text(AmountFormatter.format(row['payment']!, 'USD'),
+                      child: Text(AmountFormatter.ui(row['payment']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                   Expanded(
                       flex: 2,
-                      child: Text(AmountFormatter.format(row['balance']!, 'USD'),
+                      child: Text(AmountFormatter.ui(row['balance']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                 ]),
               );

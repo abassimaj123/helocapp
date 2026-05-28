@@ -52,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                               ? AppStringsES.premium.toUpperCase()
                               : AppStringsEN.premium.toUpperCase())),
                       ValueListenableBuilder<bool>(
-                        valueListenable: freemiumService.isPremiumNotifier,
+                        valueListenable: freemiumService.hasFullAccessNotifier,
                         builder: (_, isPremium, __) {
                           if (isPremium) {
                             return ListTile(

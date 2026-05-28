@@ -400,17 +400,17 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       return '''
 HELOC Calculator — Resultado
 
-Valor vivienda: ${AmountFormatter.format(homeValue, 'USD')}
-Saldo hipoteca: ${AmountFormatter.format(mortgage, 'USD')}
-Monto dispuesto: ${AmountFormatter.format(draw, 'USD')}
+Valor vivienda: ${AmountFormatter.ui(homeValue, 'USD')}
+Saldo hipoteca: ${AmountFormatter.ui(mortgage, 'USD')}
+Monto dispuesto: ${AmountFormatter.ui(draw, 'USD')}
 Tasa HELOC: ${rate.toStringAsFixed(2)}%
 Período: ${drawYears}a disposición / ${repayYears}a pago
 
-Pago solo interés: ${AmountFormatter.format(interestOnly, 'USD')}/mes
-Pago amortizado: ${AmountFormatter.format(repayment, 'USD')}/mes
-Capital disponible: ${AmountFormatter.format(equity, 'USD')}
+Pago solo interés: ${AmountFormatter.ui(interestOnly, 'USD')}/mes
+Pago amortizado: ${AmountFormatter.ui(repayment, 'USD')}/mes
+Capital disponible: ${AmountFormatter.ui(equity, 'USD')}
 LTV actual: ${_fmtPct.format(ltv)}%
-Ahorro fiscal estimado: ${AmountFormatter.format(taxSavings, 'USD')}/año
+Ahorro fiscal estimado: ${AmountFormatter.ui(taxSavings, 'USD')}/año
 
 ⚠ Consulta a un asesor fiscal. Los intereses del HELOC pueden ser deducibles si se usan para mejoras del hogar.
 
@@ -420,17 +420,17 @@ Ahorro fiscal estimado: ${AmountFormatter.format(taxSavings, 'USD')}/año
     return '''
 HELOC Calculator — Results
 
-Home Value: ${AmountFormatter.format(homeValue, 'USD')}
-Mortgage Balance: ${AmountFormatter.format(mortgage, 'USD')}
-Draw Amount: ${AmountFormatter.format(draw, 'USD')}
+Home Value: ${AmountFormatter.ui(homeValue, 'USD')}
+Mortgage Balance: ${AmountFormatter.ui(mortgage, 'USD')}
+Draw Amount: ${AmountFormatter.ui(draw, 'USD')}
 HELOC Rate: ${rate.toStringAsFixed(2)}%
 Period: ${drawYears}yr draw / ${repayYears}yr repayment
 
-Interest-Only Payment: ${AmountFormatter.format(interestOnly, 'USD')}/mo
-Repayment Payment: ${AmountFormatter.format(repayment, 'USD')}/mo
-Available Equity: ${AmountFormatter.format(equity, 'USD')}
+Interest-Only Payment: ${AmountFormatter.ui(interestOnly, 'USD')}/mo
+Repayment Payment: ${AmountFormatter.ui(repayment, 'USD')}/mo
+Available Equity: ${AmountFormatter.ui(equity, 'USD')}
 Current LTV: ${_fmtPct.format(ltv)}%
-Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
+Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
 
 ⚠ Consult a tax advisor. HELOC interest may be deductible if used for home improvements.
 
@@ -538,17 +538,17 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
               _pdfTable(
                 isEs
                     ? [
-                        ['Valor de la vivienda', AmountFormatter.format(homeValue, 'USD')],
-                        ['Saldo hipotecario', AmountFormatter.format(mortgage, 'USD')],
-                        ['Monto a disponer', AmountFormatter.format(draw, 'USD')],
+                        ['Valor de la vivienda', AmountFormatter.ui(homeValue, 'USD')],
+                        ['Saldo hipotecario', AmountFormatter.ui(mortgage, 'USD')],
+                        ['Monto a disponer', AmountFormatter.ui(draw, 'USD')],
                         ['Tasa HELOC', '${rate.toStringAsFixed(2)}%'],
                         ['Período de disposición', '$drawYears años'],
                         ['Período de pago', '$repayYears años'],
                       ]
                     : [
-                        ['Home Value', AmountFormatter.format(homeValue, 'USD')],
-                        ['Mortgage Balance', AmountFormatter.format(mortgage, 'USD')],
-                        ['Draw Amount', AmountFormatter.format(draw, 'USD')],
+                        ['Home Value', AmountFormatter.ui(homeValue, 'USD')],
+                        ['Mortgage Balance', AmountFormatter.ui(mortgage, 'USD')],
+                        ['Draw Amount', AmountFormatter.ui(draw, 'USD')],
                         ['HELOC Rate', '${rate.toStringAsFixed(2)}%'],
                         ['Draw Period', '$drawYears years'],
                         ['Repayment Period', '$repayYears years'],
@@ -564,33 +564,33 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                     ? [
                         [
                           'Pago solo interés (período disposición)',
-                          AmountFormatter.format(interestOnly, 'USD')
+                          AmountFormatter.ui(interestOnly, 'USD')
                         ],
                         [
                           'Pago amortizado (período de pago)',
-                          AmountFormatter.format(repayment, 'USD')
+                          AmountFormatter.ui(repayment, 'USD')
                         ],
-                        ['Capital disponible (85% LTV)', AmountFormatter.format(equity, 'USD')],
+                        ['Capital disponible (85% LTV)', AmountFormatter.ui(equity, 'USD')],
                         ['LTV actual', '${_fmtPct.format(ltv)}%'],
                         [
                           'Ahorro fiscal estimado (22%)',
-                          '${AmountFormatter.format(taxSavings, 'USD')}/año'
+                          '${AmountFormatter.ui(taxSavings, 'USD')}/año'
                         ],
                       ]
                     : [
                         [
                           'Interest-Only Payment (Draw Period)',
-                          AmountFormatter.format(interestOnly, 'USD')
+                          AmountFormatter.ui(interestOnly, 'USD')
                         ],
                         [
                           'Repayment Payment (After Draw)',
-                          AmountFormatter.format(repayment, 'USD')
+                          AmountFormatter.ui(repayment, 'USD')
                         ],
-                        ['Available Equity (85% LTV)', AmountFormatter.format(equity, 'USD')],
+                        ['Available Equity (85% LTV)', AmountFormatter.ui(equity, 'USD')],
                         ['Current LTV', '${_fmtPct.format(ltv)}%'],
                         [
                           'Est. Tax Savings (22% bracket)',
-                          '${AmountFormatter.format(taxSavings, 'USD')}/year'
+                          '${AmountFormatter.ui(taxSavings, 'USD')}/year'
                         ],
                       ],
                 highlightFirst: true,
@@ -1051,7 +1051,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                               // PDF export button
                                               ValueListenableBuilder<bool>(
                                                 valueListenable: freemiumService
-                                                    .isPremiumNotifier,
+                                                    .hasFullAccessNotifier,
                                                 builder: (_, isPremium, __) =>
                                                     IconButton(
                                                   icon: Icon(
@@ -1115,7 +1115,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                       ? 'Pago P&I'
                                                       : 'P&I Payment'),
                                               value:
-                                                  AmountFormatter.format(drawPayment, 'USD'),
+                                                  AmountFormatter.ui(drawPayment, 'USD'),
                                               secondary: isIO
                                                   ? (isEs
                                                       ? '$drawYears años de disposición'
@@ -1129,13 +1129,13 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                   label: isEs
                                                       ? 'Interés total'
                                                       : 'Total Interest',
-                                                  value: AmountFormatter.format(totalInt, 'USD')
+                                                  value: AmountFormatter.ui(totalInt, 'USD')
                                                 ),
                                                 (
                                                   label: isEs
                                                       ? 'Capital disponible'
                                                       : 'Available Equity',
-                                                  value: AmountFormatter.format(equity, 'USD')
+                                                  value: AmountFormatter.ui(equity, 'USD')
                                                 ),
                                               ],
                                             );
@@ -1150,7 +1150,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                   label: isEs
                                                       ? 'Capital disponible (85% LTV)'
                                                       : 'Available Equity (85% LTV)',
-                                                  value: AmountFormatter.format(
+                                                  value: AmountFormatter.ui(
                                                       (_results!['equity'] as double?) ?? 0.0, 'USD'),
                                                   valueColor: AppTheme.success,
                                                 ),
@@ -1159,7 +1159,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                   label: isEs
                                                       ? 'Capacidad máx. préstamo (85%)'
                                                       : 'Max Borrow Capacity (85%)',
-                                                  value: AmountFormatter.format(
+                                                  value: AmountFormatter.ui(
                                                       (_results!['maxBorrow85'] as double?) ?? 0.0, 'USD'),
                                                   valueColor: AppTheme.primary,
                                                 ),
@@ -1254,7 +1254,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                       : (isEs
                                                           ? 'Interés total (P&I completo)'
                                                           : 'Total Interest (Full P&I)'),
-                                                  value: AmountFormatter.format(
+                                                  value: AmountFormatter.ui(
                                                     (_paymentMode ==
                                                             _PaymentMode
                                                                 .interestOnly
@@ -1324,8 +1324,8 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                                               height: 8),
                                                           Text(
                                                             isSpanish
-                                                                ? 'Ahorro fiscal estimado (22%): ${AmountFormatter.format((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/año'
-                                                                : 'Est. tax savings (22% bracket): ${AmountFormatter.format((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/year',
+                                                                ? 'Ahorro fiscal estimado (22%): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/año'
+                                                                : 'Est. tax savings (22% bracket): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/year',
                                                             style: TextStyle(
                                                                 fontSize:
                                                                     AppTextSize
@@ -1404,7 +1404,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                                           // Feature 1 — Rate Sensitivity sliders
                                           ValueListenableBuilder<bool>(
                                             valueListenable: freemiumService
-                                                .isPremiumNotifier,
+                                                .hasFullAccessNotifier,
                                             builder: (_, isPremium, __) {
                                               if (!isPremium) {
                                                 return PremiumCtaWidget(
@@ -1678,7 +1678,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                       ),
                     ),
                     Text(
-                      '${AmountFormatter.format(drawPmt, 'USD')}/mo',
+                      '${AmountFormatter.ui(drawPmt, 'USD')}/mo',
                       style: TextStyle(
                         fontSize: AppTextSize.sm,
                         fontWeight: FontWeight.w700,
@@ -1697,7 +1697,7 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
                       ),
                     ),
                     Text(
-                      '${AmountFormatter.format(repayPmt, 'USD')}/mo',
+                      '${AmountFormatter.ui(repayPmt, 'USD')}/mo',
                       style: TextStyle(
                         fontSize: AppTextSize.sm,
                         fontWeight: FontWeight.w700,
@@ -1811,18 +1811,18 @@ Est. Tax Savings: ${AmountFormatter.format(taxSavings, 'USD')}/yr
             ),
             _row(
               isEs ? 'Pago fase disponer' : 'Draw phase pmt',
-              '${AmountFormatter.format(helocDrawPmt, 'USD')}/mo',
-              '${AmountFormatter.format(helMonthly, 'USD')}/mo',
+              '${AmountFormatter.ui(helocDrawPmt, 'USD')}/mo',
+              '${AmountFormatter.ui(helMonthly, 'USD')}/mo',
             ),
             _row(
               isEs ? 'Pago amortización' : 'Repay phase pmt',
-              '${AmountFormatter.format(helocRepayPmt, 'USD')}/mo',
-              '${AmountFormatter.format(helMonthly, 'USD')}/mo',
+              '${AmountFormatter.ui(helocRepayPmt, 'USD')}/mo',
+              '${AmountFormatter.ui(helMonthly, 'USD')}/mo',
             ),
             _row(
               isEs ? 'Interés total est.' : 'Total interest est.',
-              AmountFormatter.format(helocTotalInterest, 'USD'),
-              AmountFormatter.format(helTotalInterest, 'USD'),
+              AmountFormatter.ui(helocTotalInterest, 'USD'),
+              AmountFormatter.ui(helTotalInterest, 'USD'),
             ),
             _row(
               isEs ? 'Flexibilidad' : 'Flexibility',
@@ -1958,8 +1958,8 @@ class _EquityCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isEs
-                ? 'Máx. disponible (85%): ${AmountFormatter.format(availableEquity, 'USD')}'
-                : 'Max available (85% LTV): ${AmountFormatter.format(availableEquity, 'USD')}',
+                ? 'Máx. disponible (85%): ${AmountFormatter.ui(availableEquity, 'USD')}'
+                : 'Max available (85% LTV): ${AmountFormatter.ui(availableEquity, 'USD')}',
             style: TextStyle(
               fontSize: AppTextSize.title,
               fontWeight: FontWeight.w800,
@@ -2202,7 +2202,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                     label: isEs
                         ? 'Nuevo pago mensual (interés)'
                         : 'New monthly payment (interest)',
-                    value: AmountFormatter.format(_newMonthly, 'USD'),
+                    value: AmountFormatter.ui(_newMonthly, 'USD'),
                     delta: paymentDelta,
                     color: arrowColor,
                     isEs: isEs,
@@ -2211,7 +2211,7 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
                   _SensRow(
                     label:
                         isEs ? 'Delta interés total' : 'Total interest delta',
-                    value: AmountFormatter.format(_newTotal, 'USD'),
+                    value: AmountFormatter.ui(_newTotal, 'USD'),
                     delta: totalDelta,
                     color: arrowColor,
                     isEs: isEs,
@@ -2322,7 +2322,7 @@ class _SensRow extends StatelessWidget {
           style: const TextStyle(fontSize: AppTextSize.xs, color: AppTheme.labelGray),
         ),
         Text(
-          '$sign${AmountFormatter.format(delta, 'USD')}',
+          '$sign${AmountFormatter.ui(delta, 'USD')}',
           style: TextStyle(
             fontSize: AppTextSize.md,
             fontWeight: FontWeight.w700,
@@ -2461,29 +2461,29 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
               label: isEs
                   ? 'Pago mensual\n(fase disposición)'
                   : 'Monthly payment\n(draw phase)',
-              val1: AmountFormatter.format(ioDrawPayment, 'USD'),
-              val2: AmountFormatter.format(faMonthly, 'USD'),
+              val1: AmountFormatter.ui(ioDrawPayment, 'USD'),
+              val2: AmountFormatter.ui(faMonthly, 'USD'),
               winner: ioDrawPayment < faMonthly ? 0 : 1,
             ),
             _CompRow(
               label: isEs
                   ? 'Pago mensual\n(fase de pago)'
                   : 'Monthly payment\n(repay phase)',
-              val1: AmountFormatter.format(ioRepayPayment, 'USD'),
-              val2: AmountFormatter.format(faMonthly, 'USD'),
+              val1: AmountFormatter.ui(ioRepayPayment, 'USD'),
+              val2: AmountFormatter.ui(faMonthly, 'USD'),
               winner: ioRepayPayment < faMonthly ? 0 : 1,
             ),
             _CompRow(
               label: isEs ? 'Interés total' : 'Total interest',
-              val1: AmountFormatter.format(ioTotalInterest, 'USD'),
-              val2: AmountFormatter.format(faTotalInterest, 'USD'),
+              val1: AmountFormatter.ui(ioTotalInterest, 'USD'),
+              val2: AmountFormatter.ui(faTotalInterest, 'USD'),
               highlight: true,
               winner: ioTotalInterest < faTotalInterest ? 0 : 1,
             ),
             _CompRow(
               label: isEs ? 'Total pagado' : 'Total paid',
-              val1: AmountFormatter.format(ioTotalPaid, 'USD'),
-              val2: AmountFormatter.format(faTotalPaid, 'USD'),
+              val1: AmountFormatter.ui(ioTotalPaid, 'USD'),
+              val2: AmountFormatter.ui(faTotalPaid, 'USD'),
               winner: ioTotalPaid < faTotalPaid ? 0 : 1,
             ),
 
@@ -2504,10 +2504,10 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isEs
-                        ? 'Solo interés ahorra ${AmountFormatter.format(monthlyDraw.abs(), 'USD')}/mes ahora, '
-                            'pero cuesta ${AmountFormatter.format(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "más" : "menos"} en total.'
-                        : 'Interest-only saves ${AmountFormatter.format(monthlyDraw.abs(), 'USD')}/mo now, '
-                            'costs ${AmountFormatter.format(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "more" : "less"} total.',
+                        ? 'Solo interés ahorra ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mes ahora, '
+                            'pero cuesta ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "más" : "menos"} en total.'
+                        : 'Interest-only saves ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mo now, '
+                            'costs ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "more" : "less"} total.',
                     style: const TextStyle(
                         fontSize: AppTextSize.sm,
                         color: CalcwiseSemanticColors.alertText,

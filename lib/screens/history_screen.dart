@@ -126,7 +126,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
                               AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
                           child: ValueListenableBuilder<bool>(
-                            valueListenable: freemiumService.isPremiumNotifier,
+                            valueListenable: freemiumService.hasFullAccessNotifier,
                             builder: (_, isPremium, __) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -404,13 +404,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Hipoteca actual'
                                                         : 'Mortgage Balance',
-                                                    value: AmountFormatter.format(balance, 'USD'),
+                                                    value: AmountFormatter.ui(balance, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label: isEs
                                                         ? 'Monto dispuesto'
                                                         : 'Draw Amount',
-                                                    value: AmountFormatter.format(draw, 'USD'),
+                                                    value: AmountFormatter.ui(draw, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label:
@@ -430,7 +430,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Capital disponible'
                                                         : 'Available Equity',
-                                                    value: AmountFormatter.format(equity, 'USD'),
+                                                    value: AmountFormatter.ui(equity, 'USD'),
                                                     color: AppTheme.success,
                                                   ),
                                                   _HistoryRow(
@@ -442,7 +442,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago solo interés'
                                                         : 'Interest-Only Payment',
-                                                    value: AmountFormatter.format(interestOnly, 'USD'),
+                                                    value: AmountFormatter.ui(interestOnly, 'USD'),
                                                     bold: true,
                                                     color: AppTheme.primary,
                                                   ),
@@ -450,7 +450,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago amortizado'
                                                         : 'Repayment Payment',
-                                                    value: AmountFormatter.format(repayment, 'USD'),
+                                                    value: AmountFormatter.ui(repayment, 'USD'),
                                                   ),
                                                 ],
                                               ),
