@@ -279,6 +279,8 @@ class _MainShellState extends State<MainShell> {
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
           final trigger = await paywallSession.recordAction();
           if (trigger != PaywallTrigger.none &&
+              mounted &&
+              (ModalRoute.of(context)?.isCurrent ?? false) &&
               !freemiumService.hasFullAccess) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
