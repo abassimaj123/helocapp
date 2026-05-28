@@ -1,5 +1,5 @@
 import 'package:calcwise_core/calcwise_core.dart'
-    hide CrashlyticsService, iapErrorNotifier;
+    hide CrashlyticsService, iapErrorNotifier, PaywallHard;
 import 'core/ads/ad_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -28,7 +28,10 @@ import 'screens/splash_screen.dart';
 import 'widgets/paywall_hard.dart';
 import 'widgets/paywall_soft.dart';
 
-final paywallSession = PaywallSessionService(appKey: 'helocapp');
+final paywallSession = PaywallSessionService(
+  appKey: 'helocapp',
+  hasFullAccess: () => freemiumService.hasFullAccess,
+);
 
 final adService = CalcwiseAdService(
   config: CalcwiseAdConfig(

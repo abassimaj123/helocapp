@@ -1,8 +1,6 @@
-import 'package:calcwise_core/calcwise_core.dart'
-    show PaywallTrigger, MonetizationConfig, CalcwiseAdFooter;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 
 import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
@@ -27,10 +25,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
 
-  final _fmtCur =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
   final _fmtPct = NumberFormat('##0.0#');
 
@@ -410,14 +404,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Hipoteca actual'
                                                         : 'Mortgage Balance',
-                                                    value:
-                                                        _fmtCur.format(balance),
+                                                    value: AmountFormatter.format(balance, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label: isEs
                                                         ? 'Monto dispuesto'
                                                         : 'Draw Amount',
-                                                    value: _fmtCur.format(draw),
+                                                    value: AmountFormatter.format(draw, 'USD'),
                                                   ),
                                                   _HistoryRow(
                                                     label:
@@ -437,8 +430,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Capital disponible'
                                                         : 'Available Equity',
-                                                    value:
-                                                        _fmtCur.format(equity),
+                                                    value: AmountFormatter.format(equity, 'USD'),
                                                     color: AppTheme.success,
                                                   ),
                                                   _HistoryRow(
@@ -450,8 +442,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago solo interés'
                                                         : 'Interest-Only Payment',
-                                                    value: _fmtDec
-                                                        .format(interestOnly),
+                                                    value: AmountFormatter.format(interestOnly, 'USD'),
                                                     bold: true,
                                                     color: AppTheme.primary,
                                                   ),
@@ -459,8 +450,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     label: isEs
                                                         ? 'Pago amortizado'
                                                         : 'Repayment Payment',
-                                                    value: _fmtDec
-                                                        .format(repayment),
+                                                    value: AmountFormatter.format(repayment, 'USD'),
                                                   ),
                                                 ],
                                               ),

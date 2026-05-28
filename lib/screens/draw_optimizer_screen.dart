@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
@@ -130,11 +129,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
-
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
   final List<_PlannedDraw> _draws = [
     _PlannedDraw(name: 'Kitchen Renovation', amount: 40000, month: 1),
@@ -723,8 +717,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             repayYears: repayYears,
             totalDraw: totalDraw,
             isEs: isEs,
-            fmt: _fmt,
-            fmtDec: _fmtDec,
           ),
         ],
       ],
@@ -768,15 +760,15 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
         // Hero KPI — optimal strategy total interest
         Semantics(
           label:
-              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${_fmt.format(optimalResult.totalInterest)}',
+              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${AmountFormatter.format(optimalResult.totalInterest, 'USD')}',
           child: CalcwiseHeroCard(
             label: isEs ? 'Mejor Estrategia' : 'Best Strategy',
-            value: _fmt.format(optimalResult.totalInterest),
+            value: AmountFormatter.format(optimalResult.totalInterest, 'USD'),
             secondary: _optimalLocalLabel(),
             stats: [
               (
                 label: isEs ? 'Interés en disposición' : 'Draw Phase Interest',
-                value: _fmt.format(optimalResult.interestDuringDraw),
+                value: AmountFormatter.format(optimalResult.interestDuringDraw, 'USD'),
               ),
               (
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
@@ -797,8 +789,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
             result: r,
             isOptimal: isOptimal,
             isEs: isEs,
-            fmt: _fmt,
-            fmtDec: _fmtDec,
           );
         }),
 
@@ -820,8 +810,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
               child: Text(
                 savings > 0
                     ? (isEs
-                        ? 'Distribuir las disposiciones ahorra ${_fmt.format(savings)} vs retirar todo a la vez.'
-                        : 'Spreading draws saves ${_fmt.format(savings)} vs drawing all at once.')
+                        ? 'Distribuir las disposiciones ahorra ${AmountFormatter.format(savings, 'USD')} vs retirar todo a la vez.'
+                        : 'Spreading draws saves ${AmountFormatter.format(savings, 'USD')} vs drawing all at once.')
                     : (isEs
                         ? 'Retirar todo a la vez es igual de eficiente para tu plan.'
                         : 'Drawing all at once is equally efficient for your plan.'),
@@ -1014,15 +1004,11 @@ class _StrategyCard extends StatelessWidget {
   final _StrategyResult result;
   final bool isOptimal;
   final bool isEs;
-  final NumberFormat fmt;
-  final NumberFormat fmtDec;
 
   const _StrategyCard({
     required this.result,
     required this.isOptimal,
     required this.isEs,
-    required this.fmt,
-    required this.fmtDec,
   });
 
   String _localLabel() {
@@ -1093,13 +1079,13 @@ class _StrategyCard extends StatelessWidget {
               _Metric(
                 label:
                     isEs ? 'Interés fase disposición' : 'Draw Phase Interest',
-                value: fmt.format(result.interestDuringDraw),
+                value: AmountFormatter.format(result.interestDuringDraw, 'USD'),
                 color: AppTheme.labelGray,
               ),
               const SizedBox(width: AppSpacing.md),
               _Metric(
                 label: isEs ? 'Balance al final' : 'Balance at Draw End',
-                value: fmt.format(result.balanceAtDrawEnd),
+                value: AmountFormatter.format(result.balanceAtDrawEnd, 'USD'),
                 color: AppTheme.primary,
               ),
             ]),
@@ -1107,7 +1093,7 @@ class _StrategyCard extends StatelessWidget {
             Row(children: [
               _Metric(
                 label: isEs ? 'Interés total' : 'Total Interest',
-                value: fmt.format(result.totalInterest),
+                value: AmountFormatter.format(result.totalInterest, 'USD'),
                 color: CalcwiseSemanticColors.errorDark,
               ),
               const SizedBox(width: AppSpacing.md),
@@ -1302,8 +1288,6 @@ class _VarRateResults extends StatelessWidget {
   final int repayYears;
   final double totalDraw;
   final bool isEs;
-  final NumberFormat fmt;
-  final NumberFormat fmtDec;
 
   const _VarRateResults({
     required this.schedule,
@@ -1312,8 +1296,6 @@ class _VarRateResults extends StatelessWidget {
     required this.repayYears,
     required this.totalDraw,
     required this.isEs,
-    required this.fmt,
-    required this.fmtDec,
   });
 
   @override
@@ -1438,7 +1420,7 @@ class _VarRateResults extends StatelessWidget {
                       label: isEs
                           ? 'Interés total (variable)'
                           : 'Total Interest (Variable)',
-                      value: fmt.format(totalInterest),
+                      value: AmountFormatter.format(totalInterest, 'USD'),
                       color: CalcwiseSemanticColors.errorDark,
                     ),
                   ),
@@ -1448,7 +1430,7 @@ class _VarRateResults extends StatelessWidget {
                       label: isEs
                           ? 'Interés total (tasa fija ${baseRate.toStringAsFixed(1)}%)'
                           : 'Total Interest (Fixed ${baseRate.toStringAsFixed(1)}%)',
-                      value: fmt.format(fixedTotalInterest),
+                      value: AmountFormatter.format(fixedTotalInterest, 'USD'),
                       color: AppTheme.primary,
                     ),
                   ),
@@ -1480,11 +1462,11 @@ class _VarRateResults extends StatelessWidget {
                       child: Text(
                         diff > 0
                             ? (isEs
-                                ? 'Las subidas de tasa añaden ${fmt.format(diff.abs())} en interés vs tasa fija.'
-                                : 'Rate increases add ${fmt.format(diff.abs())} in interest vs fixed rate.')
+                                ? 'Las subidas de tasa añaden ${AmountFormatter.format(diff.abs(), 'USD')} en interés vs tasa fija.'
+                                : 'Rate increases add ${AmountFormatter.format(diff.abs(), 'USD')} in interest vs fixed rate.')
                             : (isEs
-                                ? 'Las bajadas de tasa ahorran ${fmt.format(diff.abs())} vs tasa fija.'
-                                : 'Rate decreases save ${fmt.format(diff.abs())} vs fixed rate.'),
+                                ? 'Las bajadas de tasa ahorran ${AmountFormatter.format(diff.abs(), 'USD')} vs tasa fija.'
+                                : 'Rate decreases save ${AmountFormatter.format(diff.abs(), 'USD')} vs fixed rate.'),
                         style: TextStyle(
                           fontSize: AppTextSize.sm,
                           color: diff > 0
@@ -1644,7 +1626,6 @@ class _VarRateResults extends StatelessWidget {
         _VarRateMonthlyTable(
           schedule: schedule.take(24).toList(),
           isEs: isEs,
-          fmtDec: fmtDec,
         ),
       ],
     );
@@ -1677,12 +1658,10 @@ class _VarMetric extends StatelessWidget {
 class _VarRateMonthlyTable extends StatelessWidget {
   final List<Map<String, double>> schedule;
   final bool isEs;
-  final NumberFormat fmtDec;
 
   const _VarRateMonthlyTable({
     required this.schedule,
     required this.isEs,
-    required this.fmtDec,
   });
 
   @override
@@ -1751,12 +1730,12 @@ class _VarRateMonthlyTable extends StatelessWidget {
                   ),
                   Expanded(
                       flex: 3,
-                      child: Text(fmtDec.format(payment),
+                      child: Text(AmountFormatter.format(payment, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.xs))),
                   Expanded(
                     flex: 3,
                     child: Text(
-                      fmtDec.format(balance),
+                      AmountFormatter.format(balance, 'USD'),
                       style: TextStyle(
                         fontSize: AppTextSize.xs,
                         color:

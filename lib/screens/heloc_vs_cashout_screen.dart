@@ -1,11 +1,8 @@
 import 'dart:math' show pow;
 
-import 'package:calcwise_core/calcwise_core.dart'
-    show CalcwiseAdFooter, ComparisonScenario, ComparisonView, PaywallTrigger;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
@@ -93,11 +90,6 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   final _closingPctCtrl = TextEditingController(text: '3');
 
   bool _financeClosing = true;
-
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
   _CompareCashoutResult? _result;
 
@@ -464,14 +456,14 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
               accentColor: _helocColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    _fmtDec.format(r.scenarioATotalMonthly),
+                    AmountFormatter.format(r.scenarioATotalMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    _fmtDec.format(r.existingMortgagePI + r.helocPI),
+                    AmountFormatter.format(r.existingMortgagePI + r.helocPI, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'): r'$0',
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    _fmt.format(r.scenarioATotalInterest30y),
+                    AmountFormatter.format(r.scenarioATotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    _fmt.format(r.scenarioATotalInterest30y),
+                    AmountFormatter.format(r.scenarioATotalInterest30y, 'USD'),
               },
             ),
             ComparisonScenario(
@@ -479,15 +471,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
               accentColor: _refiColor,
               metrics: {
                 (isEs ? 'Pago mensual inicial' : 'Initial monthly'):
-                    _fmtDec.format(r.refiMonthly),
+                    AmountFormatter.format(r.refiMonthly, 'USD'),
                 (isEs ? 'Pago mensual (fase pago)' : 'Monthly (repay phase)'):
-                    _fmtDec.format(r.refiMonthly),
+                    AmountFormatter.format(r.refiMonthly, 'USD'),
                 (isEs ? 'Costos iniciales' : 'Upfront costs'):
-                    _financeClosing ? r'$0' : _fmt.format(r.refiClosingCosts),
+                    _financeClosing ? r'$0' : AmountFormatter.format(r.refiClosingCosts, 'USD'),
                 (isEs ? 'Interés total 30 años' : 'Total interest 30y'):
-                    _fmt.format(r.scenarioBTotalInterest30y),
+                    AmountFormatter.format(r.scenarioBTotalInterest30y, 'USD'),
                 (isEs ? 'Costo total' : 'Total cost'):
-                    _fmt.format(r.scenarioBTotalCost),
+                    AmountFormatter.format(r.scenarioBTotalCost, 'USD'),
               },
             ),
           ],

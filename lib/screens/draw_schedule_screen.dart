@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -30,11 +30,6 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
   List<Map<String, double>>? _schedule;
   double? _draw;
   double? _rate;
@@ -46,8 +41,15 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
     super.initState();
     // Pre-fill draw amount and rate from the last calculator result.
     final h = helocNotifier.value;
-    _drawCtrl.text = h.creditLimit.toStringAsFixed(0);
-    _rateCtrl.text = h.rate.toStringAsFixed(1);
+    if (h.creditLimit > 0) {
+      _drawCtrl.text = h.creditLimit.toStringAsFixed(0);
+    }
+    if (h.rate > 0) {
+      _rateCtrl.text = h.rate.toStringAsFixed(1);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _generate();
+    });
   }
 
   @override
@@ -116,9 +118,6 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
         ? 'Generado: ${dateFmt.format(now)}'
         : 'Generated: ${dateFmt.format(now)}';
 
-    final fmtCur =
-        NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
-
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -127,8 +126,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
               style: pw.TextStyle(
                   fontSize: AppTextSize.title, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 12),
-          pw.Text('$homeLabel: ${fmtCur.format(draw)}'),
-          pw.Text('$creditLabel: ${fmtCur.format(draw)}'),
+          pw.Text('$homeLabel: ${AmountFormatter.format(draw, 'USD')}'),
+          pw.Text('$creditLabel: ${AmountFormatter.format(draw, 'USD')}'),
           pw.Text('$drawLabel: ${drawYears}y'),
           pw.Text('$repayLabel: ${repayYears}y'),
           pw.Text('$rateLabel: ${rate.toStringAsFixed(2)}%'),
@@ -155,10 +154,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   (balance - principal).clamp(0.0, double.infinity);
               return [
                 '$month',
-                fmtCur.format(balance),
-                fmtCur.format(interest),
-                fmtCur.format(principal),
-                fmtCur.format(remaining),
+                AmountFormatter.format(balance, 'USD'),
+                AmountFormatter.format(interest, 'USD'),
+                AmountFormatter.format(principal, 'USD'),
+                AmountFormatter.format(remaining, 'USD'),
               ];
             }).toList(),
             headerStyle:
@@ -491,20 +490,20 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                 ),
                 _scenarioRow(
                     '${baseRate.toStringAsFixed(1)}%',
-                    _fmtDec.format(baseInterestOnly),
-                    _fmtDec.format(baseRepay),
-                    _fmt.format(baseTotal),
+                    AmountFormatter.format(baseInterestOnly, 'USD'),
+                    AmountFormatter.format(baseRepay, 'USD'),
+                    AmountFormatter.format(baseTotal, 'USD'),
                     isBase: true),
                 _scenarioRow(
                     '+1% (${(baseRate + 1).toStringAsFixed(1)}%)',
-                    _fmtDec.format(base1InterestOnly),
-                    _fmtDec.format(base1Repay),
-                    _fmt.format(base1Total)),
+                    AmountFormatter.format(base1InterestOnly, 'USD'),
+                    AmountFormatter.format(base1Repay, 'USD'),
+                    AmountFormatter.format(base1Total, 'USD')),
                 _scenarioRow(
                     '+2% (${(baseRate + 2).toStringAsFixed(1)}%)',
-                    _fmtDec.format(base2InterestOnly),
-                    _fmtDec.format(base2Repay),
-                    _fmt.format(base2Total)),
+                    AmountFormatter.format(base2InterestOnly, 'USD'),
+                    AmountFormatter.format(base2Repay, 'USD'),
+                    AmountFormatter.format(base2Total, 'USD')),
               ],
             ),
           ],
@@ -594,11 +593,11 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                   ),
                   Expanded(
                       flex: 2,
-                      child: Text(_fmtDec.format(row['payment']!),
+                      child: Text(AmountFormatter.format(row['payment']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                   Expanded(
                       flex: 2,
-                      child: Text(_fmt.format(row['balance']!),
+                      child: Text(AmountFormatter.format(row['balance']!, 'USD'),
                           style: const TextStyle(fontSize: AppTextSize.sm))),
                 ]),
               );

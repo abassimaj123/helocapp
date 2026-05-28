@@ -1,9 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:calcwise_core/calcwise_core.dart' show PaywallTrigger;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -62,10 +61,6 @@ class _HistoryDetailBody extends StatefulWidget {
 }
 
 class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
-  final _fmtCur =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
   final _fmtPct = NumberFormat('##0.0#');
 
@@ -119,17 +114,17 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
       return '''
 HELOC Calculator — Resultado
 
-Valor vivienda: ${_fmtCur.format(_homeValue)}
-Saldo hipoteca: ${_fmtCur.format(_balance)}
-Monto dispuesto: ${_fmtCur.format(_draw)}
+Valor vivienda: ${AmountFormatter.format(_homeValue, 'USD')}
+Saldo hipoteca: ${AmountFormatter.format(_balance, 'USD')}
+Monto dispuesto: ${AmountFormatter.format(_draw, 'USD')}
 Tasa HELOC: ${_rate.toStringAsFixed(2)}%
 Período: ${_drawYears}a disposición / ${_repayYears}a pago
 
-Pago solo interés: ${_fmtDec.format(_interestOnly)}/mes
-Pago amortizado: ${_fmtDec.format(_repayment)}/mes
-Capital disponible: ${_fmtCur.format(_equity)}
+Pago solo interés: ${AmountFormatter.format(_interestOnly, 'USD')}/mes
+Pago amortizado: ${AmountFormatter.format(_repayment, 'USD')}/mes
+Capital disponible: ${AmountFormatter.format(_equity, 'USD')}
 LTV actual: ${_fmtPct.format(_ltv)}%
-Ahorro fiscal estimado: ${_fmtDec.format(_taxSavings)}/año
+Ahorro fiscal estimado: ${AmountFormatter.format(_taxSavings, 'USD')}/año
 
 ⚠ Consulta a un asesor fiscal. Los intereses del HELOC pueden ser deducibles si se usan para mejoras del hogar.
 Calculado el: ${_fmtDate.format(_createdAt.toLocal())}
@@ -138,17 +133,17 @@ Calculado el: ${_fmtDate.format(_createdAt.toLocal())}
     return '''
 HELOC Calculator — Results
 
-Home Value: ${_fmtCur.format(_homeValue)}
-Mortgage Balance: ${_fmtCur.format(_balance)}
-Draw Amount: ${_fmtCur.format(_draw)}
+Home Value: ${AmountFormatter.format(_homeValue, 'USD')}
+Mortgage Balance: ${AmountFormatter.format(_balance, 'USD')}
+Draw Amount: ${AmountFormatter.format(_draw, 'USD')}
 HELOC Rate: ${_rate.toStringAsFixed(2)}%
 Period: ${_drawYears}yr draw / ${_repayYears}yr repayment
 
-Interest-Only Payment: ${_fmtDec.format(_interestOnly)}/mo
-Repayment Payment: ${_fmtDec.format(_repayment)}/mo
-Available Equity: ${_fmtCur.format(_equity)}
+Interest-Only Payment: ${AmountFormatter.format(_interestOnly, 'USD')}/mo
+Repayment Payment: ${AmountFormatter.format(_repayment, 'USD')}/mo
+Available Equity: ${AmountFormatter.format(_equity, 'USD')}
 Current LTV: ${_fmtPct.format(_ltv)}%
-Est. Tax Savings: ${_fmtDec.format(_taxSavings)}/yr
+Est. Tax Savings: ${AmountFormatter.format(_taxSavings, 'USD')}/yr
 
 ⚠ Consult a tax advisor. HELOC interest may be deductible if used for home improvements.
 Calculated: ${_fmtDate.format(_createdAt.toLocal())}
@@ -220,17 +215,17 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               _pdfTable(
                 isEs
                     ? [
-                        ['Valor de la vivienda', _fmtCur.format(_homeValue)],
-                        ['Saldo hipotecario', _fmtCur.format(_balance)],
-                        ['Monto a disponer', _fmtCur.format(_draw)],
+                        ['Valor de la vivienda', AmountFormatter.format(_homeValue, 'USD')],
+                        ['Saldo hipotecario', AmountFormatter.format(_balance, 'USD')],
+                        ['Monto a disponer', AmountFormatter.format(_draw, 'USD')],
                         ['Tasa HELOC', '${_rate.toStringAsFixed(2)}%'],
                         ['Período de disposición', '$_drawYears años'],
                         ['Período de pago', '$_repayYears años'],
                       ]
                     : [
-                        ['Home Value', _fmtCur.format(_homeValue)],
-                        ['Mortgage Balance', _fmtCur.format(_balance)],
-                        ['Draw Amount', _fmtCur.format(_draw)],
+                        ['Home Value', AmountFormatter.format(_homeValue, 'USD')],
+                        ['Mortgage Balance', AmountFormatter.format(_balance, 'USD')],
+                        ['Draw Amount', AmountFormatter.format(_draw, 'USD')],
                         ['HELOC Rate', '${_rate.toStringAsFixed(2)}%'],
                         ['Draw Period', '$_drawYears years'],
                         ['Repayment Period', '$_repayYears years'],
@@ -246,36 +241,36 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                     ? [
                         [
                           'Pago solo interés (período disposición)',
-                          _fmtDec.format(_interestOnly)
+                          AmountFormatter.format(_interestOnly, 'USD')
                         ],
                         [
                           'Pago amortizado (período de pago)',
-                          _fmtDec.format(_repayment)
+                          AmountFormatter.format(_repayment, 'USD')
                         ],
                         [
                           'Capital disponible (85% LTV)',
-                          _fmtCur.format(_equity)
+                          AmountFormatter.format(_equity, 'USD')
                         ],
                         ['LTV actual', '${_fmtPct.format(_ltv)}%'],
                         [
                           'Ahorro fiscal estimado (22%)',
-                          '${_fmtDec.format(_taxSavings)}/año'
+                          '${AmountFormatter.format(_taxSavings, 'USD')}/año'
                         ],
                       ]
                     : [
                         [
                           'Interest-Only Payment (Draw Period)',
-                          _fmtDec.format(_interestOnly)
+                          AmountFormatter.format(_interestOnly, 'USD')
                         ],
                         [
                           'Repayment Payment (After Draw)',
-                          _fmtDec.format(_repayment)
+                          AmountFormatter.format(_repayment, 'USD')
                         ],
-                        ['Available Equity (85% LTV)', _fmtCur.format(_equity)],
+                        ['Available Equity (85% LTV)', AmountFormatter.format(_equity, 'USD')],
                         ['Current LTV', '${_fmtPct.format(_ltv)}%'],
                         [
                           'Est. Tax Savings (22% bracket)',
-                          '${_fmtDec.format(_taxSavings)}/year'
+                          '${AmountFormatter.format(_taxSavings, 'USD')}/year'
                         ],
                       ],
                 highlightFirst: true,
@@ -509,7 +504,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Valor de la vivienda'
                                     : 'Home Value',
-                                value: _fmtCur.format(_homeValue),
+                                value: AmountFormatter.format(_homeValue, 'USD'),
                                 valueColor: AppTheme.primary,
                                 bold: true,
                               ),
@@ -518,12 +513,12 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Saldo hipotecario'
                                     : 'Mortgage Balance',
-                                value: _fmtCur.format(_balance),
+                                value: AmountFormatter.format(_balance, 'USD'),
                               ),
                               _DetailRow(
                                 label:
                                     isEs ? 'Monto a disponer' : 'Draw Amount',
-                                value: _fmtCur.format(_draw),
+                                value: AmountFormatter.format(_draw, 'USD'),
                               ),
                               _DetailRow(
                                 label: isEs ? 'Tasa HELOC' : 'HELOC Rate',
@@ -554,7 +549,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Pago solo interés'
                                     : 'Interest-Only Payment',
-                                value: '${_fmtDec.format(_interestOnly)}/mo',
+                                value: '${AmountFormatter.format(_interestOnly, 'USD')}/mo',
                                 valueColor: AppTheme.primary,
                                 bold: true,
                               ),
@@ -563,13 +558,13 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Pago amortizado'
                                     : 'Repayment Payment',
-                                value: '${_fmtDec.format(_repayment)}/mo',
+                                value: '${AmountFormatter.format(_repayment, 'USD')}/mo',
                               ),
                               _DetailRow(
                                 label: isEs
                                     ? 'Capital disponible'
                                     : 'Available Equity',
-                                value: _fmtCur.format(_equity),
+                                value: AmountFormatter.format(_equity, 'USD'),
                                 valueColor: AppTheme.success,
                               ),
                               _DetailRow(
@@ -581,7 +576,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Ahorro fiscal est. (22%)'
                                     : 'Est. Tax Savings (22%)',
-                                value: '${_fmtDec.format(_taxSavings)}/yr',
+                                value: '${AmountFormatter.format(_taxSavings, 'USD')}/yr',
                                 valueColor: Colors.blue.shade700,
                               ),
                             ]),

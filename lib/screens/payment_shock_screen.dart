@@ -1,12 +1,9 @@
 import 'dart:math' show pow;
 
-import 'package:calcwise_core/calcwise_core.dart'
-    show CalcwiseAdFooter, PaywallTrigger;
-import 'package:calcwise_core/calcwise_core.dart';
+import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
@@ -56,11 +53,6 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   final _currentRateCtrl = TextEditingController(text: '8.5');
   int _repayYears = 20;
   double _projectedRate = 9.5;
-
-  final _fmt =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final _fmtDec =
-      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
 
   _ShockResult? _result;
 
@@ -305,7 +297,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _fmtDec.format(r.piPayment),
+                  AmountFormatter.format(r.piPayment, 'USD'),
                   style: const TextStyle(
                     fontSize: AppTextSize.hero,
                     fontWeight: FontWeight.bold,
@@ -316,8 +308,8 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 const SizedBox(height: AppSpacing.smPlus),
                 Text(
                   isEs
-                      ? 'Tu pago pasa de ${_fmtDec.format(r.ioPayment)}/mes a ${_fmtDec.format(r.piPayment)}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
-                      : 'Your payment goes from ${_fmtDec.format(r.ioPayment)}/mo to ${_fmtDec.format(r.piPayment)}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
+                      ? 'Tu pago pasa de ${AmountFormatter.format(r.ioPayment, 'USD')}/mes a ${AmountFormatter.format(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
+                      : 'Your payment goes from ${AmountFormatter.format(r.ioPayment, 'USD')}/mo to ${AmountFormatter.format(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
                   style: const TextStyle(fontSize: AppTextSize.md),
                 ),
               ],
@@ -333,14 +325,14 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           const SizedBox(width: AppSpacing.md),
           Expanded(
               child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                  '+${_fmtDec.format(r.dollarIncrease)}', _piColor)),
+                  '+${AmountFormatter.format(r.dollarIncrease, 'USD')}', _piColor)),
         ]),
         const SizedBox(height: AppSpacing.md),
         _metricCard(
           isEs
               ? 'Interés total durante el pago'
               : 'Total interest over repayment',
-          _fmt.format(r.totalInterest),
+          AmountFormatter.format(r.totalInterest, 'USD'),
           _ioColor,
         ),
 
