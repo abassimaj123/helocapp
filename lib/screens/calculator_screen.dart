@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show pow;
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -55,6 +56,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
+
+  Timer? _autoSaveTimer;
 
   final _fmtPct = NumberFormat('##0.0#');
 
@@ -156,6 +159,59 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     });
     // Update global notifier so secondary tools can pre-fill from latest values.
     helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
+
+    // Auto-save: debounced 2 s after last keystroke.
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) _autoSave();
+    });
+  }
+
+  Future<void> _autoSave() async {
+    if (_results == null) return;
+    final db = await DatabaseService.instance.database;
+    final countResult = await db.rawQuery('SELECT COUNT(*) AS c FROM history');
+    final count = (countResult.first['c'] as int?) ?? 0;
+    if (!freemiumService.hasFullAccess &&
+        count >= freemiumService.historyLimit) {
+      if (mounted) {
+        PaywallSoft.show(
+          context,
+          featureTitle: _isEs() ? 'Historial ilimitado' : 'Unlimited History',
+          onUnlock: () => PaywallHard.show(context),
+        );
+      }
+      return;
+    }
+    final homeValue = (_results!['homeValue'] as double?) ?? 0;
+    final mortgage = (_results!['mortgage'] as double?) ?? 0;
+    final draw = (_results!['draw'] as double?) ?? 0;
+    final rate = (_results!['rate'] as double?) ?? 0;
+    final drawYears = (_results!['drawYears'] as int?) ?? 10;
+    final repayYears = (_results!['repayYears'] as int?) ?? 20;
+    final equity = (_results!['equity'] as double?) ?? 0;
+    final ltv = (_results!['ltv'] as double?) ?? 0;
+    final interestOnly = (_results!['interestOnly'] as double?) ?? 0;
+    final repayment = (_results!['repayment'] as double?) ?? 0;
+    try {
+      await DatabaseService.instance.insertHistory(
+        inputs: {
+          'homeValue': homeValue,
+          'balance': mortgage,
+          'draw': draw,
+          'rate': rate,
+          'drawYears': drawYears,
+          'repayYears': repayYears,
+        },
+        results: {
+          'equity': equity,
+          'ltv': ltv,
+          'interestOnly': interestOnly,
+          'repayment': repayment,
+        },
+      );
+    } catch (_) {}
+    adService.onSave();
   }
 
   /// Computes rate scenario rows without touching the widget tree.
@@ -182,6 +238,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);
     _homeValueCtrl.dispose();
@@ -282,6 +339,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   Future<void> _saveToHistory() async {
     if (_results == null) return;
+    // Save is a premium feature — show soft gate for free users.
+    if (!freemiumService.hasFullAccess) {
+      PaywallSoft.show(context);
+      return;
+    }
     final homeValue = (_results!['homeValue'] as double?) ?? 0;
     final mortgage = (_results!['mortgage'] as double?) ?? 0;
     final draw = (_results!['draw'] as double?) ?? 0;

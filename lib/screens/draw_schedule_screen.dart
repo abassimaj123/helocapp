@@ -227,29 +227,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
                 if (_schedule != null) ...[
                   const SizedBox(height: 24),
 
-                  // Balance chart
-                  _buildChart(isEs),
-
-                  const SizedBox(height: 20),
-
-                  // Rate scenarios + Export — single premium gate
-                  ValueListenableBuilder<bool>(
-                    valueListenable: freemiumService.hasFullAccessNotifier,
-                    builder: (_, isPremium, __) {
-                      if (!isPremium) {
-                        return PremiumCtaWidget(
-                          feature: isEs
-                              ? 'Escenarios de tasa y exportación PDF'
-                              : 'Rate Scenarios & PDF Export',
-                        );
-                      }
-                      return _buildRateScenarios(isEs);
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // First 12 months table
+                  // First 12 months table — always free
                   Text(
                     isEs ? 'Primeros 12 meses' : 'First 12 Months',
                     style: const TextStyle(
@@ -261,18 +239,52 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Export — premium gated
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      if (!freemiumService.hasFullAccess) {
-                        PaywallHard.show(context);
-                      } else {
-                        _exportPdf(context, isEs);
+                  // Premium: full schedule, chart, rate scenarios, PDF
+                  ValueListenableBuilder<bool>(
+                    valueListenable: freemiumService.hasFullAccessNotifier,
+                    builder: (_, isPremium, __) {
+                      if (!isPremium) {
+                        return PremiumCtaWidget(
+                          feature: isEs
+                              ? 'Calendario completo, gráfico y PDF'
+                              : 'Full Schedule, Chart & PDF Export',
+                        );
                       }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Balance chart
+                          _buildChart(isEs),
+                          const SizedBox(height: 20),
+
+                          // Rate scenarios
+                          _buildRateScenarios(isEs),
+                          const SizedBox(height: 20),
+
+                          // Full schedule beyond 12 months
+                          if (_schedule!.length > 12) ...[
+                            Text(
+                              isEs ? 'Calendario completo' : 'Full Schedule',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppTextSize.bodyLg),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildTable(isEs, _schedule!.skip(12).toList()),
+                            const SizedBox(height: 20),
+                          ],
+
+                          // PDF export
+                          ElevatedButton.icon(
+                            onPressed: () => _exportPdf(context, isEs),
+                            icon: const Icon(Icons.picture_as_pdf_rounded),
+                            label: Text(isEs
+                                ? AppStringsES.exportPdf
+                                : AppStringsEN.exportPdf),
+                          ),
+                        ],
+                      );
                     },
-                    icon: const Icon(Icons.picture_as_pdf_rounded),
-                    label: Text(
-                        isEs ? AppStringsES.exportPdf : AppStringsEN.exportPdf),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.listBottomInset),

@@ -11,6 +11,7 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/premium_cta_widget.dart';
 
 const _ioColor = AppTheme.primary;
 const _piColor = Color(0xFFC62828);
@@ -337,13 +338,32 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
         ),
 
         const SizedBox(height: AppSpacing.xl),
-        Text(
-          isEs ? 'Comparación mensual' : 'Monthly payment comparison',
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: AppTextSize.body),
+
+        // Premium: bar chart + full projection
+        ValueListenableBuilder<bool>(
+          valueListenable: freemiumService.hasFullAccessNotifier,
+          builder: (_, isPremium, __) {
+            if (!isPremium) {
+              return PremiumCtaWidget(
+                feature: isEs
+                    ? 'Proyección completa y gráfico'
+                    : 'Full Projection & Chart',
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEs ? 'Comparación mensual' : 'Monthly payment comparison',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: AppTextSize.body),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: 200, child: _buildBarChart(isEs, r)),
+              ],
+            );
+          },
         ),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(height: 200, child: _buildBarChart(isEs, r)),
       ],
     );
   }

@@ -277,6 +277,8 @@ class _MainShellState extends State<MainShell> {
           if (i == _index) return;
           setState(() => _index = i);
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
+          // Calculator tab (index 0) is always free — no action recording.
+          if (i == 0) return;
           final trigger = await paywallSession.recordAction();
           if (trigger != PaywallTrigger.none &&
               mounted &&
