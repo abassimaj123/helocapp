@@ -124,7 +124,8 @@ class DrawOptimizerScreen extends StatefulWidget {
   State<DrawOptimizerScreen> createState() => _DrawOptimizerScreenState();
 }
 
-class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
+class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
+    with CalcwiseAutoCalcMixin {
   final _creditLimitCtrl = TextEditingController(text: '150000');
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
@@ -154,6 +155,16 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen> {
     final h = helocNotifier.value;
     _creditLimitCtrl.text = h.creditLimit.toStringAsFixed(0);
     _rateCtrl.text = h.rate.toStringAsFixed(1);
+    for (final c in [
+      _creditLimitCtrl,
+      _rateCtrl,
+      _drawYearsCtrl,
+      _repayYearsCtrl,
+      _primeRateCtrl,
+      _marginCtrl,
+    ]) {
+      c.addListener(() => scheduleCalc(_optimize));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _optimize();
     });

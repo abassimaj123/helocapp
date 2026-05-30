@@ -42,8 +42,13 @@ class _CompareResult {
   });
 }
 
-class _CompareScreenState extends State<CompareScreen> {
+class _CompareScreenState extends State<CompareScreen>
+    with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
+
+  // Skip form validation on the very first auto-calc so default values don't
+  // surface validation errors before the user interacts.
+  bool _firstRun = true;
 
   // Shared
   final _drawCtrl = TextEditingController(text: '100000');
@@ -75,6 +80,19 @@ class _CompareScreenState extends State<CompareScreen> {
     if (h.rate > 0) {
       _helocRateCtrl.text = h.rate.toStringAsFixed(1);
     }
+    for (final c in [
+      _drawCtrl,
+      _helocRateCtrl,
+      _drawYearsCtrl,
+      _repayYearsCtrl,
+      _refiRateCtrl,
+      _refiTermCtrl,
+      _closingCtrl,
+      _loanRateCtrl,
+      _loanTermCtrl,
+    ]) {
+      c.addListener(() => scheduleCalc(_compare));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _compare();
     });
@@ -99,7 +117,13 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Future<void> _compare() async {
-    if (!_formKey.currentState!.validate()) return;
+    // On the first auto-run, skip validation so default inputs don't display
+    // errors before the user has interacted with the form.
+    if (_firstRun) {
+      _firstRun = false;
+    } else if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
     final amount = _parseN(_drawCtrl.text);
     final helocResult = HelocEngine.compare(
       withdrawalAmount: amount,

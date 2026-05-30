@@ -24,7 +24,8 @@ class DrawScheduleScreen extends StatefulWidget {
   State<DrawScheduleScreen> createState() => _DrawScheduleScreenState();
 }
 
-class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
+class _DrawScheduleScreenState extends State<DrawScheduleScreen>
+    with CalcwiseAutoCalcMixin {
   final _drawCtrl = TextEditingController(text: '100000');
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
@@ -46,6 +47,14 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen> {
     }
     if (h.rate > 0) {
       _rateCtrl.text = h.rate.toStringAsFixed(1);
+    }
+    for (final c in [
+      _drawCtrl,
+      _rateCtrl,
+      _drawYearsCtrl,
+      _repayYearsCtrl,
+    ]) {
+      c.addListener(() => scheduleCalc(_generate));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _generate();

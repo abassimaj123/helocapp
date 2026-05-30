@@ -1507,7 +1507,9 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                               .withValues(alpha: 0.4)),
                                       const SizedBox(height: 12),
                                       Text(
-                                          'Enter property details to calculate',
+                                          isEs
+                                              ? 'Ingresa los detalles de la propiedad para calcular'
+                                              : 'Enter property details to calculate',
                                           style: TextStyle(
                                               color: CalcwiseTheme.of(context)
                                                   .textSecondary,
