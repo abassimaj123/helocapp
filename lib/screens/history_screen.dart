@@ -96,8 +96,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(isEs ? 'Borrar' : 'Clear',
-                style:
-                    const TextStyle(color: CalcwiseSemanticColors.errorDark)),
+                style: TextStyle(
+                    color: CalcwiseSemanticColors.error(
+                        Theme.of(context).brightness))),
           ),
         ],
       ),
@@ -144,15 +145,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   if (isPremium && _history.isNotEmpty)
                                     TextButton.icon(
                                       onPressed: _clearAll,
-                                      icon: const Icon(Icons.delete_sweep,
+                                      icon: Icon(Icons.delete_sweep,
                                           size: 16,
-                                          color:
-                                              CalcwiseSemanticColors.errorDark),
+                                          color: CalcwiseSemanticColors.error(
+                                              Theme.of(context).brightness)),
                                       label: Text(
                                         isEs ? 'Borrar todo' : 'Clear all',
-                                        style: const TextStyle(
-                                            color: CalcwiseSemanticColors
-                                                .errorDark,
+                                        style: TextStyle(
+                                            color: CalcwiseSemanticColors.error(
+                                                Theme.of(context).brightness),
                                             fontSize: AppTextSize.md),
                                       ),
                                     ),
@@ -328,10 +329,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     isEs
                                                         ? 'Eliminar'
                                                         : 'Delete',
-                                                    style: const TextStyle(
-                                                        color:
-                                                            CalcwiseSemanticColors
-                                                                .errorDark),
+                                                    style: TextStyle(
+                                                        color: CalcwiseSemanticColors
+                                                            .error(Theme.of(
+                                                                    context)
+                                                                .brightness)),
                                                   ),
                                                 ),
                                               ],

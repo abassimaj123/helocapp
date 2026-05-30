@@ -1105,7 +1105,8 @@ class _StrategyCard extends StatelessWidget {
               _Metric(
                 label: isEs ? 'Interés total' : 'Total Interest',
                 value: AmountFormatter.ui(result.totalInterest, 'USD'),
-                color: CalcwiseSemanticColors.errorDark,
+                color: CalcwiseSemanticColors.error(
+                    Theme.of(context).brightness),
               ),
               const SizedBox(width: AppSpacing.md),
               _Metric(
@@ -1432,7 +1433,8 @@ class _VarRateResults extends StatelessWidget {
                           ? 'Interés total (variable)'
                           : 'Total Interest (Variable)',
                       value: AmountFormatter.ui(totalInterest, 'USD'),
-                      color: CalcwiseSemanticColors.errorDark,
+                      color: CalcwiseSemanticColors.error(
+                          Theme.of(context).brightness),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -1611,12 +1613,14 @@ class _VarRateResults extends StatelessWidget {
                                   LineChartBarData(
                                     spots: interestSpots,
                                     isCurved: true,
-                                    color: CalcwiseSemanticColors.errorDark,
+                                    color: CalcwiseSemanticColors.error(
+                                        Theme.of(context).brightness),
                                     barWidth: 2.5,
                                     dotData: const FlDotData(show: false),
                                     belowBarData: BarAreaData(
                                       show: true,
-                                      color: CalcwiseSemanticColors.errorDark
+                                      color: CalcwiseSemanticColors.error(
+                                              Theme.of(context).brightness)
                                           .withValues(alpha: 0.07),
                                     ),
                                   ),
