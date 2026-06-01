@@ -264,7 +264,8 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
+              child: CalcwisePageEntrance(
+                child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +403,8 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                     const SizedBox(height: AppSpacing.listBottomInset),
                   ],
                 ),
-              ),
+              ), // Form
+              ), // CalcwisePageEntrance
             ),
           ),
           const CalcwiseAdFooter(),

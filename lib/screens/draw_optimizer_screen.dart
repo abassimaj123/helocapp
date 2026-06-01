@@ -348,7 +348,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
+              child: CalcwisePageEntrance(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Info banner
@@ -500,7 +501,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                       height: AppSpacing
                           .listBottomInset), // intentional large scroll buffer
                 ],
-              ),
+              ), // Column
+              ), // CalcwisePageEntrance
             ),
           ),
           const CalcwiseAdFooter(),

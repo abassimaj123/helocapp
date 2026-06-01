@@ -183,7 +183,8 @@ class _CompareScreenState extends State<CompareScreen>
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Form(
+            child: CalcwisePageEntrance(
+              child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +381,8 @@ class _CompareScreenState extends State<CompareScreen>
                   const SizedBox(height: AppSpacing.listBottomInset),
                 ],
               ),
-            ),
+            ), // Form
+            ), // CalcwisePageEntrance
           ),
         ),
         const CalcwiseAdFooter(),
