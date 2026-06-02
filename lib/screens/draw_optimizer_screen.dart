@@ -1628,6 +1628,7 @@ class _VarRateResults extends StatelessWidget {
                                   ),
                                 ],
                               ),
+                              duration: CalcwiseChartTokens.swapDuration,
                             ),
                     );
                   },

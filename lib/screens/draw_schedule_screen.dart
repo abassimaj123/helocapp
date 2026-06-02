@@ -441,6 +441,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                         ),
                       ],
                     ),
+                    duration: CalcwiseChartTokens.swapDuration,
                   ),
                 );
               },

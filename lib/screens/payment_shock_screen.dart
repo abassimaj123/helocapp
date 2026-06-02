@@ -453,6 +453,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           ]),
         ],
       ),
+      swapAnimationDuration: CalcwiseChartTokens.swapDuration,
     );
   }
 
