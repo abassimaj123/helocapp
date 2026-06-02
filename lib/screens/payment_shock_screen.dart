@@ -371,15 +371,44 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   }
 
   Widget _buildBarChart(bool isEs, _ShockResult r) {
+    final cs = Theme.of(context).colorScheme;
     final maxY = (r.piPayment * 1.2);
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: maxY,
-        barTouchData: BarTouchData(enabled: false),
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => cs.inverseSurface,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final label = group.x == 0
+                  ? (isEs ? 'Solo interés' : 'Interest-only')
+                  : (isEs ? 'P + I' : 'P + I');
+              return BarTooltipItem(
+                '$label\n${AmountFormatter.ui(rod.toY, 'USD')}',
+                TextStyle(
+                  color: cs.onInverseSurface,
+                  fontWeight: FontWeight.bold,
+                  fontSize: AppTextSize.sm,
+                ),
+              );
+            },
+          ),
+        ),
         titlesData: FlTitlesData(
-          leftTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 44,
+              getTitlesWidget: (v, m) => Text(
+                '\$${(v / 1000).toStringAsFixed(0)}k',
+                style: const TextStyle(
+                    fontSize: CalcwiseChartTokens.axisFontSize,
+                    color: AppTheme.labelGray),
+              ),
+            ),
+          ),
           rightTitles:
               const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           topTitles:
@@ -408,7 +437,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
             BarChartRodData(
               toY: r.ioPayment,
               color: _ioColor,
-              width: 48,
+              width: CalcwiseChartTokens.barWidth,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(6)),
             ),
@@ -416,8 +445,8 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           BarChartGroupData(x: 1, barRods: [
             BarChartRodData(
               toY: r.piPayment,
-              color: _piColor,
-              width: 48,
+              color: cs.error,
+              width: CalcwiseChartTokens.barWidth,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(6)),
             ),

@@ -1542,12 +1542,12 @@ class _VarRateResults extends StatelessWidget {
                                   handleBuiltInTouches: true,
                                   touchTooltipData: LineTouchTooltipData(
                                     getTooltipColor: (_) =>
-                                        Colors.blueGrey.shade800,
+                                        Theme.of(context).colorScheme.inverseSurface,
                                     getTooltipItems: (spots) => spots
                                         .map((s) => LineTooltipItem(
                                               '\$${(s.y / 1000).toStringAsFixed(1)}k',
-                                              const TextStyle(
-                                                  color: Colors.white,
+                                              TextStyle(
+                                                  color: Theme.of(context).colorScheme.onInverseSurface,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: AppTextSize.sm),
                                             ))
