@@ -193,10 +193,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                         ButtonSegment(value: 20, label: Text('20 yr')),
                       ],
                       selected: {_repayYears},
-                      onSelectionChanged: (s) => setState(() {
-                        _repayYears = s.first;
-                        _tryCompute();
-                      }),
+                      onSelectionChanged: (s) {
+                        setState(() => _repayYears = s.first);
+                        scheduleCalc(_tryCompute);
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _sectionHeader(isEs ? 'Tasa actual' : 'Current Rate'),
@@ -219,10 +219,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                           max: 15,
                           divisions: 120,
                           label: '${_projectedRate.toStringAsFixed(2)}%',
-                          onChanged: (v) => setState(() {
-                            _projectedRate = v;
-                            _tryCompute();
-                          }),
+                          onChanged: (v) {
+                            setState(() => _projectedRate = v);
+                            scheduleCalc(_tryCompute);
+                          },
                         ),
                       ),
                       SizedBox(

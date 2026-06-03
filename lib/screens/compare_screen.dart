@@ -116,7 +116,7 @@ class _CompareScreenState extends State<CompareScreen>
     super.dispose();
   }
 
-  Future<void> _compare() async {
+  Future<void> _compare({bool isManual = false}) async {
     // On the first auto-run, skip validation so default inputs don't display
     // errors before the user has interacted with the form.
     if (_firstRun) {
@@ -146,18 +146,20 @@ class _CompareScreenState extends State<CompareScreen>
           loanMonthlyPayment: loanPayment,
           loanTotalInterest: loanInterest,
         ));
-    adService.onAction();
     AnalyticsService.instance.logCompareViewed(
       withdrawalAmount: amount,
       helocRate: _parseN(_helocRateCtrl.text),
       refiRate: _parseN(_refiRateCtrl.text),
     );
-    final trigger = await paywallSession.recordAction();
-    if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-      PaywallHard.show(context);
-    } else if (trigger == PaywallTrigger.soft &&
-        !freemiumService.hasFullAccess) {
-      PaywallSoft.show(context);
+    if (isManual) {
+      adService.onAction();
+      final trigger = await paywallSession.recordAction();
+      if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
+        PaywallHard.show(context);
+      } else if (trigger == PaywallTrigger.soft &&
+          !freemiumService.hasFullAccess) {
+        PaywallSoft.show(context);
+      }
     }
   }
 
@@ -351,7 +353,7 @@ class _CompareScreenState extends State<CompareScreen>
                   const SizedBox(height: AppSpacing.xxl),
 
                   ElevatedButton.icon(
-                    onPressed: _compare,
+                    onPressed: () => _compare(isManual: true),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(

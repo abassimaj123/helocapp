@@ -461,6 +461,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                           _draws[i] = updated;
                           _results = null;
                         });
+                        scheduleCalc(_optimize);
                       },
                       onRemove: _draws.length > 1 ? () => _removeDraw(i) : null,
                     );
@@ -693,10 +694,13 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                       step: step,
                       isEs: isEs,
                       maxYear: drawYears + repayYears,
-                      onChanged: (updated) => setState(() {
-                        _rateSteps[i] = updated;
-                        _varRateSchedule = null;
-                      }),
+                      onChanged: (updated) {
+                        setState(() {
+                          _rateSteps[i] = updated;
+                          _varRateSchedule = null;
+                        });
+                        scheduleCalc(_optimize);
+                      },
                       onRemove: () => _removeRateStep(i),
                     );
                   }),

@@ -1,3 +1,4 @@
+import 'dart:math' show pow;
 import 'dart:typed_data';
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -79,6 +80,21 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
   double get _ltv => (_results['ltv'] as num).toDouble();
   double get _interestOnly => (_results['interestOnly'] as num).toDouble();
   double get _repayment => (_results['repayment'] as num).toDouble();
+
+  /// Total interest computed from stored inputs (not saved to DB separately).
+  double get _totalInterest {
+    final stored = _results['totalInterest'];
+    if (stored != null) return (stored as num).toDouble();
+    // Recompute: IO phase interest + repayment phase amortization interest
+    final r = _rate / 100 / 12;
+    final ioPhaseInterest = _draw * r * _drawYears * 12;
+    final repayN = _repayYears * 12;
+    final repayPmt = r > 0
+        ? _draw * r * pow(1 + r, repayN) / (pow(1 + r, repayN) - 1)
+        : _draw / repayN;
+    final repayPhaseInterest = repayPmt * repayN - _draw;
+    return ioPhaseInterest + repayPhaseInterest;
+  }
 
   /// Tax savings: stored if available, else estimated at 22%
   double get _taxSavings {
@@ -511,9 +527,19 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                               ),
                               _DetailRow(
                                 label: isEs
-                                    ? 'Período disposición / pago'
-                                    : 'Draw / Repayment Period',
-                                value: '${_drawYears}yr / ${_repayYears}yr',
+                                    ? 'Período de disposición'
+                                    : 'Draw Period',
+                                value: isEs
+                                    ? '$_drawYears años'
+                                    : '$_drawYears yr',
+                              ),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Período de pago'
+                                    : 'Repayment Period',
+                                value: isEs
+                                    ? '$_repayYears años'
+                                    : '$_repayYears yr',
                               ),
                             ]),
                           ),
@@ -532,8 +558,8 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                             child: Column(children: [
                               _DetailRow(
                                 label: isEs
-                                    ? 'Pago solo interés'
-                                    : 'Interest-Only Payment',
+                                    ? 'Pago mensual (solo interés)'
+                                    : 'Monthly IO Payment',
                                 value: '${AmountFormatter.ui(_interestOnly, 'USD')}/mo',
                                 valueColor: AppTheme.primary,
                                 bold: true,
@@ -541,9 +567,16 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                               const Divider(height: 16),
                               _DetailRow(
                                 label: isEs
-                                    ? 'Pago amortizado'
-                                    : 'Repayment Payment',
+                                    ? 'Pago mensual amortizado'
+                                    : 'Monthly Amortizing Payment',
                                 value: '${AmountFormatter.ui(_repayment, 'USD')}/mo',
+                              ),
+                              _DetailRow(
+                                label: isEs
+                                    ? 'Interés total estimado'
+                                    : 'Total Interest',
+                                value: AmountFormatter.ui(_totalInterest, 'USD'),
+                                valueColor: AppTheme.errorDark,
                               ),
                               _DetailRow(
                                 label: isEs

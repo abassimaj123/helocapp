@@ -251,6 +251,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   }
 
   Future<void> _calculate() async {
+    _autoSaveTimer?.cancel();
     if (!_formKey.currentState!.validate()) return;
     final homeValue = _parseNum(_homeValueCtrl.text);
     final mortgage = _parseNum(_mortgageCtrl.text);
@@ -304,6 +305,24 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       homeValue: homeValue,
       ratePct: rate,
     );
+    // Check history limit BEFORE session paywall to avoid double-modal.
+    HapticFeedback.mediumImpact();
+    if (!freemiumService.hasFullAccess) {
+      final db = await DatabaseService.instance.database;
+      final countResult = await db.rawQuery('SELECT COUNT(*) AS c FROM history');
+      final count = (countResult.first['c'] as int?) ?? 0;
+      if (count >= freemiumService.historyLimit) {
+        if (mounted) {
+          PaywallSoft.show(
+            context,
+            featureTitle: _isEs() ? 'Historial ilimitado' : 'Unlimited History',
+            onUnlock: () => PaywallHard.show(context),
+          );
+        }
+        return;
+      }
+    }
+
     final trigger = await paywallSession.recordAction();
     if (trigger != PaywallTrigger.none &&
         mounted &&
@@ -315,7 +334,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       }
     }
 
-    HapticFeedback.mediumImpact();
     try {
       await DatabaseService.instance.insertHistory(
         inputs: {
@@ -2452,7 +2470,7 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
     final monthlyDraw =
         ioDrawPayment - faMonthly; // +ve means IO cheaper during draw
     final totalDiff = faTotalInterest -
-        ioTotalInterest; // +ve means FA costs more overall... actually IO costs more
+        ioTotalInterest; // totalDiff > 0 means FA costs more; totalDiff < 0 means IO costs more (typical: IO defers principal so accumulates more interest)
 
     // IO: lower monthly during draw but higher total; FA: higher monthly but lower total
 
@@ -2577,9 +2595,9 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                   child: Text(
                     isEs
                         ? 'Solo interés ahorra ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mes ahora, '
-                            'pero cuesta ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "más" : "menos"} en total.'
+                            'pero cuesta ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff < 0 ? "más" : "menos"} en total.'
                         : 'Interest-only saves ${AmountFormatter.ui(monthlyDraw.abs(), 'USD')}/mo now, '
-                            'costs ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff > 0 ? "more" : "less"} total.',
+                            'costs ${AmountFormatter.ui(totalDiff.abs(), 'USD')} ${totalDiff < 0 ? "more" : "less"} total.',
                     style: const TextStyle(
                         fontSize: AppTextSize.sm,
                         color: CalcwiseSemanticColors.alertText,

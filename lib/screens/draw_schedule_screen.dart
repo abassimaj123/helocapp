@@ -70,7 +70,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     super.dispose();
   }
 
-  Future<void> _generate() async {
+  Future<void> _generate({bool isManual = false}) async {
     final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
     final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
     final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
@@ -90,14 +90,16 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     });
 
     AnalyticsService.instance.logDrawScheduleViewed();
-    final trigger = await paywallSession.recordAction();
-    if (trigger != PaywallTrigger.none &&
-        mounted &&
-        !freemiumService.hasFullAccess) {
-      if (trigger == PaywallTrigger.soft) {
-        PaywallSoft.show(context);
-      } else {
-        PaywallHard.show(context);
+    if (isManual) {
+      final trigger = await paywallSession.recordAction();
+      if (trigger != PaywallTrigger.none &&
+          mounted &&
+          !freemiumService.hasFullAccess) {
+        if (trigger == PaywallTrigger.soft) {
+          PaywallSoft.show(context);
+        } else {
+          PaywallHard.show(context);
+        }
       }
     }
   }
@@ -228,7 +230,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                 ]),
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: _generate,
+                  onPressed: () => _generate(isManual: true),
                   icon: const Icon(Icons.timeline),
                   label:
                       Text(isEs ? 'Generar calendario' : 'Generate Schedule'),

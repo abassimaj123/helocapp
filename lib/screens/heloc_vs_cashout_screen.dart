@@ -367,10 +367,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                         style: const TextStyle(fontSize: AppTextSize.body),
                       ),
                       value: _financeClosing,
-                      onChanged: (v) => setState(() {
-                        _financeClosing = v;
-                        _tryCompute();
-                      }),
+                      onChanged: (v) {
+                        setState(() => _financeClosing = v);
+                        scheduleCalc(_tryCompute);
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     ElevatedButton.icon(
