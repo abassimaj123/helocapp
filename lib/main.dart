@@ -24,6 +24,7 @@ import 'screens/heloc_vs_cashout_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/payment_shock_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/tools_screen.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/paywall_hard.dart';
 import 'widgets/paywall_soft.dart';
@@ -268,6 +269,7 @@ class _MainShellState extends State<MainShell> {
           CalculatorScreen(),
           DrawScheduleScreen(),
           CompareScreen(),
+          ToolsScreen(),
           HistoryScreen(),
         ],
       ),
@@ -311,6 +313,11 @@ class _MainShellState extends State<MainShell> {
             icon: const Icon(Icons.compare_arrows_rounded),
             selectedIcon: const Icon(Icons.compare_arrows),
             label: isEs ? 'Comparar' : 'Compare',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.build_rounded),
+            selectedIcon: const Icon(Icons.build),
+            label: isEs ? 'Herramientas' : 'Tools',
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_rounded),
