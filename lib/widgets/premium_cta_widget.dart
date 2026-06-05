@@ -57,17 +57,20 @@ class PremiumCtaWidget extends StatelessWidget {
                           color: Colors.white70, fontSize: AppTextSize.sm)),
                 ],
               )),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.mdPlus, vertical: AppSpacing.sm),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppRadius.xxl)),
-                child: Text(r'$2.99',
-                    style: TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: AppTextSize.md)),
+              ValueListenableBuilder<String?>(
+                valueListenable: IAPService.instance.localizedPrice,
+                builder: (_, price, __) => Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.mdPlus, vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.xxl)),
+                  child: Text(price ?? '',
+                      style: TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: AppTextSize.md)),
+                ),
               ),
             ]),
           ),
