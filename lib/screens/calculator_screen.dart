@@ -21,7 +21,7 @@ import '../main.dart';
 import '../widgets/insight_card.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
-import '../widgets/premium_cta_widget.dart';
+import '../core/freemium/iap_service.dart';
 import '../widgets/result_card.dart';
 import '../core/insight_engine.dart';
 import 'compare_screen.dart';
@@ -1398,10 +1398,12 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                 .hasFullAccessNotifier,
                                             builder: (_, isPremium, __) {
                                               if (!isPremium) {
-                                                return PremiumCtaWidget(
+                                                return CalcwisePremiumCta(
                                                   feature: isEs
                                                       ? 'Sensibilidad de Tasa'
                                                       : 'Rate Sensitivity',
+                                                  onTap: () => IAPService.instance.buy(),
+                                                  price: IAPService.instance.localizedPrice,
                                                 );
                                               }
                                               return _RateSensitivityWidget(

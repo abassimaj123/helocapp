@@ -15,7 +15,7 @@ import '../l10n/strings_es.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
-import '../widgets/premium_cta_widget.dart';
+import '../core/freemium/iap_service.dart';
 
 class DrawScheduleScreen extends StatefulWidget {
   const DrawScheduleScreen({super.key});
@@ -255,10 +255,12 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                     valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
-                        return PremiumCtaWidget(
+                        return CalcwisePremiumCta(
                           feature: isEs
                               ? 'Calendario completo, gráfico y PDF'
                               : 'Full Schedule, Chart & PDF Export',
+                          onTap: () => IAPService.instance.buy(),
+                          price: IAPService.instance.localizedPrice,
                         );
                       }
                       return Column(

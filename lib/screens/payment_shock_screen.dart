@@ -11,7 +11,7 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
-import '../widgets/premium_cta_widget.dart';
+import '../core/freemium/iap_service.dart';
 
 const _ioColor = AppTheme.primary;
 const _piColor = Color(0xFFC62828);
@@ -346,10 +346,12 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           valueListenable: freemiumService.hasFullAccessNotifier,
           builder: (_, isPremium, __) {
             if (!isPremium) {
-              return PremiumCtaWidget(
+              return CalcwisePremiumCta(
                 feature: isEs
                     ? 'Proyección completa y gráfico'
                     : 'Full Projection & Chart',
+                onTap: () => IAPService.instance.buy(),
+                price: IAPService.instance.localizedPrice,
               );
             }
             return Column(

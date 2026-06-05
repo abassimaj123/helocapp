@@ -9,7 +9,7 @@ import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
-import '../widgets/premium_cta_widget.dart';
+import '../core/freemium/iap_service.dart';
 
 // ---------------------------------------------------------------------------
 // Model
@@ -488,10 +488,12 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                     valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
-                        return PremiumCtaWidget(
+                        return CalcwisePremiumCta(
                           feature: isEs
                               ? 'Simulación de Tasa Variable'
                               : 'Variable Rate Simulation',
+                          onTap: () => IAPService.instance.buy(),
+                          price: IAPService.instance.localizedPrice,
                         );
                       }
                       return _buildVariableRateSection(isEs);
