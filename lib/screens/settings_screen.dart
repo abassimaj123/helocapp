@@ -76,10 +76,10 @@ class SettingsScreen extends StatelessWidget {
                                 ListTile(
                                   leading: const Icon(Icons.star_outline),
                                   title: Text(isFr
-                                      ? '${AppStringsFR.getPremium} — \$2.99'
+                                      ? AppStringsFR.getPremium
                                       : (isEs
-                                          ? '${AppStringsES.getPremium} — \$2.99'
-                                          : '${AppStringsEN.getPremium} — \$2.99')),
+                                          ? AppStringsES.getPremium
+                                          : AppStringsEN.getPremium)),
                                   subtitle: Text(isFr
                                       ? AppStringsFR.premiumDesc
                                       : (isEs
