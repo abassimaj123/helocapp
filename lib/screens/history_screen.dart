@@ -14,6 +14,8 @@ import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import 'history_detail_screen.dart';
 
+enum _CardAction { unpin, rename, delete }
+
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -75,7 +77,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _delete(int id) async {
-    await DatabaseService.instance.deleteHistory(id);
+    await smartHistoryService.delete(id);
+    await _load();
+  }
+
+  Future<void> _unpin(int id) async {
+    await smartHistoryService.unpin(id);
+    await _load();
+  }
+
+  Future<void> _rename(Map<String, dynamic> row) async {
+    final isEs = isSpanishNotifier.value;
+    final ctrl =
+        TextEditingController(text: (row['pin_label'] as String?) ?? '');
+    final label = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(isEs ? 'Renombrar escenario' : 'Rename scenario'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+              hintText: isEs ? 'Nombre del escenario' : 'Scenario name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(isEs ? 'Cancelar' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, ctrl.text),
+            child: Text(isEs ? 'Guardar' : 'Save'),
+          ),
+        ],
+      ),
+    );
+    if (label == null) return;
+    await smartHistoryService.rename(row['id'] as int, label.trim());
     await _load();
   }
 
@@ -109,6 +148,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  List<Map<String, dynamic>> get _pinned =>
+      _history.where((r) => (r['is_pinned'] as int? ?? 0) == 1).toList();
+
+  List<Map<String, dynamic>> get _autoSaves =>
+      _history.where((r) => (r['is_pinned'] as int? ?? 0) == 0).toList();
+
+  List<Map<String, dynamic>> get _visibleAutoSaves {
+    if (freemiumService.hasFullAccess || freemiumService.isRewarded) {
+      return _autoSaves;
+    }
+    return _autoSaves.take(MonetizationConfig.freeRingBufferSize).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
@@ -122,81 +174,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onRefresh: _load,
                   child: CustomScrollView(
                     slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                              AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
-                          child: ValueListenableBuilder<bool>(
-                            valueListenable: freemiumService.hasFullAccessNotifier,
-                            builder: (_, isPremium, __) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  Expanded(
-                                    child: Text(
-                                      isPremium
-                                          ? '${_history.length} ${isEs ? 'cálculos guardados' : 'entries saved'}'
-                                          : '${_history.length} / ${MonetizationConfig.freeCalculationLimit} ${isEs ? 'guardados' : 'saved'}',
-                                      style: const TextStyle(
-                                          color: AppTheme.labelGray,
-                                          fontSize: AppTextSize.md),
-                                    ),
-                                  ),
-                                  if (isPremium && _history.isNotEmpty)
-                                    TextButton.icon(
-                                      onPressed: _clearAll,
-                                      icon: Icon(Icons.delete_sweep,
-                                          size: 16,
-                                          color: CalcwiseSemanticColors.error(
-                                              Theme.of(context).brightness)),
-                                      label: Text(
-                                        isEs ? 'Borrar todo' : 'Clear all',
-                                        style: TextStyle(
-                                            color: CalcwiseSemanticColors.error(
-                                                Theme.of(context).brightness),
-                                            fontSize: AppTextSize.md),
-                                      ),
-                                    ),
-                                ]),
-                                if (!isPremium) ...[
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Row(children: [
-                                    const Icon(Icons.lock_outline,
-                                        size: 13,
-                                        color: CalcwiseSemanticColors.warnIcon),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        isEs
-                                            ? AppStringsES.historyLimit
-                                            : AppStringsEN.historyLimit,
-                                        style: const TextStyle(
-                                            fontSize: AppTextSize.sm,
-                                            color: AppTheme.labelGray),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          IAPService.instance.buy(),
-                                      style: TextButton.styleFrom(
-                                          padding: EdgeInsets.zero,
-                                          tapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap),
-                                      child: Text(
-                                        isEs ? 'Desbloquear' : 'Unlock',
-                                        style: const TextStyle(
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: AppTextSize.sm),
-                                      ),
-                                    ),
-                                  ]),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      SliverToBoxAdapter(child: _buildHeader(context, isEs)),
                       if (_history.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
@@ -211,66 +189,69 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             actionLabel: isEs
                                 ? 'Hacer mi primer cálculo'
                                 : 'Run my first calculation',
-                            onAction: () => Navigator.pop(context),
+                            onAction: () => tabSwitchNotifier.value = 0,
                           ),
                         )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
-                          sliver: SliverList(
+                      else ...[
+                        // ── Saved Scenarios (pinned) ─────────────────────────
+                        if (_pinned.isNotEmpty) ...[
+                          SliverToBoxAdapter(
+                            child: _sectionHeader(
+                                context,
+                                isEs ? 'ESCENARIOS GUARDADOS' : 'SAVED SCENARIOS',
+                                Icons.bookmark_rounded),
+                          ),
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (ctx, i) => Padding(
+                                padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                                    0, AppSpacing.lg, AppSpacing.smPlus),
+                                child:
+                                    _buildCard(_pinned[i], isEs, pinned: true),
+                              ),
+                              childCount: _pinned.length,
+                            ),
+                          ),
+                        ],
+                        // ── Recent Calculations (auto-saves) ─────────────────
+                        if (_visibleAutoSaves.isNotEmpty) ...[
+                          SliverToBoxAdapter(
+                            child: _sectionHeader(
+                                context,
+                                isEs
+                                    ? 'CÁLCULOS RECIENTES'
+                                    : 'RECENT CALCULATIONS',
+                                Icons.history_rounded),
+                          ),
+                          SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
-                                final item = _history[i];
-                                final id = item['id'] as int;
-                                final inputs =
-                                    item['inputs'] as Map<String, dynamic>;
-                                final results =
-                                    item['results'] as Map<String, dynamic>;
-                                final createdAt = DateTime.parse(
-                                    item['created_at'] as String);
-
-                                final homeValue =
-                                    (inputs['homeValue'] as num).toDouble();
-                                final balance =
-                                    (inputs['balance'] as num).toDouble();
-                                final draw = (inputs['draw'] as num).toDouble();
-                                final rate = (inputs['rate'] as num).toDouble();
-                                final drawYears =
-                                    (inputs['drawYears'] as num).toInt();
-                                final repayYears =
-                                    (inputs['repayYears'] as num).toInt();
-                                final equity =
-                                    (results['equity'] as num).toDouble();
-                                final ltv = (results['ltv'] as num).toDouble();
-                                final interestOnly =
-                                    (results['interestOnly'] as num).toDouble();
-                                final repayment =
-                                    (results['repayment'] as num).toDouble();
-
-                                // Date-group header logic
+                                final list = _visibleAutoSaves;
+                                final row = list[i];
+                                final id = row['id'] as int;
+                                final createdAt =
+                                    DateTime.parse(row['created_at'] as String);
                                 final currentGroup =
                                     _dateGroup(createdAt.toLocal(), isEs);
                                 final prevGroup = i == 0
                                     ? null
                                     : _dateGroup(
-                                        DateTime.parse(_history[i - 1]
-                                                ['created_at'] as String)
+                                        DateTime.parse(
+                                                list[i - 1]['created_at']
+                                                    as String)
                                             .toLocal(),
                                         isEs);
                                 final showHeader = currentGroup != prevGroup;
-
-                                // Human label (HELOC pattern)
-                                final humanLabel =
-                                    '${_shortK(draw)} ${isEs ? 'dispuesto' : 'draw'} @ ${rate.toStringAsFixed(1)}%';
-
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (showHeader)
                                       Padding(
                                         padding: const EdgeInsets.fromLTRB(
-                                            4, 16, 4, 8),
+                                            AppSpacing.xl,
+                                            AppSpacing.sm,
+                                            AppSpacing.xl,
+                                            AppSpacing.sm),
                                         child: Text(
                                           currentGroup.toUpperCase(),
                                           style: TextStyle(
@@ -284,10 +265,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                       ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: AppSpacing.smPlus),
+                                      padding: const EdgeInsets.fromLTRB(
+                                          AppSpacing.lg,
+                                          0,
+                                          AppSpacing.lg,
+                                          AppSpacing.smPlus),
                                       child: Dismissible(
-                                        key: ValueKey(id),
+                                        key: ValueKey('hist_$id'),
                                         direction: DismissDirection.endToStart,
                                         background: Container(
                                           alignment: Alignment.centerRight,
@@ -304,176 +288,326 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               color: Colors.white,
                                               size: 26),
                                         ),
-                                        confirmDismiss: (_) async {
-                                          return await showDialog<bool>(
-                                            context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              title: Text(isEs
-                                                  ? '¿Eliminar entrada?'
-                                                  : 'Delete entry?'),
-                                              content: Text(isEs
-                                                  ? '¿Eliminar este cálculo?'
-                                                  : 'Remove this calculation?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  child: Text(isEs
-                                                      ? 'Cancelar'
-                                                      : 'Cancel'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  child: Text(
-                                                    isEs
-                                                        ? 'Eliminar'
-                                                        : 'Delete',
-                                                    style: TextStyle(
-                                                        color: CalcwiseSemanticColors
-                                                            .error(Theme.of(
-                                                                    context)
-                                                                .brightness)),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
+                                        confirmDismiss: (_) =>
+                                            _confirmDelete(context, isEs),
                                         onDismissed: (_) => _delete(id),
-                                        child: Card(
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                                AppRadius.xl),
-                                            onTap: () =>
-                                                HistoryDetailScreen.push(
-                                              context,
-                                              entry: item,
-                                              onDelete: () => _delete(id),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                  AppSpacing.mdPlus),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(children: [
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Text(
-                                                            humanLabel,
-                                                            style: const TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    AppTextSize
-                                                                        .bodyMd,
-                                                                color: AppTheme
-                                                                    .primary),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 2),
-                                                          Text(
-                                                            _fmtDate.format(
-                                                                createdAt
-                                                                    .toLocal()),
-                                                            style: const TextStyle(
-                                                                fontSize:
-                                                                    AppTextSize
-                                                                        .xs,
-                                                                color: AppTheme
-                                                                    .labelGray),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    const Icon(
-                                                        Icons
-                                                            .chevron_right_rounded,
-                                                        size: 18,
-                                                        color:
-                                                            AppTheme.labelGray),
-                                                  ]),
-                                                  const SizedBox(
-                                                      height: AppSpacing.sm),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Hipoteca actual'
-                                                        : 'Mortgage Balance',
-                                                    value: AmountFormatter.ui(balance, 'USD'),
-                                                  ),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Monto dispuesto'
-                                                        : 'Draw Amount',
-                                                    value: AmountFormatter.ui(draw, 'USD'),
-                                                  ),
-                                                  _HistoryRow(
-                                                    label:
-                                                        isEs ? 'Tasa' : 'Rate',
-                                                    value:
-                                                        '${rate.toStringAsFixed(2)}%',
-                                                  ),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Período (disp/pago)'
-                                                        : 'Period (draw/repay)',
-                                                    value:
-                                                        '${drawYears}y / ${repayYears}y',
-                                                  ),
-                                                  const Divider(height: 14),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Capital disponible'
-                                                        : 'Available Equity',
-                                                    value: AmountFormatter.ui(equity, 'USD'),
-                                                    color: AppTheme.success,
-                                                  ),
-                                                  _HistoryRow(
-                                                    label: 'LTV',
-                                                    value:
-                                                        '${_fmtPct.format(ltv)}%',
-                                                  ),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Pago solo interés'
-                                                        : 'Interest-Only Payment',
-                                                    value: AmountFormatter.ui(interestOnly, 'USD'),
-                                                    bold: true,
-                                                    color: AppTheme.primary,
-                                                  ),
-                                                  _HistoryRow(
-                                                    label: isEs
-                                                        ? 'Pago amortizado'
-                                                        : 'Repayment Payment',
-                                                    value: AmountFormatter.ui(repayment, 'USD'),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                        child: _buildCard(row, isEs,
+                                            pinned: false),
                                       ),
                                     ),
                                   ],
                                 );
                               },
-                              childCount: _history.length,
+                              childCount: _visibleAutoSaves.length,
                             ),
                           ),
-                        ),
+                        ],
+                      ],
+                      const SliverToBoxAdapter(
+                          child: SizedBox(height: AppSpacing.lg)),
                     ],
                   ),
                 ),
         ),
         const CalcwiseAdFooter(),
       ],
+    );
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context, bool isEs) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isEs ? '¿Eliminar entrada?' : 'Delete entry?'),
+        content: Text(
+            isEs ? '¿Eliminar este cálculo?' : 'Remove this calculation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(isEs ? 'Cancelar' : 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isEs ? 'Eliminar' : 'Delete',
+                style: TextStyle(
+                    color: CalcwiseSemanticColors.error(
+                        Theme.of(ctx).brightness))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool isEs) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: freemiumService.hasFullAccessNotifier,
+        builder: (_, isPremium, __) => ValueListenableBuilder<bool>(
+          valueListenable: freemiumService.isRewardedNotifier,
+          builder: (_, isRewarded, ___) {
+            final unlocked = isPremium || isRewarded;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Expanded(
+                    child: Text(
+                      unlocked
+                          ? '${_history.length} ${isEs ? 'cálculos guardados' : 'entries saved'}'
+                          : '${_autoSaves.length} / ${MonetizationConfig.freeRingBufferSize} ${isEs ? 'guardados' : 'saved'}',
+                      style: const TextStyle(
+                          color: AppTheme.labelGray, fontSize: AppTextSize.md),
+                    ),
+                  ),
+                  if (unlocked && _history.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: _clearAll,
+                      icon: Icon(Icons.delete_sweep,
+                          size: 16,
+                          color: CalcwiseSemanticColors.error(
+                              Theme.of(context).brightness)),
+                      label: Text(
+                        isEs ? 'Borrar todo' : 'Clear all',
+                        style: TextStyle(
+                            color: CalcwiseSemanticColors.error(
+                                Theme.of(context).brightness),
+                            fontSize: AppTextSize.md),
+                      ),
+                    ),
+                ]),
+                if (!unlocked) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(children: [
+                    const Icon(Icons.lock_outline,
+                        size: 13, color: CalcwiseSemanticColors.warnIcon),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        isEs
+                            ? 'Máx. ${MonetizationConfig.freeRingBufferSize} entradas recientes (gratis)'
+                            : 'Max ${MonetizationConfig.freeRingBufferSize} recent entries for free users',
+                        style: const TextStyle(
+                            fontSize: AppTextSize.sm, color: AppTheme.labelGray),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => IAPService.instance.buy(),
+                      style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                      child: Text(
+                        isEs ? 'Desbloquear' : 'Unlock',
+                        style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: AppTextSize.sm),
+                      ),
+                    ),
+                  ]),
+                ],
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.sm),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: AppTheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: AppTextSize.xs,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primary,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(Map<String, dynamic> row, bool isEs,
+      {required bool pinned}) {
+    final id = row['id'] as int;
+    final inputs = row['inputs'] as Map<String, dynamic>;
+    final results = row['results'] as Map<String, dynamic>;
+    final createdAt = DateTime.parse(row['created_at'] as String);
+
+    final balance = (inputs['balance'] as num).toDouble();
+    final draw = (inputs['draw'] as num).toDouble();
+    final rate = (inputs['rate'] as num).toDouble();
+    final drawYears = (inputs['drawYears'] as num).toInt();
+    final repayYears = (inputs['repayYears'] as num).toInt();
+    final equity = (results['equity'] as num).toDouble();
+    final ltv = (results['ltv'] as num).toDouble();
+    final interestOnly = (results['interestOnly'] as num).toDouble();
+    final repayment = (results['repayment'] as num).toDouble();
+    final pinLabel = row['pin_label'] as String?;
+
+    final humanLabel =
+        '${_shortK(draw)} ${isEs ? 'dispuesto' : 'draw'} @ ${rate.toStringAsFixed(1)}%';
+    final title = pinned && pinLabel != null && pinLabel.isNotEmpty
+        ? pinLabel
+        : humanLabel;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: pinned
+            ? BorderSide(
+                color: AppTheme.primary.withValues(alpha: 0.5), width: 1.5)
+            : BorderSide.none,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        onTap: () => HistoryDetailScreen.push(
+          context,
+          entry: row,
+          onDelete: () => _delete(id),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.mdPlus),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                if (pinned) ...[
+                  const Icon(Icons.bookmark_rounded,
+                      size: 16, color: AppTheme.primary),
+                  const SizedBox(width: 5),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppTextSize.bodyMd,
+                            color: AppTheme.primary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _fmtDate.format(createdAt.toLocal()),
+                        style: const TextStyle(
+                            fontSize: AppTextSize.xs,
+                            color: AppTheme.labelGray),
+                      ),
+                    ],
+                  ),
+                ),
+                if (pinned)
+                  SizedBox(
+                    height: 28,
+                    width: 32,
+                    child: PopupMenuButton<_CardAction>(
+                      icon: const Icon(Icons.more_vert_rounded,
+                          size: 18, color: AppTheme.labelGray),
+                      padding: EdgeInsets.zero,
+                      onSelected: (action) {
+                        switch (action) {
+                          case _CardAction.unpin:
+                            _unpin(id);
+                          case _CardAction.rename:
+                            _rename(row);
+                          case _CardAction.delete:
+                            _delete(id);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: _CardAction.unpin,
+                          child: Row(children: [
+                            const Icon(Icons.bookmark_remove_outlined, size: 18),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(isEs ? 'Desfijar' : 'Unpin'),
+                          ]),
+                        ),
+                        PopupMenuItem(
+                          value: _CardAction.rename,
+                          child: Row(children: [
+                            const Icon(Icons.edit_outlined, size: 18),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(isEs ? 'Renombrar' : 'Rename'),
+                          ]),
+                        ),
+                        PopupMenuItem(
+                          value: _CardAction.delete,
+                          child: Row(children: [
+                            Icon(Icons.delete_outline_rounded,
+                                size: 18,
+                                color: CalcwiseSemanticColors.error(
+                                    Theme.of(context).brightness)),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(isEs ? 'Eliminar' : 'Delete',
+                                style: TextStyle(
+                                    color: CalcwiseSemanticColors.error(
+                                        Theme.of(context).brightness))),
+                          ]),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  const Icon(Icons.chevron_right_rounded,
+                      size: 18, color: AppTheme.labelGray),
+              ]),
+              const SizedBox(height: AppSpacing.sm),
+              _HistoryRow(
+                label: isEs ? 'Hipoteca actual' : 'Mortgage Balance',
+                value: AmountFormatter.ui(balance, 'USD'),
+              ),
+              _HistoryRow(
+                label: isEs ? 'Monto dispuesto' : 'Draw Amount',
+                value: AmountFormatter.ui(draw, 'USD'),
+              ),
+              _HistoryRow(
+                label: isEs ? 'Tasa' : 'Rate',
+                value: '${rate.toStringAsFixed(2)}%',
+              ),
+              _HistoryRow(
+                label: isEs ? 'Período (disp/pago)' : 'Period (draw/repay)',
+                value: '${drawYears}y / ${repayYears}y',
+              ),
+              const Divider(height: 14),
+              _HistoryRow(
+                label: isEs ? 'Capital disponible' : 'Available Equity',
+                value: AmountFormatter.ui(equity, 'USD'),
+                color: AppTheme.success,
+              ),
+              _HistoryRow(
+                label: 'LTV',
+                value: '${_fmtPct.format(ltv)}%',
+              ),
+              _HistoryRow(
+                label: isEs ? 'Pago solo interés' : 'Interest-Only Payment',
+                value: AmountFormatter.ui(interestOnly, 'USD'),
+                bold: true,
+                color: AppTheme.primary,
+              ),
+              _HistoryRow(
+                label: isEs ? 'Pago amortizado' : 'Repayment Payment',
+                value: AmountFormatter.ui(repayment, 'USD'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

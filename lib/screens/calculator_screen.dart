@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' show pow;
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -10,7 +9,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart' show Share;
 
-import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
@@ -21,6 +19,7 @@ import '../main.dart';
 import '../widgets/insight_card.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/save_scenario_button.dart';
 import '../core/freemium/iap_service.dart';
 import '../widgets/result_card.dart';
 import '../core/insight_engine.dart';
@@ -56,8 +55,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   final _rateCtrl = TextEditingController(text: '8.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
-
-  Timer? _autoSaveTimer;
 
   final _fmtPct = NumberFormat('##0.0#');
 
@@ -160,59 +157,58 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     // Update global notifier so secondary tools can pre-fill from latest values.
     helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
 
-    // Auto-save: debounced 2 s after last keystroke.
-    _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) _autoSave();
-    });
+    // Auto-save: debounced ring-buffer via SmartHistory.
+    final inputs = _resultsToInputs();
+    final results = _resultsToResults();
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'calculator',
+      inputHash: _resultHash(inputs),
+      l1: _buildL1(inputs, results),
+      l2: {'inputs': inputs, 'results': results},
+    );
   }
 
-  Future<void> _autoSave() async {
-    if (_results == null) return;
-    final db = await DatabaseService.instance.database;
-    final countResult = await db.rawQuery('SELECT COUNT(*) AS c FROM history');
-    final count = (countResult.first['c'] as int?) ?? 0;
-    if (!freemiumService.hasFullAccess &&
-        count >= freemiumService.historyLimit) {
-      if (mounted) {
-        PaywallSoft.show(
-          context,
-          featureTitle: _isEs() ? 'Historial ilimitado' : 'Unlimited History',
-          onUnlock: () => PaywallHard.show(context),
-        );
-      }
-      return;
-    }
-    final homeValue = (_results!['homeValue'] as double?) ?? 0;
-    final mortgage = (_results!['mortgage'] as double?) ?? 0;
-    final draw = (_results!['draw'] as double?) ?? 0;
-    final rate = (_results!['rate'] as double?) ?? 0;
-    final drawYears = (_results!['drawYears'] as int?) ?? 10;
-    final repayYears = (_results!['repayYears'] as int?) ?? 20;
-    final equity = (_results!['equity'] as double?) ?? 0;
-    final ltv = (_results!['ltv'] as double?) ?? 0;
-    final interestOnly = (_results!['interestOnly'] as double?) ?? 0;
-    final repayment = (_results!['repayment'] as double?) ?? 0;
-    try {
-      await DatabaseService.instance.insertHistory(
-        inputs: {
-          'homeValue': homeValue,
-          'balance': mortgage,
-          'draw': draw,
-          'rate': rate,
-          'drawYears': drawYears,
-          'repayYears': repayYears,
-        },
-        results: {
-          'equity': equity,
-          'ltv': ltv,
-          'interestOnly': interestOnly,
-          'repayment': repayment,
-        },
-      );
-    } catch (_) {}
-    adService.onSave();
-  }
+  // ── SmartHistory payload helpers ───────────────────────────────────────────
+
+  Map<String, dynamic> _resultsToInputs() => {
+        'homeValue': (_results!['homeValue'] as double?) ?? 0,
+        'balance': (_results!['mortgage'] as double?) ?? 0,
+        'draw': (_results!['draw'] as double?) ?? 0,
+        'rate': (_results!['rate'] as double?) ?? 0,
+        'drawYears': (_results!['drawYears'] as int?) ?? 10,
+        'repayYears': (_results!['repayYears'] as int?) ?? 20,
+      };
+
+  Map<String, dynamic> _resultsToResults() => {
+        'equity': (_results!['equity'] as double?) ?? 0,
+        'ltv': (_results!['ltv'] as double?) ?? 0,
+        'interestOnly': (_results!['interestOnly'] as double?) ?? 0,
+        'repayment': (_results!['repayment'] as double?) ?? 0,
+        'totalInterest': (_results!['totalInterest'] as double?) ?? 0,
+        'taxSavings': (_results!['taxSavings'] as double?) ?? 0,
+      };
+
+  String _resultHash(Map<String, dynamic> inputs) => ResultHasher.hashMixed({
+        'home': ResultHasher.roundTo(
+            (inputs['homeValue'] as num).toDouble(), 1000),
+        'bal':
+            ResultHasher.roundTo((inputs['balance'] as num).toDouble(), 1000),
+        'draw':
+            ResultHasher.roundTo((inputs['draw'] as num).toDouble(), 1000),
+        'rate':
+            ResultHasher.roundTo((inputs['rate'] as num).toDouble(), 0.01),
+        'dyrs': inputs['drawYears'],
+        'ryrs': inputs['repayYears'],
+      });
+
+  Map<String, dynamic> _buildL1(
+          Map<String, dynamic> inputs, Map<String, dynamic> results) =>
+      {
+        'draw': (inputs['draw'] as num).toDouble(),
+        'rate': (inputs['rate'] as num).toDouble(),
+        'interestOnly': (results['interestOnly'] as num).toDouble(),
+      };
 
   /// Computes rate scenario rows without touching the widget tree.
   List<Map<String, dynamic>> _computeScenarioData({
@@ -238,7 +234,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   @override
   void dispose() {
-    _autoSaveTimer?.cancel();
+    smartHistoryService.cancelPendingSave('helocapp', 'calculator');
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);
     _homeValueCtrl.dispose();
@@ -251,7 +247,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   }
 
   Future<void> _calculate() async {
-    _autoSaveTimer?.cancel();
+    smartHistoryService.cancelPendingSave('helocapp', 'calculator');
     if (!_formKey.currentState!.validate()) return;
     final homeValue = _parseNum(_homeValueCtrl.text);
     final mortgage = _parseNum(_mortgageCtrl.text);
@@ -305,23 +301,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       homeValue: homeValue,
       ratePct: rate,
     );
-    // Check history limit BEFORE session paywall to avoid double-modal.
     HapticFeedback.mediumImpact();
-    if (!freemiumService.hasFullAccess) {
-      final db = await DatabaseService.instance.database;
-      final countResult = await db.rawQuery('SELECT COUNT(*) AS c FROM history');
-      final count = (countResult.first['c'] as int?) ?? 0;
-      if (count >= freemiumService.historyLimit) {
-        if (mounted) {
-          PaywallSoft.show(
-            context,
-            featureTitle: _isEs() ? 'Historial ilimitado' : 'Unlimited History',
-            onUnlock: () => PaywallHard.show(context),
-          );
-        }
-        return;
-      }
-    }
 
     final trigger = await paywallSession.recordAction();
     if (trigger != PaywallTrigger.none &&
@@ -334,81 +314,34 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       }
     }
 
-    try {
-      await DatabaseService.instance.insertHistory(
-        inputs: {
-          'homeValue': homeValue,
-          'balance': mortgage,
-          'draw': draw,
-          'rate': rate,
-          'drawYears': drawYears,
-          'repayYears': repayYears,
-        },
-        results: {
-          'equity': equity,
-          'ltv': ltv,
-          'interestOnly': interestOnly,
-          'repayment': repayment,
-        },
-      );
-    } catch (_) {}
+    // Immediate auto-save into the ring buffer (bypass debounce).
+    final inputs = _resultsToInputs();
+    final results = _resultsToResults();
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'calculator',
+      inputHash: _resultHash(inputs),
+      l1: _buildL1(inputs, results),
+      l2: {'inputs': inputs, 'results': results},
+    );
     adService.onSave();
   }
 
-  Future<void> _saveToHistory() async {
+  /// Pin the current result as a saved scenario via SmartHistory.
+  Future<void> _saveScenario(String? label) async {
     if (_results == null) return;
-    // Save is a premium feature — show soft gate for free users.
-    if (!freemiumService.hasFullAccess) {
-      PaywallSoft.show(context);
-      return;
-    }
-    final homeValue = (_results!['homeValue'] as double?) ?? 0;
-    final mortgage = (_results!['mortgage'] as double?) ?? 0;
-    final draw = (_results!['draw'] as double?) ?? 0;
-    final rate = (_results!['rate'] as double?) ?? 0;
-    final drawYears = (_results!['drawYears'] as int?) ?? 10;
-    final repayYears = (_results!['repayYears'] as int?) ?? 20;
-    final equity = (_results!['equity'] as double?) ?? 0;
-    final ltv = (_results!['ltv'] as double?) ?? 0;
-    final interestOnly = (_results!['interestOnly'] as double?) ?? 0;
-    final repayment = (_results!['repayment'] as double?) ?? 0;
-
+    final inputs = _resultsToInputs();
+    final results = _resultsToResults();
     HapticFeedback.mediumImpact();
-    try {
-      await DatabaseService.instance.insertHistory(
-        inputs: {
-          'homeValue': homeValue,
-          'balance': mortgage,
-          'draw': draw,
-          'rate': rate,
-          'drawYears': drawYears,
-          'repayYears': repayYears,
-        },
-        results: {
-          'equity': equity,
-          'ltv': ltv,
-          'interestOnly': interestOnly,
-          'repayment': repayment,
-        },
-      );
-    } catch (_) {}
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'calculator',
+      inputHash: _resultHash(inputs),
+      l1: _buildL1(inputs, results),
+      l2: {'inputs': inputs, 'results': results},
+      label: freemiumService.hasFullAccess ? label : null,
+    );
     adService.onSave();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(_isEs() ? 'Guardado en historial' : 'Saved to history')),
-      );
-    }
-  }
-
-  bool _isEs() {
-    // Reads the current locale preference without requiring BuildContext.
-    try {
-      return Localizations.localeOf(context).languageCode == 'es';
-    } catch (_) {
-      return false;
-    }
   }
 
   void _reset() {
@@ -1398,11 +1331,14 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                 .hasFullAccessNotifier,
                                             builder: (_, isPremium, __) {
                                               if (!isPremium) {
-                                                return CalcwisePremiumCta(
-                                                  feature: isEs
+                                                return CalcwisePremiumGate(
+                                                  title: isEs
                                                       ? 'Sensibilidad de Tasa'
                                                       : 'Rate Sensitivity',
-                                                  onTap: () => IAPService.instance.buy(),
+                                                  description: isEs
+                                                      ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
+                                                      : 'Simulate how rate changes impact your monthly payment and total interest.',
+                                                  onUnlock: () => IAPService.instance.buy(),
                                                   price: IAPService.instance.localizedPrice,
                                                 );
                                               }
@@ -1542,19 +1478,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                           // Save button + Compare Options — shown when results are available
                           if (_results != null) ...[
                             const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: _saveToHistory,
-                              icon: const Icon(Icons.bookmark_add_rounded),
-                              label: Text(isEs
-                                  ? 'Guardar en Historial'
-                                  : 'Save to History'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 52),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.xl)),
-                              ),
-                            ),
+                            SaveScenarioButton(onSave: _saveScenario),
                             const SizedBox(height: 8),
                             OutlinedButton.icon(
                               onPressed: () {

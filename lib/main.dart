@@ -1,6 +1,7 @@
 import 'package:calcwise_core/calcwise_core.dart'
     hide CrashlyticsService, iapErrorNotifier, PaywallHard;
 import 'core/ads/ad_config.dart';
+import 'core/db/heloc_database_adapter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,15 @@ final adService = CalcwiseAdService(
 
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
 final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
+
+/// Smart history (auto-save ring buffer + pinned scenarios).
+final smartHistoryService = SmartHistoryService(
+  db: HelocDatabaseAdapter(),
+  freemium: freemiumService,
+);
+
+/// Jump to a specific bottom-nav tab from anywhere (e.g. History empty state).
+final ValueNotifier<int> tabSwitchNotifier = ValueNotifier<int>(-1);
 
 /// Last-calculated HELOC values for pre-filling secondary tools.
 final ValueNotifier<({double creditLimit, double balance, double rate})>
@@ -208,6 +218,7 @@ class _MainShellState extends State<MainShell> {
     isSpanishNotifier.addListener(_onLangChange);
     isFrenchNotifier.addListener(_onLangChange);
     freemiumService.isPremiumNotifier.addListener(_onPremiumChange);
+    tabSwitchNotifier.addListener(_onTabSwitch);
     WidgetsBinding.instance.addPostFrameCallback(
         (_) async => await paywallSession.recordSession());
   }
@@ -217,10 +228,19 @@ class _MainShellState extends State<MainShell> {
     isSpanishNotifier.removeListener(_onLangChange);
     isFrenchNotifier.removeListener(_onLangChange);
     freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
+    tabSwitchNotifier.removeListener(_onTabSwitch);
     super.dispose();
   }
 
   void _onLangChange() => setState(() {});
+
+  void _onTabSwitch() {
+    final idx = tabSwitchNotifier.value;
+    if (idx >= 0 && mounted) {
+      setState(() => _index = idx);
+      tabSwitchNotifier.value = -1;
+    }
+  }
 
   void _onPremiumChange() {
     final now = freemiumService.hasFullAccess;
