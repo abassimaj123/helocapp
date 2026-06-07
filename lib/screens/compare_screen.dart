@@ -135,22 +135,26 @@ class _CompareScreenState extends State<CompareScreen>
   Map<String, dynamic> _buildL2(_CompareResult cr) {
     final r = cr.heloc;
     return {
-      'draw_amount': _parseN(_drawCtrl.text),
-      'heloc_rate': _parseN(_helocRateCtrl.text),
-      'draw_years': _drawYearsCtrl.text,
-      'repay_years': _repayYearsCtrl.text,
-      'refi_rate': _parseN(_refiRateCtrl.text),
-      'refi_term': _refiTermCtrl.text,
-      'closing_costs': _parseN(_closingCtrl.text),
-      'loan_rate': _parseN(_loanRateCtrl.text),
-      'loan_term': _loanTermCtrl.text,
-      'heloc_draw_payment': r.helocDrawPayment,
-      'heloc_repay_payment': r.helocRepayPayment,
-      'heloc_total_interest': r.helocTotalInterest,
-      'refi_monthly': r.refiMonthlyPayment,
-      'refi_total_interest': r.refiTotalInterest,
-      'loan_monthly': cr.loanMonthlyPayment,
-      'loan_total_interest': cr.loanTotalInterest,
+      'inputs': {
+        'draw_amount': _parseN(_drawCtrl.text),
+        'heloc_rate': _parseN(_helocRateCtrl.text),
+        'draw_years': _drawYearsCtrl.text,
+        'repay_years': _repayYearsCtrl.text,
+        'refi_rate': _parseN(_refiRateCtrl.text),
+        'refi_term': _refiTermCtrl.text,
+        'closing_costs': _parseN(_closingCtrl.text),
+        'loan_rate': _parseN(_loanRateCtrl.text),
+        'loan_term': _loanTermCtrl.text,
+      },
+      'results': {
+        'heloc_draw_payment': r.helocDrawPayment,
+        'heloc_repay_payment': r.helocRepayPayment,
+        'heloc_total_interest': r.helocTotalInterest,
+        'refi_monthly': r.refiMonthlyPayment,
+        'refi_total_interest': r.refiTotalInterest,
+        'loan_monthly': cr.loanMonthlyPayment,
+        'loan_total_interest': cr.loanTotalInterest,
+      },
     };
   }
 

@@ -302,18 +302,22 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   Map<String, dynamic> _buildL2(List<_StrategyResult> results, int optimalIdx) {
     final totalDraw = _draws.fold(0.0, (s, d) => s + d.amount);
     return {
-      'credit_limit': _parseCtrl(_creditLimitCtrl),
-      'rate': _parseCtrl(_rateCtrl),
-      'draw_years': _parseInt(_drawYearsCtrl),
-      'repay_years': _parseInt(_repayYearsCtrl),
-      'total_draw': totalDraw,
-      'draws_count': _draws.length,
-      'optimal_strategy': results[optimalIdx].label,
-      'your_plan_total_interest': results[0].totalInterest,
-      'all_at_once_total_interest': results[1].totalInterest,
-      'spread_evenly_total_interest': results[2].totalInterest,
-      'optimal_total_interest': results[optimalIdx].totalInterest,
-      'optimal_payoff_months': results[optimalIdx].payoffMonths,
+      'inputs': {
+        'credit_limit': _parseCtrl(_creditLimitCtrl),
+        'rate': _parseCtrl(_rateCtrl),
+        'draw_years': _parseInt(_drawYearsCtrl),
+        'repay_years': _parseInt(_repayYearsCtrl),
+        'total_draw': totalDraw,
+        'draws_count': _draws.length,
+      },
+      'results': {
+        'optimal_strategy': results[optimalIdx].label,
+        'your_plan_total_interest': results[0].totalInterest,
+        'all_at_once_total_interest': results[1].totalInterest,
+        'spread_evenly_total_interest': results[2].totalInterest,
+        'optimal_total_interest': results[optimalIdx].totalInterest,
+        'optimal_payoff_months': results[optimalIdx].payoffMonths,
+      },
     };
   }
 

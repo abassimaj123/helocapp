@@ -91,15 +91,19 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
       };
 
   Map<String, dynamic> _buildL2(_ShockResult r) => {
-        'balance': _parseN(_balanceCtrl.text),
-        'current_rate': _parseN(_currentRateCtrl.text),
-        'repay_years': _repayYears,
-        'projected_rate': _projectedRate,
-        'io_payment': r.ioPayment,
-        'pi_payment': r.piPayment,
-        'shock_pct': r.shockPct,
-        'dollar_increase': r.dollarIncrease,
-        'total_interest': r.totalInterest,
+        'inputs': {
+          'balance': _parseN(_balanceCtrl.text),
+          'current_rate': _parseN(_currentRateCtrl.text),
+          'repay_years': _repayYears,
+          'projected_rate': _projectedRate,
+        },
+        'results': {
+          'io_payment': r.ioPayment,
+          'pi_payment': r.piPayment,
+          'shock_pct': r.shockPct,
+          'dollar_increase': r.dollarIncrease,
+          'total_interest': r.totalInterest,
+        },
       };
 
   void _scheduleAutoSave(_ShockResult r) {

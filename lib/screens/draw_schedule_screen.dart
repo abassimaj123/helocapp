@@ -310,7 +310,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                   ValueListenableBuilder<bool>(
                     valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
-                      if (!isPremium) {
+                      final hasAccess = isPremium || freemiumService.isRewarded;
+                      if (!hasAccess) {
                         return CalcwisePremiumGate(
                           title: isEs
                               ? 'Calendario completo, gráfico y PDF'

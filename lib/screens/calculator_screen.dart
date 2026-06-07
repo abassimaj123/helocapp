@@ -205,9 +205,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   Map<String, dynamic> _buildL1(
           Map<String, dynamic> inputs, Map<String, dynamic> results) =>
       {
-        'draw': (inputs['draw'] as num).toDouble(),
+        'draw_amount': (inputs['draw'] as num).toDouble(),
         'rate': (inputs['rate'] as num).toDouble(),
-        'interestOnly': (results['interestOnly'] as num).toDouble(),
+        'interest_only': (results['interestOnly'] as num).toDouble(),
+        'monthly_payment': (results['repayment'] as num).toDouble(),
+        'total_interest': (results['totalInterest'] as num).toDouble(),
       };
 
   /// Computes rate scenario rows without touching the widget tree.
