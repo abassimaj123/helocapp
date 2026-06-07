@@ -15,6 +15,7 @@ import '../l10n/strings_es.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/save_scenario_button.dart';
 import '../core/freemium/iap_service.dart';
 
 class DrawScheduleScreen extends StatefulWidget {
@@ -71,6 +72,59 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     super.dispose();
   }
 
+  double _roundTo(double v, double step) => (v / step).round() * step;
+
+  Future<void> _saveScenario(String? label) async {
+    if (_schedule == null) return;
+    final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
+    final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
+    final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
+    final repayYears = int.tryParse(_repayYearsCtrl.text) ?? 20;
+
+    final drawPayment = HelocEngine.interestOnlyPayment(draw, rate);
+    final repayPayment = HelocEngine.amortizedPayment(draw, rate, repayYears);
+    final totalInterest =
+        HelocEngine.totalInterestPaid(draw, rate, drawYears, repayYears);
+    final totalPaid = totalInterest + draw;
+
+    final hash = ResultHasher.hashMixed({
+      'draw': _roundTo(draw, 1000),
+      'rate': _roundTo(rate, 0.25),
+      'draw_years': drawYears.toDouble(),
+      'repay_years': repayYears.toDouble(),
+    });
+
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'draw_schedule',
+      inputHash: hash,
+      l1: {
+        'Draw Amount': AmountFormatter.ui(draw, 'USD'),
+        'HELOC Rate': '${rate.toStringAsFixed(2)}%',
+        'Draw Period': '${drawYears}y',
+        'Repay Period': '${repayYears}y',
+        'Draw Payment': AmountFormatter.ui(drawPayment, 'USD'),
+        'Total Interest': AmountFormatter.ui(totalInterest, 'USD'),
+      },
+      l2: {
+        'inputs': {
+          'creditLimit': draw,
+          'rate': rate,
+          'drawYears': drawYears,
+          'repayYears': repayYears,
+        },
+        'results': {
+          'drawPayment': drawPayment,
+          'repayPayment': repayPayment,
+          'totalInterest': totalInterest,
+          'totalPaid': totalPaid,
+        },
+      },
+      label: label ??
+          'Draw Schedule \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%',
+    );
+  }
+
   Future<void> _generate({bool isManual = false}) async {
     final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
     final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
@@ -106,6 +160,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   }
 
   Future<void> _exportPdf(BuildContext context, bool isSpanish) async {
+    if (!freemiumService.hasFullAccess && !freemiumService.isRewarded) return;
     final doc = pw.Document();
     final schedule = _schedule!;
     final draw = _draw!;
@@ -299,6 +354,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                                 ? AppStringsES.exportPdf
                                 : AppStringsEN.exportPdf),
                           ),
+                          const SizedBox(height: 12),
+
+                          // Save scenario
+                          SaveScenarioButton(onSave: _saveScenario),
                         ],
                       );
                     },
