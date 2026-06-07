@@ -97,6 +97,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('heloc_vs_cashout');
     // Pre-fill balance and rate from the last calculator result.
     final h = helocNotifier.value;
     _existingBalCtrl.text = h.balance.toStringAsFixed(0);

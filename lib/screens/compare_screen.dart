@@ -73,6 +73,7 @@ class _CompareScreenState extends State<CompareScreen>
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('compare');
     // Pre-fill draw amount and rate from the last calculator result.
     final h = helocNotifier.value;
     if (h.creditLimit > 0) {

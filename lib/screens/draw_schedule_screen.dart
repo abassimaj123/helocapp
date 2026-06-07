@@ -40,6 +40,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('draw_schedule');
     // Pre-fill draw amount and rate from the last calculator result.
     final h = helocNotifier.value;
     if (h.creditLimit > 0) {
@@ -255,11 +256,14 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                     valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
-                        return CalcwisePremiumCta(
-                          feature: isEs
+                        return CalcwisePremiumGate(
+                          title: isEs
                               ? 'Calendario completo, gráfico y PDF'
                               : 'Full Schedule, Chart & PDF Export',
-                          onTap: () => IAPService.instance.buy(),
+                          description: isEs
+                              ? 'Accede al calendario completo, gráfico de balance y exportación PDF.'
+                              : 'Access the full amortization schedule, balance chart, and PDF export.',
+                          onUnlock: () => IAPService.instance.buy(),
                           price: IAPService.instance.localizedPrice,
                         );
                       }

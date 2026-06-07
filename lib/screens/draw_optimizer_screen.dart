@@ -5,6 +5,7 @@ import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
@@ -152,6 +153,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('draw_optimizer');
     // Pre-fill credit limit and rate from the last calculator result.
     final h = helocNotifier.value;
     _creditLimitCtrl.text = h.creditLimit.toStringAsFixed(0);

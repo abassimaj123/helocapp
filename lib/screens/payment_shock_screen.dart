@@ -61,6 +61,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('payment_shock');
     // Pre-fill balance and rate from the last calculator result.
     final h = helocNotifier.value;
     _balanceCtrl.text = h.balance.toStringAsFixed(0);
