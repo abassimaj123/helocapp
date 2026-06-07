@@ -10,6 +10,7 @@ import '../core/heloc_engine.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../core/freemium/iap_service.dart';
+import '../widgets/save_scenario_button.dart';
 
 // ---------------------------------------------------------------------------
 // Model
@@ -266,12 +267,14 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       _results = results;
       _optimalIndex = optimal;
     });
+    _scheduleAutoSave(results, optimal);
 
     HapticFeedback.mediumImpact();
   }
 
   @override
   void dispose() {
+    smartHistoryService.cancelPendingSave('helocapp', 'draw_optimizer');
     _creditLimitCtrl.dispose();
     _rateCtrl.dispose();
     _drawYearsCtrl.dispose();
@@ -279,6 +282,71 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     _primeRateCtrl.dispose();
     _marginCtrl.dispose();
     super.dispose();
+  }
+
+  double _roundTo(double v, double step) => (v / step).round() * step;
+
+  Map<String, String> _buildL1(List<_StrategyResult> results, int optimalIdx) {
+    final opt = results[optimalIdx];
+    return {
+      'Best Strategy': opt.label,
+      'Best Total Interest': AmountFormatter.ui(opt.totalInterest, 'USD'),
+      'Draw Phase Interest': AmountFormatter.ui(opt.interestDuringDraw, 'USD'),
+      'Balance at Draw End': AmountFormatter.ui(opt.balanceAtDrawEnd, 'USD'),
+      'Payoff Timeline': '${(opt.payoffMonths / 12).toStringAsFixed(1)} yrs',
+    };
+  }
+
+  Map<String, dynamic> _buildL2(List<_StrategyResult> results, int optimalIdx) {
+    final totalDraw = _draws.fold(0.0, (s, d) => s + d.amount);
+    return {
+      'credit_limit': _parseCtrl(_creditLimitCtrl),
+      'rate': _parseCtrl(_rateCtrl),
+      'draw_years': _parseInt(_drawYearsCtrl),
+      'repay_years': _parseInt(_repayYearsCtrl),
+      'total_draw': totalDraw,
+      'draws_count': _draws.length,
+      'optimal_strategy': results[optimalIdx].label,
+      'your_plan_total_interest': results[0].totalInterest,
+      'all_at_once_total_interest': results[1].totalInterest,
+      'spread_evenly_total_interest': results[2].totalInterest,
+      'optimal_total_interest': results[optimalIdx].totalInterest,
+      'optimal_payoff_months': results[optimalIdx].payoffMonths,
+    };
+  }
+
+  void _scheduleAutoSave(List<_StrategyResult> results, int optimalIdx) {
+    final hash = ResultHasher.hashMixed({
+      'limit': _roundTo(_parseCtrl(_creditLimitCtrl), 1000),
+      'rate': _roundTo(_parseCtrl(_rateCtrl), 0.25),
+      'draw_years': _parseInt(_drawYearsCtrl),
+      'repay_years': _parseInt(_repayYearsCtrl),
+    });
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'draw_optimizer',
+      inputHash: hash,
+      l1: _buildL1(results, optimalIdx),
+      l2: _buildL2(results, optimalIdx),
+    );
+  }
+
+  Future<void> _saveScenario(String? label) async {
+    if (_results == null || _optimalIndex == null) return;
+    final hash = ResultHasher.hashMixed({
+      'limit': _roundTo(_parseCtrl(_creditLimitCtrl), 1000),
+      'rate': _roundTo(_parseCtrl(_rateCtrl), 0.25),
+      'draw_years': _parseInt(_drawYearsCtrl),
+      'repay_years': _parseInt(_repayYearsCtrl),
+    });
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'draw_optimizer',
+      inputHash: hash,
+      l1: _buildL1(_results!, _optimalIndex!),
+      l2: _buildL2(_results!, _optimalIndex!),
+      label: label ?? 'Draw Optimizer \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%',
+    );
   }
 
   // ── Variable rate helpers ─────────────────────────────────────────────────
@@ -476,6 +544,13 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                         isEs ? 'Analizar estrategias' : 'Analyze Strategies'),
                   ),
 
+                  if (_results != null &&
+                      (freemiumService.hasFullAccess ||
+                          freemiumService.isRewarded)) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    SaveScenarioButton(onSave: _saveScenario),
+                  ],
+
                   if (_results != null) ...[
                     const SizedBox(height: AppSpacing.xxlPlus),
                     _buildResults(isEs),
@@ -488,11 +563,14 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                     valueListenable: freemiumService.hasFullAccessNotifier,
                     builder: (_, isPremium, __) {
                       if (!isPremium) {
-                        return CalcwisePremiumCta(
-                          feature: isEs
+                        return CalcwisePremiumGate(
+                          title: isEs
                               ? 'Simulación de Tasa Variable'
                               : 'Variable Rate Simulation',
-                          onTap: () => IAPService.instance.buy(),
+                          description: isEs
+                              ? 'Simula cómo los cambios en la tasa prime afectan tu costo total de interés.'
+                              : 'Simulate how prime rate changes affect your total interest cost.',
+                          onUnlock: () => IAPService.instance.buy(),
                           price: IAPService.instance.localizedPrice,
                         );
                       }

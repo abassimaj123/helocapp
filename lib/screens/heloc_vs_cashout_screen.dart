@@ -10,6 +10,7 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/save_scenario_button.dart';
 
 const _helocColor = AppTheme.primary;
 const _refiColor = Color(0xFF01579B);
@@ -117,6 +118,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
 
   @override
   void dispose() {
+    smartHistoryService.cancelPendingSave('helocapp', 'heloc_vs_cashout');
     for (final c in [
       _homeValueCtrl,
       _existingBalCtrl,
@@ -130,6 +132,73 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       c.dispose();
     }
     super.dispose();
+  }
+
+  double _roundTo(double v, double step) => (v / step).round() * step;
+
+  Map<String, String> _buildL1(_CompareCashoutResult r) => {
+        'Winner': r.winnerIndex == 0 ? 'HELOC' : 'Cash-Out Refi',
+        'HELOC Total Interest 30y': AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
+        'Refi Total Cost': AmountFormatter.ui(r.scenarioBTotalCost, 'USD'),
+        'HELOC Monthly (initial)': AmountFormatter.ui(r.scenarioATotalMonthly, 'USD'),
+        'Refi Monthly': AmountFormatter.ui(r.refiMonthly, 'USD'),
+      };
+
+  Map<String, dynamic> _buildL2(_CompareCashoutResult r) => {
+        'home_value': _parseN(_homeValueCtrl.text),
+        'existing_balance': _parseN(_existingBalCtrl.text),
+        'existing_rate': _parseN(_existingRateCtrl.text),
+        'existing_years': _existingYearsCtrl.text,
+        'cash_needed': _parseN(_cashCtrl.text),
+        'heloc_rate': _parseN(_helocRateCtrl.text),
+        'refi_rate': _parseN(_refiRateCtrl.text),
+        'closing_pct': _parseN(_closingPctCtrl.text),
+        'finance_closing': _financeClosing,
+        'heloc_io': r.helocIO,
+        'heloc_pi': r.helocPI,
+        'scenario_a_total_monthly': r.scenarioATotalMonthly,
+        'scenario_a_total_interest_30y': r.scenarioATotalInterest30y,
+        'refi_new_balance': r.refiNewBalance,
+        'refi_monthly': r.refiMonthly,
+        'refi_closing_costs': r.refiClosingCosts,
+        'scenario_b_total_interest_30y': r.scenarioBTotalInterest30y,
+        'scenario_b_total_cost': r.scenarioBTotalCost,
+        'breakeven_months': r.breakevenMonths,
+        'winner_index': r.winnerIndex,
+      };
+
+  void _scheduleAutoSave(_CompareCashoutResult r) {
+    final hash = ResultHasher.hashMixed({
+      'existing_bal': _roundTo(_parseN(_existingBalCtrl.text), 1000),
+      'cash': _roundTo(_parseN(_cashCtrl.text), 500),
+      'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),
+      'refi_rate': _roundTo(_parseN(_refiRateCtrl.text), 0.25),
+    });
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'heloc_vs_cashout',
+      inputHash: hash,
+      l1: _buildL1(r),
+      l2: _buildL2(r),
+    );
+  }
+
+  Future<void> _saveScenario(String? label) async {
+    if (_result == null) return;
+    final hash = ResultHasher.hashMixed({
+      'existing_bal': _roundTo(_parseN(_existingBalCtrl.text), 1000),
+      'cash': _roundTo(_parseN(_cashCtrl.text), 500),
+      'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),
+      'refi_rate': _roundTo(_parseN(_refiRateCtrl.text), 0.25),
+    });
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'heloc_vs_cashout',
+      inputHash: hash,
+      l1: _buildL1(_result!),
+      l2: _buildL2(_result!),
+      label: label ?? 'HELOC vs Refi \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k',
+    );
   }
 
   void _tryCompute() {
@@ -207,20 +276,22 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final winner = aTotal <= bTotal ? 0 : 1;
 
     if (!mounted) return;
-    setState(() => _result = _CompareCashoutResult(
-          existingMortgagePI: existingPI,
-          helocIO: helocIO,
-          helocPI: helocPI,
-          scenarioATotalMonthly: aMonthly,
-          scenarioATotalInterest30y: aTotalInterest,
-          refiNewBalance: refiPrincipal,
-          refiMonthly: refiMonthly,
-          refiClosingCosts: closingCosts,
-          scenarioBTotalInterest30y: refiTotalInterest,
-          scenarioBTotalCost: bTotalCost,
-          breakevenMonths: breakeven,
-          winnerIndex: winner,
-        ));
+    final newResult = _CompareCashoutResult(
+      existingMortgagePI: existingPI,
+      helocIO: helocIO,
+      helocPI: helocPI,
+      scenarioATotalMonthly: aMonthly,
+      scenarioATotalInterest30y: aTotalInterest,
+      refiNewBalance: refiPrincipal,
+      refiMonthly: refiMonthly,
+      refiClosingCosts: closingCosts,
+      scenarioBTotalInterest30y: refiTotalInterest,
+      scenarioBTotalCost: bTotalCost,
+      breakevenMonths: breakeven,
+      winnerIndex: winner,
+    );
+    setState(() => _result = newResult);
+    _scheduleAutoSave(newResult);
 
     if (silent) return;
     adService.onAction();
@@ -393,6 +464,12 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                       ),
                       child: Text(isEs ? 'Limpiar' : 'Reset'),
                     ),
+                    if (_result != null &&
+                        (freemiumService.hasFullAccess ||
+                            freemiumService.isRewarded)) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      SaveScenarioButton(onSave: _saveScenario),
+                    ],
                     const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,

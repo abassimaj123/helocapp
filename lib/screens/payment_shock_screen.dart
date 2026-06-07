@@ -12,6 +12,7 @@ import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../core/freemium/iap_service.dart';
+import '../widgets/save_scenario_button.dart';
 
 const _ioColor = AppTheme.primary;
 const _piColor = Color(0xFFC62828);
@@ -72,9 +73,66 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
 
   @override
   void dispose() {
+    smartHistoryService.cancelPendingSave('helocapp', 'payment_shock');
     _balanceCtrl.dispose();
     _currentRateCtrl.dispose();
     super.dispose();
+  }
+
+  double _roundTo(double v, double step) => (v / step).round() * step;
+
+  Map<String, String> _buildL1(_ShockResult r) => {
+        'IO Payment': AmountFormatter.ui(r.ioPayment, 'USD'),
+        'PI Payment': AmountFormatter.ui(r.piPayment, 'USD'),
+        'Payment Shock': '+${r.shockPct.toStringAsFixed(1)}%',
+        'Dollar Increase': '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
+        'Total Interest': AmountFormatter.ui(r.totalInterest, 'USD'),
+      };
+
+  Map<String, dynamic> _buildL2(_ShockResult r) => {
+        'balance': _parseN(_balanceCtrl.text),
+        'current_rate': _parseN(_currentRateCtrl.text),
+        'repay_years': _repayYears,
+        'projected_rate': _projectedRate,
+        'io_payment': r.ioPayment,
+        'pi_payment': r.piPayment,
+        'shock_pct': r.shockPct,
+        'dollar_increase': r.dollarIncrease,
+        'total_interest': r.totalInterest,
+      };
+
+  void _scheduleAutoSave(_ShockResult r) {
+    final hash = ResultHasher.hashMixed({
+      'balance': _roundTo(_parseN(_balanceCtrl.text), 500),
+      'current_rate': _roundTo(_parseN(_currentRateCtrl.text), 0.25),
+      'projected_rate': _roundTo(_projectedRate, 0.25),
+      'repay_years': _repayYears,
+    });
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'payment_shock',
+      inputHash: hash,
+      l1: _buildL1(r),
+      l2: _buildL2(r),
+    );
+  }
+
+  Future<void> _saveScenario(String? label) async {
+    if (_result == null) return;
+    final hash = ResultHasher.hashMixed({
+      'balance': _roundTo(_parseN(_balanceCtrl.text), 500),
+      'current_rate': _roundTo(_parseN(_currentRateCtrl.text), 0.25),
+      'projected_rate': _roundTo(_projectedRate, 0.25),
+      'repay_years': _repayYears,
+    });
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'payment_shock',
+      inputHash: hash,
+      l1: _buildL1(_result!),
+      l2: _buildL2(_result!),
+      label: label ?? 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%',
+    );
   }
 
   void _tryCompute() {
@@ -99,13 +157,15 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     final totalInterest = (pi * n) - balance;
 
     if (!mounted) return;
-    setState(() => _result = _ShockResult(
-          ioPayment: io,
-          piPayment: pi,
-          shockPct: shockPct.toDouble(),
-          dollarIncrease: dollarInc,
-          totalInterest: totalInterest,
-        ));
+    final newResult = _ShockResult(
+      ioPayment: io,
+      piPayment: pi,
+      shockPct: shockPct.toDouble(),
+      dollarIncrease: dollarInc,
+      totalInterest: totalInterest,
+    );
+    setState(() => _result = newResult);
+    _scheduleAutoSave(newResult);
 
     if (silent) return;
     adService.onAction();
@@ -255,6 +315,12 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                       ),
                       child: Text(isEs ? 'Limpiar' : 'Reset'),
                     ),
+                    if (_result != null &&
+                        (freemiumService.hasFullAccess ||
+                            freemiumService.isRewarded)) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      SaveScenarioButton(onSave: _saveScenario),
+                    ],
                     const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,
@@ -346,11 +412,14 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           valueListenable: freemiumService.hasFullAccessNotifier,
           builder: (_, isPremium, __) {
             if (!isPremium) {
-              return CalcwisePremiumCta(
-                feature: isEs
+              return CalcwisePremiumGate(
+                title: isEs
                     ? 'Proyección completa y gráfico'
                     : 'Full Projection & Chart',
-                onTap: () => IAPService.instance.buy(),
+                description: isEs
+                    ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
+                    : 'View the full payment comparison with an interactive bar chart.',
+                onUnlock: () => IAPService.instance.buy(),
                 price: IAPService.instance.localizedPrice,
               );
             }

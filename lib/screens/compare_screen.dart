@@ -9,6 +9,7 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+import '../widgets/save_scenario_button.dart';
 
 // ── Option colors ─────────────────────────────────────────────────────────────
 const _helocColor = AppTheme.primary;
@@ -100,6 +101,7 @@ class _CompareScreenState extends State<CompareScreen>
 
   @override
   void dispose() {
+    smartHistoryService.cancelPendingSave('helocapp', 'compare');
     for (final c in [
       _drawCtrl,
       _helocRateCtrl,
@@ -114,6 +116,75 @@ class _CompareScreenState extends State<CompareScreen>
       c.dispose();
     }
     super.dispose();
+  }
+
+  double _roundTo(double v, double step) => (v / step).round() * step;
+
+  Map<String, String> _buildL1(_CompareResult cr) {
+    final r = cr.heloc;
+    return {
+      'HELOC Total Interest': AmountFormatter.ui(r.helocTotalInterest, 'USD'),
+      'Refi Total Interest': AmountFormatter.ui(r.refiTotalInterest, 'USD'),
+      'Loan Total Interest': AmountFormatter.ui(cr.loanTotalInterest, 'USD'),
+      'HELOC Monthly': AmountFormatter.ui(r.helocDrawPayment, 'USD'),
+      'Refi Monthly': AmountFormatter.ui(r.refiMonthlyPayment, 'USD'),
+    };
+  }
+
+  Map<String, dynamic> _buildL2(_CompareResult cr) {
+    final r = cr.heloc;
+    return {
+      'draw_amount': _parseN(_drawCtrl.text),
+      'heloc_rate': _parseN(_helocRateCtrl.text),
+      'draw_years': _drawYearsCtrl.text,
+      'repay_years': _repayYearsCtrl.text,
+      'refi_rate': _parseN(_refiRateCtrl.text),
+      'refi_term': _refiTermCtrl.text,
+      'closing_costs': _parseN(_closingCtrl.text),
+      'loan_rate': _parseN(_loanRateCtrl.text),
+      'loan_term': _loanTermCtrl.text,
+      'heloc_draw_payment': r.helocDrawPayment,
+      'heloc_repay_payment': r.helocRepayPayment,
+      'heloc_total_interest': r.helocTotalInterest,
+      'refi_monthly': r.refiMonthlyPayment,
+      'refi_total_interest': r.refiTotalInterest,
+      'loan_monthly': cr.loanMonthlyPayment,
+      'loan_total_interest': cr.loanTotalInterest,
+    };
+  }
+
+  void _scheduleAutoSave(_CompareResult cr) {
+    final hash = ResultHasher.hashMixed({
+      'draw': _roundTo(_parseN(_drawCtrl.text), 500),
+      'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),
+      'refi_rate': _roundTo(_parseN(_refiRateCtrl.text), 0.25),
+      'loan_rate': _roundTo(_parseN(_loanRateCtrl.text), 0.25),
+    });
+    smartHistoryService.scheduleAutoSave(
+      appKey: 'helocapp',
+      screenId: 'compare',
+      inputHash: hash,
+      l1: _buildL1(cr),
+      l2: _buildL2(cr),
+    );
+  }
+
+  Future<void> _saveScenario(String? label) async {
+    if (_result == null) return;
+    final hash = ResultHasher.hashMixed({
+      'draw': _roundTo(_parseN(_drawCtrl.text), 500),
+      'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),
+      'refi_rate': _roundTo(_parseN(_refiRateCtrl.text), 0.25),
+      'loan_rate': _roundTo(_parseN(_loanRateCtrl.text), 0.25),
+    });
+    await smartHistoryService.saveScenario(
+      appKey: 'helocapp',
+      screenId: 'compare',
+      inputHash: hash,
+      l1: _buildL1(_result!),
+      l2: _buildL2(_result!),
+      label: label ?? 'Compare \$${(_parseN(_drawCtrl.text) / 1000).toStringAsFixed(0)}k',
+    );
   }
 
   Future<void> _compare({bool isManual = false}) async {
@@ -141,11 +212,13 @@ class _CompareScreenState extends State<CompareScreen>
     final loanInterest =
         HelocEngine.personalLoanTotalInterest(amount, loanRate, loanTerm);
 
-    setState(() => _result = _CompareResult(
-          heloc: helocResult,
-          loanMonthlyPayment: loanPayment,
-          loanTotalInterest: loanInterest,
-        ));
+    final newResult = _CompareResult(
+      heloc: helocResult,
+      loanMonthlyPayment: loanPayment,
+      loanTotalInterest: loanInterest,
+    );
+    setState(() => _result = newResult);
+    _scheduleAutoSave(newResult);
     AnalyticsService.instance.logCompareViewed(
       withdrawalAmount: amount,
       helocRate: _parseN(_helocRateCtrl.text),
@@ -374,6 +447,13 @@ class _CompareScreenState extends State<CompareScreen>
                     ),
                     child: Text(isEs ? 'Limpiar' : 'Reset'),
                   ),
+
+                  if (_result != null &&
+                      (freemiumService.hasFullAccess ||
+                          freemiumService.isRewarded)) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    SaveScenarioButton(onSave: _saveScenario),
+                  ],
 
                   // ── Results ────────────────────────────────────────────
                   if (_result != null) ...[
