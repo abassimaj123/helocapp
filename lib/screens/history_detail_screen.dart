@@ -109,17 +109,6 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
   // ── Share ─────────────────────────────────────────────────────────────────
 
   Future<void> _share(BuildContext context, bool isEs) async {
-    if (!freemiumService.hasFullAccess) {
-      final trigger = await paywallSession.recordAction();
-      if (trigger == PaywallTrigger.hard) {
-        PaywallHard.show(context);
-        return;
-      } else if (trigger == PaywallTrigger.soft) {
-        PaywallSoft.show(context);
-        // Share anyway (soft = not hard-blocked)
-      }
-    }
-
     final text = _buildShareText(isEs);
     Share.share(text);
     AnalyticsService.instance.logHistorySaved();

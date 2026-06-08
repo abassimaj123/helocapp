@@ -364,17 +364,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   Future<void> _share(bool isEs) async {
     if (_results == null) return;
 
-    if (!freemiumService.hasFullAccess) {
-      final trigger = await paywallSession.recordAction();
-      if (trigger == PaywallTrigger.hard) {
-        PaywallHard.show(context);
-        return;
-      } else if (trigger == PaywallTrigger.soft) {
-        PaywallSoft.show(context);
-        // share anyway (soft paywall)
-      }
-    }
-
     final text = _buildShareText(isEs);
     try {
       await Share.share(text);

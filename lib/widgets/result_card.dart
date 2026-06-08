@@ -79,9 +79,11 @@ class MetricRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child:
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppTheme.labelGray, fontSize: AppTextSize.body)),
+          Flexible(
+              child: Text(label,
+                  style: const TextStyle(
+                      color: AppTheme.labelGray, fontSize: AppTextSize.body))),
+          const SizedBox(width: 8),
           Text(value,
               style: TextStyle(
                   fontWeight: FontWeight.w600,

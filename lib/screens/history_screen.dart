@@ -703,9 +703,12 @@ class _HistoryRow extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: AppTextSize.md, color: AppTheme.labelGray)),
+            Flexible(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: AppTextSize.md, color: AppTheme.labelGray)),
+            ),
+            const SizedBox(width: 8),
             Text(value,
                 style: TextStyle(
                     fontSize: AppTextSize.md,

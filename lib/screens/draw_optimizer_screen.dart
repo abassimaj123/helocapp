@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/heloc_engine.dart';
+import '../core/services/pdf_export_service.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../core/freemium/iap_service.dart';
@@ -190,6 +191,39 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   void _removeDraw(int index) {
     setState(() => _draws.removeAt(index));
     setState(() => _results = null);
+  }
+
+  Future<void> _exportPdf() async {
+    final results = _results;
+    final optimalIdx = _optimalIndex;
+    if (results == null || optimalIdx == null) return;
+    final isEs = isSpanishNotifier.value;
+    final isFr = isFrenchNotifier.value;
+    final opt = results[optimalIdx];
+    final totalDraw = _draws.fold(0.0, (s, d) => s + d.amount);
+    Future<void> doExport() => PdfExportService.exportDrawOptimizer(
+          context: context,
+          creditLimit: _parseCtrl(_creditLimitCtrl),
+          rate: _parseCtrl(_rateCtrl),
+          drawYears: _parseInt(_drawYearsCtrl),
+          repayYears: _parseInt(_repayYearsCtrl),
+          totalDraw: totalDraw,
+          optimalStrategy: opt.label,
+          yourPlanInterest: results[0].totalInterest,
+          allAtOnceInterest: results[1].totalInterest,
+          spreadEvenlyInterest: results[2].totalInterest,
+          optimalTotalInterest: opt.totalInterest,
+          optimalDrawInterest: opt.interestDuringDraw,
+          optimalBalanceAtDrawEnd: opt.balanceAtDrawEnd,
+          optimalPayoffMonths: opt.payoffMonths,
+          isEs: isEs,
+          isFr: isFr,
+        );
+    if (freemiumService.hasFullAccess) {
+      await doExport();
+    } else {
+      await PdfExportService.showUnlockOrPay(context, doExport);
+    }
   }
 
   void _optimize() {
@@ -555,6 +589,20 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                           freemiumService.isRewarded)) ...[
                     const SizedBox(height: AppSpacing.sm),
                     SaveScenarioButton(onSave: _saveScenario),
+                  ],
+
+                  if (_results != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: _exportPdf,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.xl)),
+                      ),
+                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                      label: Text(isEs ? 'Exportar PDF' : 'Export PDF'),
+                    ),
                   ],
 
                   if (_results != null) ...[

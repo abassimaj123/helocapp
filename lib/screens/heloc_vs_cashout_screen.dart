@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
+import '../core/services/pdf_export_service.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
@@ -204,6 +205,43 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       l2: _buildL2(_result!),
       label: label ?? 'HELOC vs Refi \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k',
     );
+  }
+
+  Future<void> _exportPdf() async {
+    final r = _result;
+    if (r == null) return;
+    final isEs = isSpanishNotifier.value;
+    final isFr = isFrenchNotifier.value;
+    Future<void> doExport() => PdfExportService.exportHelocVsCashout(
+          context: context,
+          homeValue: _parseN(_homeValueCtrl.text),
+          existingBalance: _parseN(_existingBalCtrl.text),
+          existingRate: _parseN(_existingRateCtrl.text),
+          existingYears: int.tryParse(_existingYearsCtrl.text) ?? 0,
+          cashNeeded: _parseN(_cashCtrl.text),
+          helocRate: _parseN(_helocRateCtrl.text),
+          refiRate: _parseN(_refiRateCtrl.text),
+          closingPct: _parseN(_closingPctCtrl.text),
+          financeClosing: _financeClosing,
+          helocIOPayment: r.helocIO,
+          helocPIPayment: r.existingMortgagePI + r.helocPI,
+          helocTotalMonthly: r.scenarioATotalMonthly,
+          helocTotalInterest30y: r.scenarioATotalInterest30y,
+          refiNewBalance: r.refiNewBalance,
+          refiMonthly: r.refiMonthly,
+          refiClosingCosts: r.refiClosingCosts,
+          refiTotalInterest30y: r.scenarioBTotalInterest30y,
+          refiTotalCost: r.scenarioBTotalCost,
+          breakevenMonths: r.breakevenMonths,
+          winnerIndex: r.winnerIndex,
+          isEs: isEs,
+          isFr: isFr,
+        );
+    if (freemiumService.hasFullAccess) {
+      await doExport();
+    } else {
+      await PdfExportService.showUnlockOrPay(context, doExport);
+    }
   }
 
   void _tryCompute() {
@@ -474,6 +512,19 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                             freemiumService.isRewarded)) ...[
                       const SizedBox(height: AppSpacing.sm),
                       SaveScenarioButton(onSave: _saveScenario),
+                    ],
+                    if (_result != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _exportPdf,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.xl)),
+                        ),
+                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                        label: Text(isEs ? 'Exportar PDF' : 'Export PDF'),
+                      ),
                     ],
                     const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
