@@ -143,7 +143,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   int? _optimalIndex;
 
   // ── Variable rate simulation state ────────────────────────────────────────
-  final _primeRateCtrl = TextEditingController(text: '8.0');
+  final _primeRateCtrl = TextEditingController(text: '8.5');
   final _marginCtrl = TextEditingController(text: '0.5');
   // Up to 3 rate change events
   final List<_RateStep> _rateSteps = [];
@@ -358,7 +358,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   // ── Variable rate helpers ─────────────────────────────────────────────────
 
   double _parsePrime() =>
-      double.tryParse(_primeRateCtrl.text.replaceAll(',', '')) ?? 8.0;
+      double.tryParse(_primeRateCtrl.text.replaceAll(',', '')) ?? 8.5;
   double _parseMargin() =>
       double.tryParse(_marginCtrl.text.replaceAll(',', '')) ?? 0.5;
 
@@ -667,7 +667,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                     child: _buildField(
                       ctrl: _primeRateCtrl,
                       label: isEs ? 'Tasa prime (%)' : 'Prime Rate (%)',
-                      hint: '8.0',
+                      hint: '8.5',
                     ),
                   ),
                   Padding(
