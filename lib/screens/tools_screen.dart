@@ -8,6 +8,10 @@ import 'draw_optimizer_screen.dart';
 import 'heloc_vs_cashout_screen.dart';
 import 'payment_shock_screen.dart';
 
+const _toolTealColor = Color(0xFF00897B);
+const _toolOrangeColor = Color(0xFFF57C00);
+const _toolIndigoColor = Color(0xFF5C6BC0);
+
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
@@ -25,7 +29,7 @@ class ToolsScreen extends StatelessWidget {
                   children: [
                     _ToolCard(
                       icon: Icons.tune_rounded,
-                      color: const Color(0xFF00897B),
+                      color: _toolTealColor,
                       title: isEs ? 'Optimizador de retiro' : 'Draw Optimizer',
                       subtitle: isEs
                           ? 'Optimice su calendario de retiro'
@@ -40,7 +44,7 @@ class ToolsScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _ToolCard(
                       icon: Icons.trending_up_rounded,
-                      color: const Color(0xFFF57C00),
+                      color: _toolOrangeColor,
                       title: isEs ? 'Choque de pago' : 'Payment Shock',
                       subtitle: isEs
                           ? 'Vea cómo cambian los pagos después del período de retiro'
@@ -55,7 +59,7 @@ class ToolsScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _ToolCard(
                       icon: Icons.compare_arrows_rounded,
-                      color: const Color(0xFF5C6BC0),
+                      color: _toolIndigoColor,
                       title: isEs ? 'HELOC vs Refinanciamiento' : 'HELOC vs Cash-Out Refi',
                       subtitle: isEs
                           ? 'Compare HELOC con refinanciamiento con retiro de efectivo'

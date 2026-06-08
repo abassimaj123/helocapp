@@ -30,7 +30,8 @@ class ResultCard extends StatelessWidget {
                 offset: const Offset(0, 4))
           ],
         ),
-        child: _content(Colors.white, Colors.white70),
+        child: _content(Theme.of(context).colorScheme.onPrimary,
+            Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7)),
       );
     }
     return Card(

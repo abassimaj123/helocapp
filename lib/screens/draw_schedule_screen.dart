@@ -348,7 +348,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                           ],
 
                           // PDF export
-                          ElevatedButton.icon(
+                          OutlinedButton.icon(
                             onPressed: () => _exportPdf(context, isEs),
                             icon: const Icon(Icons.picture_as_pdf_rounded),
                             label: Text(isEs

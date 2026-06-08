@@ -28,6 +28,9 @@ import 'draw_optimizer_screen.dart';
 import 'heloc_vs_cashout_screen.dart';
 import 'payment_shock_screen.dart';
 
+const _chartAmberColor = Color(0xFFF9A825);
+const _helocScenarioColor = Color(0xFF01579B);
+
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
 
@@ -1605,7 +1608,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
     Color cardColorForOffset(int offset) {
       if (offset < 0) return AppTheme.successDark;
       if (offset == 0) return AppTheme.primary;
-      if (offset == 1) return const Color(0xFFF9A825);
+      if (offset == 1) return _chartAmberColor;
       return AppTheme.errorDark;
     }
 
@@ -2454,7 +2457,7 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF01579B).withValues(alpha: 0.09),
+                    color: _helocScenarioColor.withValues(alpha: 0.09),
                     borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(8),
                       bottomRight: Radius.circular(8),
@@ -2465,7 +2468,7 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
                       isEs ? 'Amort. Completa' : 'Fully Amortizing',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF01579B),
+                          color: _helocScenarioColor,
                           fontSize: AppTextSize.sm),
                     ),
                   ),
@@ -2576,7 +2579,7 @@ class _CompRow extends StatelessWidget {
         const SizedBox(width: 4),
         Expanded(
             child:
-                _Cell(val2, winner == 1, highlight, const Color(0xFF01579B))),
+                _Cell(val2, winner == 1, highlight, _helocScenarioColor)),
       ]),
     );
   }

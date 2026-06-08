@@ -440,9 +440,11 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              isEs ? 'Eliminar' : 'Delete',
-              style: const TextStyle(color: Colors.red),
+            child: Builder(
+              builder: (ctx) => Text(
+                isEs ? 'Eliminar' : 'Delete',
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+              ),
             ),
           ),
         ],
@@ -473,7 +475,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                 onPressed: () => _share(context, isEs),
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
                 tooltip: isEs ? 'Eliminar' : 'Delete',
                 onPressed: () => _confirmDelete(context, isEs),
               ),
@@ -588,14 +590,14 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                               _DetailRow(
                                 label: 'LTV',
                                 value: '${_fmtPct.format(_ltv)}%',
-                                valueColor: _ltv > 85 ? Colors.red : null,
+                                valueColor: _ltv > 85 ? Theme.of(context).colorScheme.error : null,
                               ),
                               _DetailRow(
                                 label: isEs
                                     ? 'Ahorro fiscal est. (22%)'
                                     : 'Est. Tax Savings (22%)',
                                 value: '${AmountFormatter.ui(_taxSavings, 'USD')}/yr',
-                                valueColor: Colors.blue.shade700,
+                                valueColor: Theme.of(context).colorScheme.primary,
                               ),
                             ]),
                           ),
@@ -606,16 +608,16 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
+                            color: Theme.of(context).colorScheme.primaryContainer,
                             borderRadius:
                                 BorderRadius.circular(AppRadius.mdPlus),
-                            border: Border.all(color: Colors.blue.shade200),
+                            border: Border.all(color: Theme.of(context).colorScheme.primaryContainer),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(Icons.info_outline_rounded,
-                                  color: Colors.blue.shade700, size: 16),
+                                  color: Theme.of(context).colorScheme.primary, size: 16),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -624,7 +626,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                       : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
                                   style: TextStyle(
                                     fontSize: AppTextSize.xs,
-                                    color: Colors.blue.shade800,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                                     height: 1.4,
                                   ),
                                 ),
