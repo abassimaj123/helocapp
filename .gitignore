@@ -35,3 +35,4 @@ ios/build/
 
 # Gradle local build cache
 android/.gradle/
+release.env
