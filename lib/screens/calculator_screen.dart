@@ -169,6 +169,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       inputHash: _resultHash(inputs),
       l1: _buildL1(inputs, results),
       l2: {'inputs': inputs, 'results': results},
+      onSaved: () {
+        if (mounted) setState(() {});
+      },
     );
   }
 
@@ -328,6 +331,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       inputHash: _resultHash(inputs),
       l1: _buildL1(inputs, results),
       l2: {'inputs': inputs, 'results': results},
+      onSaved: () {
+        if (mounted) setState(() {});
+      },
     );
     adService.onSave();
   }
