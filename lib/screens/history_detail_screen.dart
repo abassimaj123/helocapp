@@ -470,7 +470,8 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
               ),
             ],
           ),
-          body: SafeArea(
+          body: CalcwisePageEntrance(
+              child: SafeArea(
             top: false,
             left: false,
             right: false,
@@ -690,7 +691,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                 ),
               ],
             ),
-          ),
+          )),
         );
       },
     );

@@ -165,7 +165,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
 
-    return Column(
+    return CalcwisePageEntrance(
+        child: Column(
       children: [
         Expanded(
           child: _loading
@@ -311,7 +312,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         const CalcwiseAdFooter(),
       ],
-    );
+    ));
   }
 
   Future<bool?> _confirmDelete(BuildContext context, bool isEs) {

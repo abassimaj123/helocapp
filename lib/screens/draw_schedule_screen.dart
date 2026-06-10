@@ -248,7 +248,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
 
-    return Column(
+    return CalcwisePageEntrance(
+        child: Column(
       children: [
         Expanded(
           child: SingleChildScrollView(
@@ -371,7 +372,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
         ),
         const CalcwiseAdFooter(),
       ],
-    );
+    ));
   }
 
   Widget _buildChart(bool isEs) {
