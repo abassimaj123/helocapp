@@ -13,6 +13,7 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../core/freemium/iap_service.dart';
 import '../widgets/save_scenario_button.dart';
+import 'history_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Model
@@ -369,6 +370,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       l1: _buildL1(results, optimalIdx),
       l2: _buildL2(results, optimalIdx),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _saveScenario(String? label) async {
@@ -915,6 +917,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
           child: CalcwiseHeroCard(
             label: isEs ? 'Mejor Estrategia' : 'Best Strategy',
             value: AmountFormatter.ui(optimalResult.totalInterest, 'USD'),
+            rawValue: optimalResult.totalInterest,
+            valueFormatter: (v) => AmountFormatter.ui(v, 'USD'),
             secondary: _optimalLocalLabel(),
             stats: [
               (
@@ -926,6 +930,18 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                 value: isEs
                     ? '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} años'
                     : '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} yrs',
+              ),
+            ],
+            rawStats: [
+              (
+                label: isEs ? 'Interés en disposición' : 'Draw Phase Interest',
+                value: optimalResult.interestDuringDraw,
+                formatter: (v) => AmountFormatter.ui(v, 'USD'),
+              ),
+              (
+                label: isEs ? 'Plazo total' : 'Payoff Timeline',
+                value: optimalResult.payoffMonths / 12,
+                formatter: (v) => '${v.toStringAsFixed(1)} ${isEs ? "años" : "yrs"}',
               ),
             ],
           ),

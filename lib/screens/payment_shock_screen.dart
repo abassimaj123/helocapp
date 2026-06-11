@@ -14,6 +14,7 @@ import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../core/freemium/iap_service.dart';
 import '../widgets/save_scenario_button.dart';
+import 'history_screen.dart';
 
 const _ioColor = AppTheme.primary;
 const _piColor = Color(0xFFC62828);
@@ -121,6 +122,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
       l1: _buildL1(r),
       l2: _buildL2(r),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _saveScenario(String? label) async {
@@ -477,7 +479,12 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                       fontWeight: FontWeight.bold, fontSize: AppTextSize.body),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                SizedBox(height: 200, child: _buildBarChart(isEs, r)),
+                SizedBox(
+                  height: 200,
+                  child: CalcwiseChartReveal(
+                    child: _buildBarChart(isEs, r),
+                  ),
+                ),
               ],
             );
           },

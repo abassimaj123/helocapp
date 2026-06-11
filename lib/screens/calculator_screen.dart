@@ -27,6 +27,7 @@ import 'compare_screen.dart';
 import 'draw_optimizer_screen.dart';
 import 'heloc_vs_cashout_screen.dart';
 import 'payment_shock_screen.dart';
+import 'history_screen.dart';
 
 const _chartAmberColor = Color(0xFFF9A825);
 const _helocScenarioColor = Color(0xFF01579B);
@@ -173,6 +174,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         if (mounted) setState(() {});
       },
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   // ── SmartHistory payload helpers ───────────────────────────────────────────
@@ -335,6 +337,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         if (mounted) setState(() {});
       },
     );
+    HistoryScreen.refreshNotifier.value++;
     adService.onSave();
   }
 
@@ -1040,6 +1043,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                       : 'P&I Payment'),
                                               value:
                                                   AmountFormatter.ui(drawPayment, 'USD'),
+                                              rawValue: drawPayment,
+                                              valueFormatter: (v) => AmountFormatter.ui(v, 'USD'),
                                               secondary: isIO
                                                   ? (isEs
                                                       ? '$drawYears años de disposición'
@@ -1060,6 +1065,22 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                       ? 'Capital disponible'
                                                       : 'Available Equity',
                                                   value: AmountFormatter.ui(equity, 'USD')
+                                                ),
+                                              ],
+                                              rawStats: [
+                                                (
+                                                  label: isEs
+                                                      ? 'Interés total'
+                                                      : 'Total Interest',
+                                                  value: totalInt,
+                                                  formatter: (v) => AmountFormatter.ui(v, 'USD'),
+                                                ),
+                                                (
+                                                  label: isEs
+                                                      ? 'Capital disponible'
+                                                      : 'Available Equity',
+                                                  value: equity,
+                                                  formatter: (v) => AmountFormatter.ui(v, 'USD'),
                                                 ),
                                               ],
                                             );
