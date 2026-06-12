@@ -131,7 +131,7 @@ class DrawOptimizerScreen extends StatefulWidget {
 class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     with CalcwiseAutoCalcMixin {
   final _creditLimitCtrl = TextEditingController(text: '150000');
-  final _rateCtrl = TextEditingController(text: '8.5');
+  final _rateCtrl = TextEditingController(text: '7.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
@@ -145,7 +145,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   int? _optimalIndex;
 
   // ── Variable rate simulation state ────────────────────────────────────────
-  final _primeRateCtrl = TextEditingController(text: '8.5');
+  final _primeRateCtrl = TextEditingController(text: '7.5');
   final _marginCtrl = TextEditingController(text: '0.5');
   // Up to 3 rate change events
   final List<_RateStep> _rateSteps = [];
@@ -394,7 +394,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   // ── Variable rate helpers ─────────────────────────────────────────────────
 
   double _parsePrime() =>
-      double.tryParse(_primeRateCtrl.text.replaceAll(',', '')) ?? 8.5;
+      double.tryParse(_primeRateCtrl.text.replaceAll(',', '')) ?? 7.5;
   double _parseMargin() =>
       double.tryParse(_marginCtrl.text.replaceAll(',', '')) ?? 0.5;
 
@@ -507,7 +507,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                   _buildField(
                     ctrl: _rateCtrl,
                     label: isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)',
-                    hint: '8.5',
+                    hint: '7.5',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Row(children: [
@@ -717,7 +717,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                     child: _buildField(
                       ctrl: _primeRateCtrl,
                       label: isEs ? 'Tasa prime (%)' : 'Prime Rate (%)',
-                      hint: '8.5',
+                      hint: '7.5',
                     ),
                   ),
                   Padding(

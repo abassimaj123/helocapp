@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:math' show pow;
 import 'dart:typed_data';
 
@@ -17,6 +18,281 @@ import '../l10n/strings_es.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
+
+// -- PDF params (only sendable primitives) ------------------------------------
+
+class _HistoryDetailPdfParams {
+  final double homeValue;
+  final double balance;
+  final double draw;
+  final double rate;
+  final int drawYears;
+  final int repayYears;
+  final double equity;
+  final double ltv;
+  final double interestOnly;
+  final double repayment;
+  final double totalInterest;
+  final double taxSavings;
+  final bool isEs;
+  final int createdAtMs;
+  const _HistoryDetailPdfParams({
+    required this.homeValue,
+    required this.balance,
+    required this.draw,
+    required this.rate,
+    required this.drawYears,
+    required this.repayYears,
+    required this.equity,
+    required this.ltv,
+    required this.interestOnly,
+    required this.repayment,
+    required this.totalInterest,
+    required this.taxSavings,
+    required this.isEs,
+    required this.createdAtMs,
+  });
+}
+
+// -- Top-level PDF builder (runs in Isolate) ----------------------------------
+
+pw.Widget _histPdfSectionTitle(String title) {
+  return pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+    decoration: pw.BoxDecoration(
+      color: const PdfColor.fromInt(0xFFE8F5E9),
+      borderRadius: pw.BorderRadius.circular(AppRadius.xs),
+    ),
+    child: pw.Text(
+      title,
+      style: pw.TextStyle(
+        fontSize: AppTextSize.md,
+        fontWeight: pw.FontWeight.bold,
+        color: const PdfColor.fromInt(0xFF00695C),
+      ),
+    ),
+  );
+}
+
+pw.Widget _histPdfTable(List<List<String>> rows, {bool highlightFirst = false}) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+    columnWidths: {
+      0: const pw.FlexColumnWidth(3),
+      1: const pw.FlexColumnWidth(2),
+    },
+    children: rows.asMap().entries.map((e) {
+      final isFirst = e.key == 0 && highlightFirst;
+      return pw.TableRow(
+        decoration: isFirst
+            ? const pw.BoxDecoration(color: PdfColor.fromInt(0xFFE8F5E9))
+            : (e.key % 2 == 0
+                ? const pw.BoxDecoration(color: PdfColors.white)
+                : const pw.BoxDecoration(
+                    color: PdfColor.fromInt(0xFFF5F5F5))),
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: pw.Text(
+              e.value[0],
+              style: pw.TextStyle(
+                fontSize: 10,
+                color: PdfColors.grey700,
+              ),
+            ),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: pw.Text(
+              e.value[1],
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight:
+                    isFirst ? pw.FontWeight.bold : pw.FontWeight.normal,
+                color: isFirst
+                    ? const PdfColor.fromInt(0xFF00695C)
+                    : PdfColors.black,
+              ),
+              textAlign: pw.TextAlign.right,
+            ),
+          ),
+        ],
+      );
+    }).toList(),
+  );
+}
+
+Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
+  final fmtPct = NumberFormat('##0.0#');
+  final dateFmt = DateFormat('MMM d, yyyy');
+  final createdAt = DateTime.fromMillisecondsSinceEpoch(p.createdAtMs);
+
+  final doc = pw.Document();
+  doc.addPage(
+    pw.Page(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(40),
+      build: (pw.Context ctx) {
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Header
+            pw.Container(
+              padding: const pw.EdgeInsets.all(AppSpacing.lg),
+              decoration: pw.BoxDecoration(
+                color: const PdfColor.fromInt(0xFF00695C),
+                borderRadius: pw.BorderRadius.circular(AppRadius.md),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    p.isEs ? 'HELOC Calculator' : 'HELOC Calculator',
+                    style: pw.TextStyle(
+                      fontSize: AppTextSize.title,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                  pw.Text(
+                    dateFmt.format(createdAt.toLocal()),
+                    style: const pw.TextStyle(
+                      fontSize: AppTextSize.sm,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 24),
+
+            // Inputs section
+            _histPdfSectionTitle(p.isEs ? 'Datos de Entrada' : 'Input Parameters'),
+            pw.SizedBox(height: 8),
+            _histPdfTable(
+              p.isEs
+                  ? [
+                      ['Valor de la vivienda', AmountFormatter.ui(p.homeValue, 'USD')],
+                      ['Saldo hipotecario', AmountFormatter.ui(p.balance, 'USD')],
+                      ['Monto a disponer', AmountFormatter.ui(p.draw, 'USD')],
+                      ['Tasa HELOC', '${p.rate.toStringAsFixed(2)}%'],
+                      ['Periodo de disposicion', '${p.drawYears} años'],
+                      ['Periodo de pago', '${p.repayYears} años'],
+                    ]
+                  : [
+                      ['Home Value', AmountFormatter.ui(p.homeValue, 'USD')],
+                      ['Mortgage Balance', AmountFormatter.ui(p.balance, 'USD')],
+                      ['Draw Amount', AmountFormatter.ui(p.draw, 'USD')],
+                      ['HELOC Rate', '${p.rate.toStringAsFixed(2)}%'],
+                      ['Draw Period', '${p.drawYears} years'],
+                      ['Repayment Period', '${p.repayYears} years'],
+                    ],
+            ),
+            pw.SizedBox(height: 20),
+
+            // Results section
+            _histPdfSectionTitle(p.isEs ? 'Resultados' : 'Results'),
+            pw.SizedBox(height: 8),
+            _histPdfTable(
+              p.isEs
+                  ? [
+                      [
+                        'Pago solo interes (periodo disposicion)',
+                        AmountFormatter.ui(p.interestOnly, 'USD')
+                      ],
+                      [
+                        'Pago amortizado (periodo de pago)',
+                        AmountFormatter.ui(p.repayment, 'USD')
+                      ],
+                      [
+                        'Capital disponible (85% LTV)',
+                        AmountFormatter.ui(p.equity, 'USD')
+                      ],
+                      ['LTV actual', '${fmtPct.format(p.ltv)}%'],
+                      [
+                        'Ahorro fiscal estimado (22%)',
+                        '${AmountFormatter.ui(p.taxSavings, "USD")}/año'
+                      ],
+                    ]
+                  : [
+                      [
+                        'Interest-Only Payment (Draw Period)',
+                        AmountFormatter.ui(p.interestOnly, 'USD')
+                      ],
+                      [
+                        'Repayment Payment (After Draw)',
+                        AmountFormatter.ui(p.repayment, 'USD')
+                      ],
+                      ['Available Equity (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
+                      ['Current LTV', '${fmtPct.format(p.ltv)}%'],
+                      [
+                        'Est. Tax Savings (22% bracket)',
+                        '${AmountFormatter.ui(p.taxSavings, "USD")}/year'
+                      ],
+                    ],
+              highlightFirst: true,
+            ),
+            pw.SizedBox(height: 20),
+
+            // Tax deductibility note
+            pw.Container(
+              padding: const pw.EdgeInsets.all(AppSpacing.md),
+              decoration: pw.BoxDecoration(
+                color: const PdfColor.fromInt(0xFFE3F2FD),
+                borderRadius: pw.BorderRadius.circular(AppRadius.sm),
+                border: pw.Border.all(
+                  color: const PdfColor.fromInt(0xFF1565C0),
+                  width: 0.5,
+                ),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    p.isEs
+                        ? 'Nota sobre Deducibilidad Fiscal'
+                        : 'Tax Deductibility Note',
+                    style: pw.TextStyle(
+                      fontSize: AppTextSize.xs,
+                      fontWeight: pw.FontWeight.bold,
+                      color: const PdfColor.fromInt(0xFF1565C0),
+                    ),
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    p.isEs
+                        ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del 22%. Consulte a un asesor fiscal calificado para obtener asesoramiento personalizado.'
+                        : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the 22% tax bracket. Consult a qualified tax advisor for personalized guidance.',
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColor.fromInt(0xFF1565C0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.Spacer(),
+
+            // Disclaimer
+            pw.Divider(color: PdfColors.grey300),
+            pw.SizedBox(height: 6),
+            pw.Text(
+              p.isEs
+                  ? 'Aviso legal: Este informe es solo para fines informativos y no constituye asesoramiento financiero, fiscal ni legal. Los resultados son estimaciones y pueden variar. Consulte a profesionales calificados antes de tomar decisiones financieras.'
+                  : 'Disclaimer: This report is for informational purposes only and does not constitute financial, tax, or legal advice. Results are estimates and may vary. Consult qualified professionals before making financial decisions.',
+              style: const pw.TextStyle(
+                fontSize: 8,
+                color: PdfColors.grey600,
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+
+  return doc.save();
+}
 
 class HistoryDetailScreen extends StatelessWidget {
   final Map<String, dynamic> entry;
@@ -173,242 +449,26 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
   }
 
   Future<Uint8List> _buildPdf(bool isEs) async {
-    final doc = pw.Document();
-    final dateFmt = DateFormat('MMM d, yyyy');
-
-    doc.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
-        build: (pw.Context ctx) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Header
-              pw.Container(
-                padding: const pw.EdgeInsets.all(AppSpacing.lg),
-                decoration: pw.BoxDecoration(
-                  color: const PdfColor.fromInt(0xFF00695C),
-                  borderRadius: pw.BorderRadius.circular(AppRadius.md),
-                ),
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      isEs ? 'HELOC Calculator' : 'HELOC Calculator',
-                      style: pw.TextStyle(
-                        fontSize: AppTextSize.title,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.white,
-                      ),
-                    ),
-                    pw.Text(
-                      dateFmt.format(_createdAt.toLocal()),
-                      style: const pw.TextStyle(
-                        fontSize: AppTextSize.sm,
-                        color: PdfColors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              pw.SizedBox(height: 24),
-
-              // Inputs section
-              _pdfSectionTitle(isEs ? 'Datos de Entrada' : 'Input Parameters'),
-              pw.SizedBox(height: 8),
-              _pdfTable(
-                isEs
-                    ? [
-                        ['Valor de la vivienda', AmountFormatter.ui(_homeValue, 'USD')],
-                        ['Saldo hipotecario', AmountFormatter.ui(_balance, 'USD')],
-                        ['Monto a disponer', AmountFormatter.ui(_draw, 'USD')],
-                        ['Tasa HELOC', '${_rate.toStringAsFixed(2)}%'],
-                        ['Período de disposición', '$_drawYears años'],
-                        ['Período de pago', '$_repayYears años'],
-                      ]
-                    : [
-                        ['Home Value', AmountFormatter.ui(_homeValue, 'USD')],
-                        ['Mortgage Balance', AmountFormatter.ui(_balance, 'USD')],
-                        ['Draw Amount', AmountFormatter.ui(_draw, 'USD')],
-                        ['HELOC Rate', '${_rate.toStringAsFixed(2)}%'],
-                        ['Draw Period', '$_drawYears years'],
-                        ['Repayment Period', '$_repayYears years'],
-                      ],
-              ),
-              pw.SizedBox(height: 20),
-
-              // Results section
-              _pdfSectionTitle(isEs ? 'Resultados' : 'Results'),
-              pw.SizedBox(height: 8),
-              _pdfTable(
-                isEs
-                    ? [
-                        [
-                          'Pago solo interés (período disposición)',
-                          AmountFormatter.ui(_interestOnly, 'USD')
-                        ],
-                        [
-                          'Pago amortizado (período de pago)',
-                          AmountFormatter.ui(_repayment, 'USD')
-                        ],
-                        [
-                          'Capital disponible (85% LTV)',
-                          AmountFormatter.ui(_equity, 'USD')
-                        ],
-                        ['LTV actual', '${_fmtPct.format(_ltv)}%'],
-                        [
-                          'Ahorro fiscal estimado (22%)',
-                          '${AmountFormatter.ui(_taxSavings, 'USD')}/año'
-                        ],
-                      ]
-                    : [
-                        [
-                          'Interest-Only Payment (Draw Period)',
-                          AmountFormatter.ui(_interestOnly, 'USD')
-                        ],
-                        [
-                          'Repayment Payment (After Draw)',
-                          AmountFormatter.ui(_repayment, 'USD')
-                        ],
-                        ['Available Equity (85% LTV)', AmountFormatter.ui(_equity, 'USD')],
-                        ['Current LTV', '${_fmtPct.format(_ltv)}%'],
-                        [
-                          'Est. Tax Savings (22% bracket)',
-                          '${AmountFormatter.ui(_taxSavings, 'USD')}/year'
-                        ],
-                      ],
-                highlightFirst: true,
-              ),
-              pw.SizedBox(height: 20),
-
-              // Tax deductibility note
-              pw.Container(
-                padding: const pw.EdgeInsets.all(AppSpacing.md),
-                decoration: pw.BoxDecoration(
-                  color: const PdfColor.fromInt(0xFFE3F2FD),
-                  borderRadius: pw.BorderRadius.circular(AppRadius.sm),
-                  border: pw.Border.all(
-                    color: const PdfColor.fromInt(0xFF1565C0),
-                    width: 0.5,
-                  ),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      isEs
-                          ? 'Nota sobre Deducibilidad Fiscal'
-                          : 'Tax Deductibility Note',
-                      style: pw.TextStyle(
-                        fontSize: AppTextSize.xs,
-                        fontWeight: pw.FontWeight.bold,
-                        color: const PdfColor.fromInt(0xFF1565C0),
-                      ),
-                    ),
-                    pw.SizedBox(height: 4),
-                    pw.Text(
-                      isEs
-                          ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del 22%. Consulte a un asesor fiscal calificado para obtener asesoramiento personalizado.'
-                          : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the 22% tax bracket. Consult a qualified tax advisor for personalized guidance.',
-                      style: const pw.TextStyle(
-                        fontSize: 10,
-                        color: PdfColor.fromInt(0xFF1565C0),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              pw.Spacer(),
-
-              // Disclaimer
-              pw.Divider(color: PdfColors.grey300),
-              pw.SizedBox(height: 6),
-              pw.Text(
-                isEs
-                    ? 'Aviso legal: Este informe es solo para fines informativos y no constituye asesoramiento financiero, fiscal ni legal. Los resultados son estimaciones y pueden variar. Consulte a profesionales calificados antes de tomar decisiones financieras.'
-                    : 'Disclaimer: This report is for informational purposes only and does not constitute financial, tax, or legal advice. Results are estimates and may vary. Consult qualified professionals before making financial decisions.',
-                style: const pw.TextStyle(
-                  fontSize: 8,
-                  color: PdfColors.grey600,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+    final params = _HistoryDetailPdfParams(
+      homeValue: _homeValue,
+      balance: _balance,
+      draw: _draw,
+      rate: _rate,
+      drawYears: _drawYears,
+      repayYears: _repayYears,
+      equity: _equity,
+      ltv: _ltv,
+      interestOnly: _interestOnly,
+      repayment: _repayment,
+      totalInterest: _totalInterest,
+      taxSavings: _taxSavings,
+      isEs: isEs,
+      createdAtMs: _createdAt.millisecondsSinceEpoch,
     );
-
-    return doc.save();
+    return Isolate.run(() => _buildHistoryDetailPdf(params));
   }
 
-  pw.Widget _pdfSectionTitle(String title) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-      decoration: pw.BoxDecoration(
-        color: const PdfColor.fromInt(0xFFE8F5E9),
-        borderRadius: pw.BorderRadius.circular(AppRadius.xs),
-      ),
-      child: pw.Text(
-        title,
-        style: pw.TextStyle(
-          fontSize: AppTextSize.md,
-          fontWeight: pw.FontWeight.bold,
-          color: const PdfColor.fromInt(0xFF00695C),
-        ),
-      ),
-    );
-  }
 
-  pw.Widget _pdfTable(List<List<String>> rows, {bool highlightFirst = false}) {
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(3),
-        1: const pw.FlexColumnWidth(2),
-      },
-      children: rows.asMap().entries.map((e) {
-        final isFirst = e.key == 0 && highlightFirst;
-        return pw.TableRow(
-          decoration: isFirst
-              ? const pw.BoxDecoration(color: PdfColor.fromInt(0xFFE8F5E9))
-              : (e.key % 2 == 0
-                  ? const pw.BoxDecoration(color: PdfColors.white)
-                  : const pw.BoxDecoration(
-                      color: PdfColor.fromInt(0xFFF5F5F5))),
-          children: [
-            pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: pw.Text(
-                e.value[0],
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  color: PdfColors.grey700,
-                ),
-              ),
-            ),
-            pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: pw.Text(
-                e.value[1],
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight:
-                      isFirst ? pw.FontWeight.bold : pw.FontWeight.normal,
-                  color: isFirst
-                      ? const PdfColor.fromInt(0xFF00695C)
-                      : PdfColors.black,
-                ),
-                textAlign: pw.TextAlign.right,
-              ),
-            ),
-          ],
-        );
-      }).toList(),
-    );
-  }
 
   // ── Delete ────────────────────────────────────────────────────────────────
 

@@ -62,7 +62,7 @@ final ValueNotifier<int> tabSwitchNotifier = ValueNotifier<int>(-1);
 /// Last-calculated HELOC values for pre-filling secondary tools.
 final ValueNotifier<({double creditLimit, double balance, double rate})>
     helocNotifier =
-    ValueNotifier((creditLimit: 100000.0, balance: 100000.0, rate: 8.5));
+    ValueNotifier((creditLimit: 100000.0, balance: 100000.0, rate: 7.5));
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -261,6 +261,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
+    final isFr = isFrenchNotifier.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: CalcwiseTheme.of(context).surface,
@@ -272,7 +273,9 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEs ? AppStringsES.appName : AppStringsEN.appName),
+        title: Text(isFr
+            ? AppStringsFR.appName
+            : (isEs ? AppStringsES.appName : AppStringsEN.appName)),
         actions: [
           CalcwiseAppBarActions(
             freemium: freemiumService,

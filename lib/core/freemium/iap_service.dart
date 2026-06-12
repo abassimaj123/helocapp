@@ -17,7 +17,7 @@ class IAPService {
     _iap = CalcwiseIAP(
       productId: productId,
       freemium: freemiumService,
-      analytics: CalcwiseAnalytics(appName: 'helocapp'),
+      analytics: AnalyticsService.instance,
       onPurchaseCompleted: () =>
           CalcwiseReviewService.instance.requestAfterPurchase(),
     );

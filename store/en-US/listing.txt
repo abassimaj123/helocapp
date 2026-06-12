@@ -14,13 +14,9 @@ KEY CALCULATORS:
 • Draw Period Calculator — estimate interest-only payments
 • Repayment Calculator — see full amortization after the draw period
 • Break-Even Calculator — find when a HELOC pays off vs a loan
-• Payoff Planner — build a strategy to pay off your line faster
+• Rate Sensitivity — simulate how rate changes affect your payments
 
-WHY USERS LOVE IT:
-★★★★★ "Finally an app that explains HELOC repayment in plain language."
-★★★★★ "Saved me from a costly mistake by showing the break-even clearly."
-
-Trusted by 30,000+ homeowners to unlock their home equity confidently.
+Used by homeowners across the US to plan their home equity strategy with confidence.
 
 PREMIUM — $2.99 (one-time)
 • Unlimited scenario comparisons

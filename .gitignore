@@ -36,3 +36,6 @@ ios/build/
 # Gradle local build cache
 android/.gradle/
 release.env
+
+# AdMob production unit IDs (copy from admob.example.json)
+admob.json

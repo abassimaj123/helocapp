@@ -54,7 +54,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   final _formKey = GlobalKey<FormState>();
 
   final _balanceCtrl = TextEditingController(text: '100000');
-  final _currentRateCtrl = TextEditingController(text: '8.5');
+  final _currentRateCtrl = TextEditingController(text: '7.5');
   int _repayYears = 20;
   double _projectedRate = 9.5;
 
@@ -216,7 +216,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
 
   void _reset() {
     _balanceCtrl.text = '100000';
-    _currentRateCtrl.text = '8.5';
+    _currentRateCtrl.text = '7.5';
     setState(() {
       _repayYears = 20;
       _projectedRate = 9.5;
@@ -298,7 +298,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     _field(
                       ctrl: _currentRateCtrl,
                       label: isEs ? 'Tasa actual (%)' : 'Current Rate (%)',
-                      hint: '8.5',
+                      hint: '7.5',
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _sectionHeader(isEs

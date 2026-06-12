@@ -11,6 +11,7 @@ import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../widgets/save_scenario_button.dart';
+import 'history_screen.dart';
 
 // ── Option colors ─────────────────────────────────────────────────────────────
 const _helocColor = AppTheme.primary;
@@ -173,6 +174,7 @@ class _CompareScreenState extends State<CompareScreen>
       l1: _buildL1(cr),
       l2: _buildL2(cr),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _saveScenario(String? label) async {

@@ -19,6 +19,8 @@ enum _CardAction { unpin, rename, delete }
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
+  static final refreshNotifier = ValueNotifier<int>(0);
+
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
@@ -52,6 +54,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void initState() {
     super.initState();
     _load();
+    HistoryScreen.refreshNotifier.addListener(_load);
+  }
+
+  @override
+  void dispose() {
+    HistoryScreen.refreshNotifier.removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {

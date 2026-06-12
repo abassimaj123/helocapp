@@ -12,6 +12,7 @@ import '../main.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../widgets/save_scenario_button.dart';
+import 'history_screen.dart';
 
 const _helocColor = AppTheme.primary;
 const _refiColor = Color(0xFF01579B);
@@ -187,6 +188,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       l1: _buildL1(r),
       l2: _buildL2(r),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _saveScenario(String? label) async {
