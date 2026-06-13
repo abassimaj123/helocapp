@@ -17,6 +17,7 @@ import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../widgets/save_scenario_button.dart';
 import '../core/freemium/iap_service.dart';
+import 'history_screen.dart';
 
 class DrawScheduleScreen extends StatefulWidget {
   const DrawScheduleScreen({super.key});
@@ -123,6 +124,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
       label: label ??
           'Draw Schedule \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%',
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _generate({bool isManual = false}) async {
@@ -320,7 +322,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                           description: isEs
                               ? 'Accede al calendario completo, gráfico de balance y exportación PDF.'
                               : 'Access the full amortization schedule, balance chart, and PDF export.',
-                          onUnlock: () => IAPService.instance.buy(),
+                          onUnlock: () => PaywallHard.show(context),
                           price: IAPService.instance.localizedPrice,
                         );
                       }

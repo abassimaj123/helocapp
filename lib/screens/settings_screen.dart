@@ -201,6 +201,15 @@ class SettingsScreen extends StatelessWidget {
                                 : AppStringsEN.privacyPolicy),
                         onTap: () => _launch('https://calqwise.com/privacy'),
                       ),
+                      _SettingsTile(
+                        icon: Icons.manage_search_rounded,
+                        label: isFr
+                            ? 'Paramètres de confidentialité'
+                            : (isEs
+                                ? 'Configuración de privacidad'
+                                : 'Privacy Settings'),
+                        onTap: showCalcwisePrivacyOptions,
+                      ),
                       CalcwiseRateAppTile(
                           label: isFr
                               ? "Noter l'app"

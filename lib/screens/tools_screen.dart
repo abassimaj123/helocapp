@@ -1,5 +1,6 @@
 import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
+import '../core/firebase/analytics_service.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
@@ -12,8 +13,19 @@ const _toolTealColor = Color(0xFF00897B);
 const _toolOrangeColor = Color(0xFFF57C00);
 const _toolIndigoColor = Color(0xFF5C6BC0);
 
-class ToolsScreen extends StatelessWidget {
+class ToolsScreen extends StatefulWidget {
   const ToolsScreen({super.key});
+
+  @override
+  State<ToolsScreen> createState() => _ToolsScreenState();
+}
+
+class _ToolsScreenState extends State<ToolsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView('tools');
+  }
 
   @override
   Widget build(BuildContext context) {

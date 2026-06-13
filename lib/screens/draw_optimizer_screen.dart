@@ -626,7 +626,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                           description: isEs
                               ? 'Simula cómo los cambios en la tasa prime afectan tu costo total de interés.'
                               : 'Simulate how prime rate changes affect your total interest cost.',
-                          onUnlock: () => IAPService.instance.buy(),
+                          onUnlock: () => PaywallHard.show(context),
                           price: IAPService.instance.localizedPrice,
                         );
                       }

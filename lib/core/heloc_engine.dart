@@ -316,21 +316,6 @@ class HelocEngine {
   /// Total interest paid from a variable-rate schedule.
   static double totalInterestFromSchedule(List<Map<String, double>> schedule) {
     double total = 0;
-    for (final row in schedule) {
-      final phase = (row['phase'] ?? 0).toInt();
-      final balance = row['balance'] ?? 0.0;
-      final payment = row['payment'] ?? 0.0;
-      if (phase == 0) {
-        // IO phase: full payment is interest
-        total += payment;
-      } else {
-        // Repay phase: interest portion only
-        total += (payment - balance).clamp(0.0, payment);
-      }
-    }
-    // Simpler: accumulate interest component directly
-    // Re-derive from schedule to be precise
-    total = 0;
     for (int i = 0; i < schedule.length; i++) {
       final row = schedule[i];
       final phase = (row['phase'] ?? 0).toInt();

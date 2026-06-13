@@ -466,7 +466,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 description: isEs
                     ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
                     : 'View the full payment comparison with an interactive bar chart.',
-                onUnlock: () => IAPService.instance.buy(),
+                onUnlock: () => PaywallHard.show(context),
                 price: IAPService.instance.localizedPrice,
               );
             }

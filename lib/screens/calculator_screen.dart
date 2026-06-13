@@ -1493,7 +1493,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                   description: isEs
                                                       ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
                                                       : 'Simulate how rate changes impact your monthly payment and total interest.',
-                                                  onUnlock: () => IAPService.instance.buy(),
+                                                  onUnlock: () => PaywallHard.show(context),
                                                   price: IAPService.instance.localizedPrice,
                                                 );
                                               }
