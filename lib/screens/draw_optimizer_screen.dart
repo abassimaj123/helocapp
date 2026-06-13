@@ -903,18 +903,23 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          isEs ? 'Análisis de estrategias' : 'Strategy Analysis',
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: AppTextSize.subtitle),
+        CalcwiseStaggerItem(
+          index: 0,
+          child: Text(
+            isEs ? 'Análisis de estrategias' : 'Strategy Analysis',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: AppTextSize.subtitle),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
 
         // Hero KPI — optimal strategy total interest
-        Semantics(
-          label:
-              '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${AmountFormatter.ui(optimalResult.totalInterest, 'USD')}',
-          child: CalcwiseHeroCard(
+        CalcwiseStaggerItem(
+          index: 1,
+          child: Semantics(
+            label:
+                '${isEs ? "Mejor estrategia" : "Best strategy"}: ${_optimalLocalLabel()}. ${isEs ? "Interés total" : "Total interest"}: ${AmountFormatter.ui(optimalResult.totalInterest, 'USD')}',
+            child: CalcwiseHeroCard(
             label: isEs ? 'Mejor Estrategia' : 'Best Strategy',
             value: AmountFormatter.ui(optimalResult.totalInterest, 'USD'),
             rawValue: optimalResult.totalInterest,
@@ -946,23 +951,29 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
             ],
           ),
         ),
+        ),
         const SizedBox(height: AppSpacing.lg),
 
         ...results.asMap().entries.map((entry) {
           final i = entry.key;
           final r = entry.value;
           final isOptimal = i == optimal;
-          return _StrategyCard(
-            result: r,
-            isOptimal: isOptimal,
-            isEs: isEs,
+          return CalcwiseStaggerItem(
+            index: 2 + i,
+            child: _StrategyCard(
+              result: r,
+              isOptimal: isOptimal,
+              isEs: isEs,
+            ),
           );
         }),
 
         const SizedBox(height: AppSpacing.lg),
 
         // Summary banner
-        Container(
+        CalcwiseStaggerItem(
+          index: 2 + results.length,
+          child: Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppTheme.success.withValues(alpha: 0.10),
@@ -990,6 +1001,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
               ),
             ),
           ]),
+        ),
         ),
       ],
     );

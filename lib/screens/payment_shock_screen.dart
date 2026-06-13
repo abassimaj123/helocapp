@@ -395,67 +395,78 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Hero
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            side: BorderSide(color: _piColor.withValues(alpha: 0.3)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEs ? 'Nuevo pago mensual' : 'New monthly payment',
-                  style: const TextStyle(
-                      fontSize: AppTextSize.md, color: AppTheme.labelGray),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  AmountFormatter.ui(r.piPayment, 'USD'),
-                  style: const TextStyle(
-                    fontSize: AppTextSize.hero,
-                    fontWeight: FontWeight.bold,
-                    color: _piColor,
-                    height: 1.0,
+        CalcwiseStaggerItem(
+          index: 0,
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              side: BorderSide(color: _piColor.withValues(alpha: 0.3)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isEs ? 'Nuevo pago mensual' : 'New monthly payment',
+                    style: const TextStyle(
+                        fontSize: AppTextSize.md, color: AppTheme.labelGray),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.smPlus),
-                Text(
-                  isEs
-                      ? 'Tu pago pasa de ${AmountFormatter.ui(r.ioPayment, 'USD')}/mes a ${AmountFormatter.ui(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
-                      : 'Your payment goes from ${AmountFormatter.ui(r.ioPayment, 'USD')}/mo to ${AmountFormatter.ui(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
-                  style: const TextStyle(fontSize: AppTextSize.md),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    AmountFormatter.ui(r.piPayment, 'USD'),
+                    style: const TextStyle(
+                      fontSize: AppTextSize.hero,
+                      fontWeight: FontWeight.bold,
+                      color: _piColor,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.smPlus),
+                  Text(
+                    isEs
+                        ? 'Tu pago pasa de ${AmountFormatter.ui(r.ioPayment, 'USD')}/mes a ${AmountFormatter.ui(r.piPayment, 'USD')}/mes (+${r.shockPct.toStringAsFixed(0)}%)'
+                        : 'Your payment goes from ${AmountFormatter.ui(r.ioPayment, 'USD')}/mo to ${AmountFormatter.ui(r.piPayment, 'USD')}/mo (+${r.shockPct.toStringAsFixed(0)}%)',
+                    style: const TextStyle(fontSize: AppTextSize.md),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
 
-        Row(children: [
-          Expanded(
-              child: _metricCard(isEs ? 'Choque' : 'Shock',
-                  '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-              child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                  '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
-        ]),
+        CalcwiseStaggerItem(
+          index: 1,
+          child: Row(children: [
+            Expanded(
+                child: _metricCard(isEs ? 'Choque' : 'Shock',
+                    '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+                child: _metricCard(isEs ? 'Aumento' : 'Increase',
+                    '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
+          ]),
+        ),
         const SizedBox(height: AppSpacing.md),
-        _metricCard(
-          isEs
-              ? 'Interés total durante el pago'
-              : 'Total interest over repayment',
-          AmountFormatter.ui(r.totalInterest, 'USD'),
-          _ioColor,
+        CalcwiseStaggerItem(
+          index: 2,
+          child: _metricCard(
+            isEs
+                ? 'Interés total durante el pago'
+                : 'Total interest over repayment',
+            AmountFormatter.ui(r.totalInterest, 'USD'),
+            _ioColor,
+          ),
         ),
 
         const SizedBox(height: AppSpacing.xl),
 
         // Premium: bar chart + full projection
-        ValueListenableBuilder<bool>(
+        CalcwiseStaggerItem(
+          index: 3,
+          child: ValueListenableBuilder<bool>(
           valueListenable: freemiumService.hasFullAccessNotifier,
           builder: (_, isPremium, __) {
             if (!isPremium) {
@@ -488,6 +499,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
               ],
             );
           },
+        ),
         ),
       ],
     );
