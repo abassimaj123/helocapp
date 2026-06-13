@@ -486,7 +486,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                       extraLinesData: ExtraLinesData(verticalLines: [
                         VerticalLine(
                           x: drawEndMonth,
-                          color: Colors.orange.withValues(alpha: 0.6),
+                          color:
+                              CalcwiseSemanticColors.warnIcon.withValues(alpha: 0.6),
                           strokeWidth: 1.5,
                           dashArray: [5, 4],
                           label: VerticalLineLabel(
@@ -494,7 +495,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                             labelResolver: (_) =>
                                 isEs ? 'Fin disposición' : 'Draw End',
                             style: const TextStyle(
-                                fontSize: AppTextSize.xxs, color: Colors.orange),
+                                fontSize: AppTextSize.xxs,
+                                color: CalcwiseSemanticColors.warnIcon),
                           ),
                         ),
                       ]),
