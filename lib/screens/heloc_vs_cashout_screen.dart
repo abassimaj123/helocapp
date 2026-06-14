@@ -88,7 +88,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   final _existingRateCtrl = TextEditingController(text: '4.0');
   final _existingYearsCtrl = TextEditingController(text: '25');
   final _cashCtrl = TextEditingController(text: '75000');
-  final _helocRateCtrl = TextEditingController(text: '8.5');
+  final _helocRateCtrl = TextEditingController(text: '7.5');
   final _refiRateCtrl = TextEditingController(text: '6.5');
   final _closingPctCtrl = TextEditingController(text: '3');
 

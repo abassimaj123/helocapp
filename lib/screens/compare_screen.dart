@@ -57,7 +57,7 @@ class _CompareScreenState extends State<CompareScreen>
   final _drawCtrl = TextEditingController(text: '100000');
 
   // HELOC
-  final _helocRateCtrl = TextEditingController(text: '8.5');
+  final _helocRateCtrl = TextEditingController(text: '7.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 

@@ -29,7 +29,7 @@ class DrawScheduleScreen extends StatefulWidget {
 class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     with CalcwiseAutoCalcMixin {
   final _drawCtrl = TextEditingController(text: '100000');
-  final _rateCtrl = TextEditingController(text: '8.5');
+  final _rateCtrl = TextEditingController(text: '7.5');
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
