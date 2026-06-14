@@ -341,6 +341,12 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
   final _fmtPct = NumberFormat('##0.0#');
 
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView('history_detail');
+  }
+
   Map<String, dynamic> get _inputs =>
       widget.entry['inputs'] as Map<String, dynamic>;
   Map<String, dynamic> get _results =>

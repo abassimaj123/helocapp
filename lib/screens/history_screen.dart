@@ -53,6 +53,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('history');
     _load();
     HistoryScreen.refreshNotifier.addListener(_load);
   }

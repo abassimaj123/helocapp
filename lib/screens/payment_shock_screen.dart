@@ -372,7 +372,21 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     AnimatedSwitcher(
                       duration: AppDuration.base,
                       child: _result == null
-                          ? const SizedBox.shrink()
+                          ? Padding(
+                              key: const ValueKey('empty'),
+                              padding: const EdgeInsets.only(top: AppSpacing.xl),
+                              child: Center(
+                                child: Text(
+                                  isEs
+                                      ? 'Ingresa el saldo y la tasa para ver el impacto'
+                                      : 'Enter balance and rate to see the payment impact',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: AppTheme.labelGray,
+                                      fontSize: AppTextSize.md),
+                                ),
+                              ),
+                            )
                           : _buildResults(isEs, _result!),
                     ),
                     const SizedBox(height: AppSpacing.listBottomInset),
