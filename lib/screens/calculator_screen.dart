@@ -1167,7 +1167,19 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                 _results!['drawYears']
                                                         as int? ??
                                                     10;
-                                            return CalcwiseHeroCard(
+                                            return Container(
+                                              margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(28),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Theme.of(ctx).colorScheme.primary.withValues(alpha: 0.3),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: CalcwiseHeroCard(
                                               label: isIO
                                                   ? (isEs
                                                       ? 'Pago Solo Interés'
@@ -1217,6 +1229,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                   formatter: (v) => AmountFormatter.ui(v, 'USD'),
                                                 ),
                                               ],
+                                            ),
                                             );
                                           }),
                                           const SizedBox(height: 8),
