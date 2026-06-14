@@ -674,6 +674,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   }
 
   String _buildShareText(bool isEs, {bool isFr = false}) {
+    if (_results == null) return '';
     final r = _results!;
     final homeValue = (r['homeValue'] as num?)?.toDouble() ?? 0.0;
     final mortgage = (r['mortgage'] as num?)?.toDouble() ?? 0.0;
@@ -795,6 +796,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
   }
 
   Future<Uint8List> _buildPdf(bool isEs, {bool isFr = false}) async {
+    if (_results == null) return Uint8List(0);
     final r = _results!;
     final params = _CalculatorPdfParams(
       homeValue: (r['homeValue'] as num?)?.toDouble() ?? 0.0,
