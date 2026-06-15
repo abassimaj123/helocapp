@@ -581,6 +581,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       ratePct: rate,
     );
     unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
+    adService.onAction();
     HapticFeedback.mediumImpact();
 
     final trigger = await paywallSession.recordAction();
