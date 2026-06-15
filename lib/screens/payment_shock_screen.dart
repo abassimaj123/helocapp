@@ -453,15 +453,20 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
 
         CalcwiseStaggerItem(
           index: 1,
-          child: Row(children: [
-            Expanded(
-                child: _metricCard(isEs ? 'Choque' : 'Shock',
-                    '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-                child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                    '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
-          ]),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                    child: _metricCard(isEs ? 'Choque' : 'Shock',
+                        '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                    child: _metricCard(isEs ? 'Aumento' : 'Increase',
+                        '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         CalcwiseStaggerItem(

@@ -664,25 +664,25 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
+                            color: AppTheme.infoBlue.withValues(alpha: 0.08),
                             borderRadius:
                                 BorderRadius.circular(AppRadius.mdPlus),
-                            border: Border.all(color: Theme.of(context).colorScheme.primaryContainer),
+                            border: Border.all(color: AppTheme.infoBlueLight),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.info_outline_rounded,
-                                  color: Theme.of(context).colorScheme.primary, size: 16),
+                              const Icon(Icons.info_outline_rounded,
+                                  color: AppTheme.infoBlue, size: 16),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   isEs
                                       ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
                                       : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: AppTextSize.xs,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    color: AppTheme.infoBlueDark,
                                     height: 1.4,
                                   ),
                                 ),

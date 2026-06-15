@@ -450,8 +450,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       appBar: AppBar(
         title:
             Text(isEs ? 'Optimizador de Disposición' : 'Draw Period Optimizer'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [

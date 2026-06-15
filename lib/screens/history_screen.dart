@@ -54,12 +54,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.initState();
     AnalyticsService.instance.logScreenView('history');
     _load();
-    HistoryScreen.refreshNotifier.addListener(_load);
+    HistoryScreen.refreshNotifier.addListener(_silentRefresh);
   }
 
   @override
   void dispose() {
-    HistoryScreen.refreshNotifier.removeListener(_load);
+    HistoryScreen.refreshNotifier.removeListener(_silentRefresh);
     super.dispose();
   }
 
@@ -83,6 +83,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
         }
       }
     }
+  }
+
+  Future<void> _silentRefresh() async {
+    final rows = await DatabaseService.instance.getHistory();
+    if (mounted) setState(() => _history = rows);
   }
 
   Future<void> _delete(int id) async {
@@ -454,15 +459,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final results = row['results'] as Map<String, dynamic>;
     final createdAt = DateTime.parse(row['created_at'] as String);
 
-    final balance = (inputs['balance'] as num).toDouble();
-    final draw = (inputs['draw'] as num).toDouble();
-    final rate = (inputs['rate'] as num).toDouble();
-    final drawYears = (inputs['drawYears'] as num).toInt();
-    final repayYears = (inputs['repayYears'] as num).toInt();
-    final equity = (results['equity'] as num).toDouble();
-    final ltv = (results['ltv'] as num).toDouble();
-    final interestOnly = (results['interestOnly'] as num).toDouble();
-    final repayment = (results['repayment'] as num).toDouble();
+    final balance = (inputs['balance'] as num?)?.toDouble() ?? 0.0;
+    final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
+    final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
+    final drawYears = (inputs['drawYears'] as num?)?.toInt() ?? 10;
+    final repayYears = (inputs['repayYears'] as num?)?.toInt() ?? 20;
+    final equity = (results['equity'] as num?)?.toDouble() ?? 0.0;
+    final ltv = (results['ltv'] as num?)?.toDouble() ?? 0.0;
+    final interestOnly = (results['interestOnly'] as num?)?.toDouble() ?? 0.0;
+    final repayment = (results['repayment'] as num?)?.toDouble() ?? 0.0;
     final pinLabel = row['pin_label'] as String?;
 
     final humanLabel =
@@ -478,7 +483,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         side: pinned
             ? BorderSide(
                 color: AppTheme.primary.withValues(alpha: 0.5), width: 1.5)
-            : BorderSide(color: Theme.of(context).dividerColor),
+            : BorderSide(
+                color: AppTheme.primary.withValues(alpha: 0.18)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -489,7 +495,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           onDelete: () => _delete(id),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.mdPlus),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.mdPlus, vertical: AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

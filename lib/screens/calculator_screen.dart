@@ -843,52 +843,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: double.infinity,
-                            color:
-                                Theme.of(context).colorScheme.primaryContainer,
-                            padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                                AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isFr
-                                      ? 'Calculateur HELOC'
-                                      : (isEs
-                                          ? 'Calculadora HELOC'
-                                          : 'HELOC Calculator'),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  isFr
-                                      ? 'Calculez votre marge de crédit sur valeur domiciliaire'
-                                      : (isEs
-                                          ? 'Calcula tu línea de crédito sobre el valor de tu hogar'
-                                          : 'Calculate your home equity line of credit'),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                            .withValues(alpha: 0.8),
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             isEs
                                 ? 'Información de la Vivienda'
@@ -1170,7 +1124,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                         as int? ??
                                                     10;
                                             return Container(
-                                              margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+                                              margin: const EdgeInsets.only(top: AppSpacing.lg),
                                               decoration: BoxDecoration(
                                                 borderRadius: BorderRadius.circular(28),
                                                 boxShadow: [
@@ -1377,9 +1331,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                               padding: const EdgeInsets.all(
                                                   AppSpacing.md),
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primaryContainer,
+                                                color: AppTheme.infoBlue
+                                                    .withValues(alpha: 0.08),
                                                 borderRadius:
                                                     BorderRadius.circular(
                                                         AppRadius.mdPlus),
@@ -1714,10 +1667,10 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
         ]),
         const SizedBox(height: 12),
         SizedBox(
-          height: 152,
+          height: 168,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.symmetric(vertical: 4),
             itemCount: _cachedScenarios!.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (ctx, i) {
