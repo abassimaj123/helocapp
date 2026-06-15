@@ -78,12 +78,10 @@ Future<void> main() async {
   final saved = prefs.getString('language');
   if (saved != null) {
     isSpanishNotifier.value = saved == 'es';
-    isFrenchNotifier.value = saved == 'fr';
   } else {
     final locales = PlatformDispatcher.instance.locales;
     final lang = locales.isNotEmpty ? locales.first.languageCode : 'en';
     isSpanishNotifier.value = lang == 'es';
-    isFrenchNotifier.value = lang == 'fr';
   }
 
   // statusBarIconBrightness is set dynamically in the shell build()

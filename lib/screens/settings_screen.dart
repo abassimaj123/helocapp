@@ -17,7 +17,6 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _setLanguage(String lang) async {
     isSpanishNotifier.value = lang == 'es';
-    isFrenchNotifier.value = lang == 'fr';
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', lang);
   }
@@ -163,14 +162,6 @@ class SettingsScreen extends StatelessWidget {
                               label: 'Español',
                               selected: isEs,
                               onTap: () => _setLanguage('es'),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: _LangButton(
-                              label: 'Français',
-                              selected: isFr,
-                              onTap: () => _setLanguage('fr'),
                             ),
                           ),
                         ]),
