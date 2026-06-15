@@ -135,11 +135,13 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
   void initState() {
     super.initState();
     iapErrorNotifier.addListener(_onIapError);
+    iapRestoreResultNotifier.addListener(_onRestoreResult);
   }
 
   @override
   void dispose() {
     iapErrorNotifier.removeListener(_onIapError);
+    iapRestoreResultNotifier.removeListener(_onRestoreResult);
     super.dispose();
   }
 
@@ -150,6 +152,22 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       iapErrorNotifier.value = null;
+    });
+  }
+
+  void _onRestoreResult() {
+    final result = iapRestoreResultNotifier.value;
+    if (result == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final isEs = isSpanishNotifier.value;
+      final msg = result == 'restored'
+          ? (isEs ? '¡Premium restaurado!' : 'Premium restored!')
+          : (isEs ? 'No hay compras para restaurar.' : 'No purchases to restore.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+      );
+      iapRestoreResultNotifier.value = null;
     });
   }
 
