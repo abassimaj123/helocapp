@@ -439,10 +439,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       l1: _buildL1(inputs, results),
       l2: {'inputs': inputs, 'results': results},
       onSaved: () {
-        if (mounted) setState(() {});
+        if (mounted) {
+          setState(() {});
+          HistoryScreen.refreshNotifier.value++;
+        }
       },
     );
-    HistoryScreen.refreshNotifier.value++;
   }
 
   // ── SmartHistory payload helpers ───────────────────────────────────────────
@@ -1560,96 +1562,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                   ),
                           ),
 
-                          // ── More Tools — shown after results ─────────────
-                          const SizedBox(height: 16),
-                          Text(
-                            isEs ? 'Más herramientas' : 'More Tools',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (_, __, ___) =>
-                                    const DrawOptimizerScreen(),
-                                transitionsBuilder: (_, anim, __, child) =>
-                                    FadeTransition(opacity: anim, child: child),
-                                transitionDuration: AppDuration.base,
-                              ),
-                            ),
-                            icon: const Icon(
-                                Icons.account_balance_wallet_rounded,
-                                size: 18),
-                            label: Text(
-                                isEs ? 'Draw Optimizer' : 'Draw Optimizer',
-                                style:
-                                    const TextStyle(fontSize: AppTextSize.md)),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 44),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.lg)),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (_, __, ___) =>
-                                    const PaymentShockScreen(),
-                                transitionsBuilder: (_, anim, __, child) =>
-                                    FadeTransition(opacity: anim, child: child),
-                                transitionDuration: AppDuration.base,
-                              ),
-                            ),
-                            icon: const Icon(Icons.bolt_rounded, size: 18),
-                            label: Text(
-                                isEs ? 'Choque de Pago' : 'Payment Shock',
-                                style:
-                                    const TextStyle(fontSize: AppTextSize.md)),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 44),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.lg)),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (_, __, ___) =>
-                                    const HelocVsCashoutScreen(),
-                                transitionsBuilder: (_, anim, __, child) =>
-                                    FadeTransition(opacity: anim, child: child),
-                                transitionDuration: AppDuration.base,
-                              ),
-                            ),
-                            icon:
-                                const Icon(Icons.swap_horiz_rounded, size: 18),
-                            label: Text(
-                                isEs
-                                    ? 'HELOC vs Refi con Retiro'
-                                    : 'HELOC vs Cash-Out Refi',
-                                style:
-                                    const TextStyle(fontSize: AppTextSize.md)),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 44),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.lg)),
-                            ),
-                          ),
-
                           // Save button + Compare Options — shown when results are available
                           if (_results != null) ...[
                             const SizedBox(height: 16),
@@ -1829,10 +1741,11 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                       width: 1.5),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       labelForOffset(offset, isEs),
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.xs,
                         fontWeight: FontWeight.w600,
@@ -1844,6 +1757,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                     const SizedBox(height: 4),
                     Text(
                       '${scenarioRate.toStringAsFixed(1)}%',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.subtitle,
                         fontWeight: FontWeight.w900,
@@ -1854,6 +1768,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                     // Draw payment
                     Text(
                       isEs ? 'Interés' : 'Draw pmt',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.xs,
                         color: isCurrent
@@ -1863,6 +1778,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                     ),
                     Text(
                       '${AmountFormatter.ui(drawPmt, 'USD')}/mo',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.sm,
                         fontWeight: FontWeight.w700,
@@ -1873,6 +1789,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                     // Repayment
                     Text(
                       isEs ? 'Amortizado' : 'Repay pmt',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.xs,
                         color: isCurrent
@@ -1882,6 +1799,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                     ),
                     Text(
                       '${AmountFormatter.ui(repayPmt, 'USD')}/mo',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: AppTextSize.sm,
                         fontWeight: FontWeight.w700,

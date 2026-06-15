@@ -1,6 +1,6 @@
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat, NumberFormat;
+import 'package:intl/intl.dart' show DateFormat;
 
 import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
@@ -30,7 +30,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _loading = true;
 
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
-  final _fmtPct = NumberFormat('##0.0#');
 
   String _dateGroup(DateTime d, bool isEs) {
     final now = DateTime.now();
@@ -479,7 +478,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         side: pinned
             ? BorderSide(
                 color: AppTheme.primary.withValues(alpha: 0.5), width: 1.5)
-            : BorderSide.none,
+            : BorderSide(color: Theme.of(context).dividerColor),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -579,41 +578,49 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       size: 18, color: AppTheme.labelGray),
               ]),
               const SizedBox(height: AppSpacing.sm),
-              _HistoryRow(
-                label: isEs ? 'Hipoteca actual' : 'Mortgage Balance',
-                value: AmountFormatter.ui(balance, 'USD'),
-              ),
-              _HistoryRow(
-                label: isEs ? 'Monto dispuesto' : 'Draw Amount',
-                value: AmountFormatter.ui(draw, 'USD'),
-              ),
-              _HistoryRow(
-                label: isEs ? 'Tasa' : 'Rate',
-                value: '${rate.toStringAsFixed(2)}%',
-              ),
-              _HistoryRow(
-                label: isEs ? 'Período (disp/pago)' : 'Period (draw/repay)',
-                value: '${drawYears}y / ${repayYears}y',
-              ),
-              const Divider(height: 14),
-              _HistoryRow(
-                label: isEs ? 'Capital disponible' : 'Available Equity',
-                value: AmountFormatter.ui(equity, 'USD'),
-                color: AppTheme.success,
-              ),
-              _HistoryRow(
-                label: 'LTV',
-                value: '${_fmtPct.format(ltv)}%',
-              ),
-              _HistoryRow(
-                label: isEs ? 'Pago solo interés' : 'Interest-Only Payment',
-                value: AmountFormatter.ui(interestOnly, 'USD'),
-                bold: true,
-                color: AppTheme.primary,
-              ),
-              _HistoryRow(
-                label: isEs ? 'Pago amortizado' : 'Repayment Payment',
-                value: AmountFormatter.ui(repayment, 'USD'),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isEs ? 'Pago interés' : 'Interest pmt',
+                          style: const TextStyle(
+                              fontSize: AppTextSize.xs,
+                              color: AppTheme.labelGray),
+                        ),
+                        Text(
+                          '${AmountFormatter.ui(interestOnly, 'USD')}/mo',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: AppTextSize.bodyMd,
+                              color: AppTheme.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          isEs ? 'Capital disp.' : 'Equity',
+                          style: const TextStyle(
+                              fontSize: AppTextSize.xs,
+                              color: AppTheme.labelGray),
+                        ),
+                        Text(
+                          AmountFormatter.ui(equity, 'USD'),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: AppTextSize.bodyMd,
+                              color: AppTheme.success),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -694,38 +701,4 @@ class _ShimmerBox extends StatelessWidget {
       ),
     );
   }
-}
-
-class _HistoryRow extends StatelessWidget {
-  final String label, value;
-  final bool bold;
-  final Color? color;
-
-  const _HistoryRow({
-    required this.label,
-    required this.value,
-    this.bold = false,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: AppTextSize.md, color: AppTheme.labelGray)),
-            ),
-            const SizedBox(width: 8),
-            Text(value,
-                style: TextStyle(
-                    fontSize: AppTextSize.md,
-                    fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-                    color: color)),
-          ],
-        ),
-      );
 }
