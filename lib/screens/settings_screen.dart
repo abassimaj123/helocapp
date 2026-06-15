@@ -39,7 +39,11 @@ class SettingsScreen extends StatelessWidget {
             final headerLabel = isFr
                 ? 'LANGUE / LANGUAGE'
                 : (isEs ? 'IDIOMA / LANGUAGE' : 'LANGUAGE / IDIOMA');
-            return Column(
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(isEs ? 'Ajustes' : 'Settings'),
+              ),
+              body: Column(
               children: [
                 Expanded(
                   child: ListView(
@@ -269,6 +273,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const CalcwiseAdFooter(),
               ],
+              ),
             );
           },
         );

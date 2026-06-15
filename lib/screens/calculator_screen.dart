@@ -1234,6 +1234,11 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                           }),
                                           const SizedBox(height: 8),
                                           Card(
+                                            elevation: 0,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(AppRadius.xl),
+                                              side: BorderSide(color: Theme.of(context).dividerColor),
+                                            ),
                                             child: Padding(
                                               padding: const EdgeInsets.all(
                                                   AppSpacing.lg),
@@ -1942,6 +1947,11 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
     }
 
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -2253,6 +2263,11 @@ class _RateSensitivityWidgetState extends State<_RateSensitivityWidget> {
             : AppTheme.primary;
 
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -2571,6 +2586,11 @@ class _IoVsFullyAmortizingCard extends StatelessWidget {
     // IO: lower monthly during draw but higher total; FA: higher monthly but lower total
 
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
