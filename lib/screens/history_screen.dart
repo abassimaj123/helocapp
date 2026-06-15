@@ -5,7 +5,6 @@ import 'package:intl/intl.dart' show DateFormat;
 import '../core/db/database_service.dart';
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
-import '../core/freemium/iap_service.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
@@ -77,8 +76,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           mounted &&
           !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
+          AnalyticsService.instance.logPaywallSoftShown();
           PaywallSoft.show(context);
         } else {
+          AnalyticsService.instance.logPaywallHardShown();
           PaywallHard.show(context);
         }
       }
@@ -157,6 +158,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
     );
     if (confirmed == true) {
+      smartHistoryService.cancelPendingSave('helocapp', 'calculator');
+      smartHistoryService.cancelPendingSave('helocapp', 'compare');
+      smartHistoryService.cancelPendingSave('helocapp', 'draw_schedule');
+      smartHistoryService.cancelPendingSave('helocapp', 'draw_optimizer');
+      smartHistoryService.cancelPendingSave('helocapp', 'heloc_vs_cashout');
+      smartHistoryService.cancelPendingSave('helocapp', 'payment_shock');
       await DatabaseService.instance.clearHistory();
       await _load();
     }
@@ -408,7 +415,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => IAPService.instance.buy(),
+                      onPressed: () {
+                        AnalyticsService.instance.logPaywallSoftShown();
+                        PaywallSoft.show(context);
+                      },
                       style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap),

@@ -18,7 +18,6 @@ import 'core/services/crashlytics_service.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/strings_en.dart';
 import 'l10n/strings_es.dart';
-import 'l10n/strings_fr.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/compare_screen.dart';
 import 'screens/draw_schedule_screen.dart';
@@ -34,6 +33,8 @@ import 'widgets/paywall_soft.dart';
 final paywallSession = PaywallSessionService(
   appKey: 'helocapp',
   hasFullAccess: () => freemiumService.hasFullAccess,
+  softSessionStart: 4,
+  hardSessionStart: 7,
 );
 
 final adService = CalcwiseAdService(
@@ -49,7 +50,6 @@ final adService = CalcwiseAdService(
 );
 
 final ValueNotifier<bool> isSpanishNotifier = ValueNotifier<bool>(false);
-final ValueNotifier<bool> isFrenchNotifier = ValueNotifier<bool>(false);
 
 /// Smart history (auto-save ring buffer + pinned scenarios).
 final smartHistoryService = SmartHistoryService(
@@ -69,6 +69,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await AnalyticsService.instance.initialize();
   unawaited(CalcwiseRemoteConfig.initialize());
   await CalcwiseTax.init(remoteFetcher: calcwiseTaxRemoteFetch);
   await CrashlyticsService.init();
@@ -96,8 +97,12 @@ Future<void> main() async {
 
   try {
     await requestCalcwiseConsent();
-    await MobileAds.instance.initialize();
-    if (AdConfig.adsEnabled) await adService.initialize();
+    if (AdConfig.adsEnabled) await adService.initialize(); // MobileAds.initialize() called internally
+    await MobileAds.instance.updateRequestConfiguration(
+      RequestConfiguration(
+        testDeviceIds: ['FD16D4616C3A21C3ACE5E48F8DC9C1DC'],
+      ),
+    );
   } catch (e) {
     debugPrint('AdMob init error: $e');
   }
@@ -114,6 +119,7 @@ Future<void> main() async {
     freemium: freemiumService,
     isSpanishNotifier: isSpanishNotifier,
   );
+  PaywallHard.setAnalytics(AnalyticsService.instance);
   runApp(const _IapErrorWrapper());
 }
 
@@ -159,16 +165,11 @@ class HELOCApp extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isEs, __) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: isFrenchNotifier,
-          builder: (_, isFr, __) {
-            return ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeModeService.notifier,
-              builder: (context, themeMode, child) => MaterialApp(
-                title: isFr
-                    ? AppStringsFR.appName
-                    : (isEs ? AppStringsES.appName : AppStringsEN.appName),
-                theme: AppTheme.theme,
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: themeModeService.notifier,
+          builder: (context, themeMode, child) => MaterialApp(
+                title: isEs ? AppStringsES.appName : AppStringsEN.appName,
+                theme: AppTheme.light,
                 darkTheme: AppTheme.dark,
                 themeMode: themeMode,
                 debugShowCheckedModeBanner: false,
@@ -194,8 +195,6 @@ class HELOCApp extends StatelessWidget {
                   '/heloc-vs-cashout': (_) => const HelocVsCashoutScreen(),
                 },
               ),
-            );
-          },
         );
       },
     );
@@ -225,8 +224,8 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _wasPremium = freemiumService.hasFullAccess;
+    unawaited(AnalyticsService.instance.setUserPremium(freemiumService.hasFullAccess));
     isSpanishNotifier.addListener(_onLangChange);
-    isFrenchNotifier.addListener(_onLangChange);
     freemiumService.isPremiumNotifier.addListener(_onPremiumChange);
     tabSwitchNotifier.addListener(_onTabSwitch);
     WidgetsBinding.instance.addPostFrameCallback(
@@ -236,7 +235,6 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     isSpanishNotifier.removeListener(_onLangChange);
-    isFrenchNotifier.removeListener(_onLangChange);
     freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
     tabSwitchNotifier.removeListener(_onTabSwitch);
     super.dispose();
@@ -258,12 +256,12 @@ class _MainShellState extends State<MainShell> {
       showPremiumWelcomeSnackBar(context, isSpanish: isSpanishNotifier.value);
     }
     _wasPremium = now;
+    unawaited(AnalyticsService.instance.setUserPremium(now));
   }
 
   @override
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: CalcwiseTheme.of(context).surface,
@@ -275,24 +273,28 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isFr
-            ? AppStringsFR.appName
-            : (isEs ? AppStringsES.appName : AppStringsEN.appName)),
+        title: Text(isEs ? AppStringsES.appName : AppStringsEN.appName),
         actions: [
           CalcwiseAppBarActions(
             freemium: freemiumService,
             session: paywallSession,
-            onSettings: () => Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const SettingsScreen(),
-                transitionsBuilder: (_, anim, __, child) =>
-                    FadeTransition(opacity: anim, child: child),
-                transitionDuration: AppDuration.base,
-              ),
-            ),
+            onSettings: () {
+              AnalyticsService.instance.logScreenView('settings');
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) => const SettingsScreen(),
+                  transitionsBuilder: (_, anim, __, child) =>
+                      FadeTransition(opacity: anim, child: child),
+                  transitionDuration: AppDuration.base,
+                ),
+              );
+            },
             onRewardAd: () => CalcwiseRewardAdSheet.show(context),
-            onPremium: () => PaywallHard.show(context),
+            onPremium: () {
+              AnalyticsService.instance.logPaywallHardShown();
+              PaywallHard.show(context);
+            },
           ),
         ],
       ),
@@ -312,6 +314,7 @@ class _MainShellState extends State<MainShell> {
           if (i == _index) return;
           setState(() => _index = i);
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
+          adService.onAction();
           // Calculator tab (index 0) is always free — no action recording.
           if (i == 0) return;
           final trigger = await paywallSession.recordAction();

@@ -12,14 +12,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
-  void initState() {
-    super.initState();
-    try {
-      AnalyticsService.instance.logAppOpen();
-    } catch (_) {}
-  }
-
-  @override
   Widget build(BuildContext context) => CalcwiseSplash(
         appName: 'HELOC',
         tagline: 'Unlock your home equity',

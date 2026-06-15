@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
@@ -95,17 +97,18 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
       'repay_years': repayYears.toDouble(),
     });
 
+    final isEs = isSpanishNotifier.value;
     await smartHistoryService.saveScenario(
       appKey: 'helocapp',
       screenId: 'draw_schedule',
       inputHash: hash,
       l1: {
-        'Draw Amount': AmountFormatter.ui(draw, 'USD'),
-        'HELOC Rate': '${rate.toStringAsFixed(2)}%',
-        'Draw Period': '${drawYears}y',
-        'Repay Period': '${repayYears}y',
-        'Draw Payment': AmountFormatter.ui(drawPayment, 'USD'),
-        'Total Interest': AmountFormatter.ui(totalInterest, 'USD'),
+        isEs ? 'Monto de Disposición' : 'Draw Amount': AmountFormatter.ui(draw, 'USD'),
+        isEs ? 'Tasa HELOC' : 'HELOC Rate': '${rate.toStringAsFixed(2)}%',
+        isEs ? 'Período de Disposición' : 'Draw Period': '${drawYears}y',
+        isEs ? 'Período de Repago' : 'Repay Period': '${repayYears}y',
+        isEs ? 'Pago durante Disposición' : 'Draw Payment': AmountFormatter.ui(drawPayment, 'USD'),
+        isEs ? 'Interés Total' : 'Total Interest': AmountFormatter.ui(totalInterest, 'USD'),
       },
       l2: {
         'inputs': {
@@ -122,7 +125,9 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
         },
       },
       label: label ??
-          'Draw Schedule \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%',
+          (isEs
+              ? 'Calendario \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%'
+              : 'Draw Schedule \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%'),
     );
     HistoryScreen.refreshNotifier.value++;
   }
@@ -147,14 +152,17 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     });
 
     AnalyticsService.instance.logDrawScheduleViewed();
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
     if (isManual) {
       final trigger = await paywallSession.recordAction();
       if (trigger != PaywallTrigger.none &&
           mounted &&
           !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
+          AnalyticsService.instance.logPaywallSoftShown();
           PaywallSoft.show(context);
         } else {
+          AnalyticsService.instance.logPaywallHardShown();
           PaywallHard.show(context);
         }
       }
@@ -162,7 +170,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   }
 
   Future<void> _exportPdf(BuildContext context, bool isSpanish) async {
-    if (!freemiumService.hasFullAccess && !freemiumService.isRewarded) return;
+    if (!freemiumService.hasFullAccess && !freemiumService.isRewarded) {
+      await PaywallHard.show(context);
+      return;
+    }
     final doc = pw.Document();
     final schedule = _schedule!;
     final draw = _draw!;
@@ -322,7 +333,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                           description: isEs
                               ? 'Accede al calendario completo, gráfico de balance y exportación PDF.'
                               : 'Access the full amortization schedule, balance chart, and PDF export.',
-                          onUnlock: () => PaywallHard.show(context),
+                          onUnlock: () {
+                            AnalyticsService.instance.logPaywallHardShown();
+                            PaywallHard.show(context);
+                          },
                           price: IAPService.instance.localizedPrice,
                         );
                       }

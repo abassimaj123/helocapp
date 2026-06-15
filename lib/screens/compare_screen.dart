@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -125,12 +127,13 @@ class _CompareScreenState extends State<CompareScreen>
 
   Map<String, String> _buildL1(_CompareResult cr) {
     final r = cr.heloc;
+    final isEs = isSpanishNotifier.value;
     return {
-      'HELOC Total Interest': AmountFormatter.ui(r.helocTotalInterest, 'USD'),
-      'Refi Total Interest': AmountFormatter.ui(r.refiTotalInterest, 'USD'),
-      'Loan Total Interest': AmountFormatter.ui(cr.loanTotalInterest, 'USD'),
-      'HELOC Monthly': AmountFormatter.ui(r.helocDrawPayment, 'USD'),
-      'Refi Monthly': AmountFormatter.ui(r.refiMonthlyPayment, 'USD'),
+      isEs ? 'Interés Total HELOC' : 'HELOC Total Interest': AmountFormatter.ui(r.helocTotalInterest, 'USD'),
+      isEs ? 'Interés Total Refi' : 'Refi Total Interest': AmountFormatter.ui(r.refiTotalInterest, 'USD'),
+      isEs ? 'Interés Total Préstamo' : 'Loan Total Interest': AmountFormatter.ui(cr.loanTotalInterest, 'USD'),
+      isEs ? 'HELOC Mensual' : 'HELOC Monthly': AmountFormatter.ui(r.helocDrawPayment, 'USD'),
+      isEs ? 'Refi Mensual' : 'Refi Monthly': AmountFormatter.ui(r.refiMonthlyPayment, 'USD'),
     };
   }
 
@@ -191,7 +194,9 @@ class _CompareScreenState extends State<CompareScreen>
       inputHash: hash,
       l1: _buildL1(_result!),
       l2: _buildL2(_result!),
-      label: label ?? 'Compare \$${(_parseN(_drawCtrl.text) / 1000).toStringAsFixed(0)}k',
+      label: label ?? (isSpanishNotifier.value
+          ? 'Comparar \$${(_parseN(_drawCtrl.text) / 1000).toStringAsFixed(0)}k'
+          : 'Compare \$${(_parseN(_drawCtrl.text) / 1000).toStringAsFixed(0)}k'),
     );
   }
 
@@ -199,7 +204,6 @@ class _CompareScreenState extends State<CompareScreen>
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
     Future<void> doExport() => PdfExportService.exportCompare(
           context: context,
           drawAmount: _parseN(_drawCtrl.text),
@@ -220,7 +224,7 @@ class _CompareScreenState extends State<CompareScreen>
           loanTotalInterest: r.loanTotalInterest,
           bestOption: '',
           isEs: isEs,
-          isFr: isFr,
+          isFr: false,
         );
     if (freemiumService.hasFullAccess) {
       await doExport();
@@ -266,13 +270,16 @@ class _CompareScreenState extends State<CompareScreen>
       helocRate: _parseN(_helocRateCtrl.text),
       refiRate: _parseN(_refiRateCtrl.text),
     );
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
     if (isManual) {
       adService.onAction();
       final trigger = await paywallSession.recordAction();
       if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
+        AnalyticsService.instance.logPaywallHardShown();
         PaywallHard.show(context);
       } else if (trigger == PaywallTrigger.soft &&
           !freemiumService.hasFullAccess) {
+        AnalyticsService.instance.logPaywallSoftShown();
         PaywallSoft.show(context);
       }
     }

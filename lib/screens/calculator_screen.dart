@@ -328,7 +328,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   // Live computed equity
   double _availableEquity = 200000;
-  double _ltvPct = 40;
 
   // IO vs P&I toggle
   _PaymentMode _paymentMode = _PaymentMode.interestOnly;
@@ -369,7 +368,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     if (mounted)
       setState(() {
         _availableEquity = equity;
-        _ltvPct = ltv;
       });
   }
 
@@ -590,8 +588,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         mounted &&
         !freemiumService.hasFullAccess) {
       if (trigger == PaywallTrigger.soft) {
+        AnalyticsService.instance.logPaywallSoftShown();
         PaywallSoft.show(context);
       } else {
+        AnalyticsService.instance.logPaywallHardShown();
         PaywallHard.show(context);
       }
     }
@@ -759,6 +759,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
     if (_results == null) return;
 
     if (!freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallHardShown();
       await PaywallHard.show(context);
       return;
     }
@@ -824,7 +825,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
   @override
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
+    const isFr = false;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -843,6 +844,405 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // ── A. Result summary (TOP) ───────────────────────────────
+                          AnimatedSwitcher(
+                            duration: AppDuration.base,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.04),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            ),
+                            child: _results != null
+                                ? KeyedSubtree(
+                                    key: const ValueKey('results_top'),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Row header: "Results" title + Share + PDF
+                                        Row(children: [
+                                          Expanded(
+                                            child: Text(
+                                              isEs ? 'Resultados' : 'Results',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize:
+                                                      AppTextSize.bodyLg),
+                                            ),
+                                          ),
+                                          // Share button
+                                          IconButton(
+                                            icon: const Icon(
+                                                Icons.share_rounded,
+                                                color: AppTheme.primary),
+                                            tooltip: isEs ? 'Compartir' : 'Share',
+                                            onPressed: () =>
+                                                _share(isEs, isFr: isFr),
+                                          ),
+                                          // PDF export button
+                                          ValueListenableBuilder<bool>(
+                                            valueListenable: freemiumService
+                                                .hasFullAccessNotifier,
+                                            builder: (_, isPremium, __) =>
+                                                IconButton(
+                                              icon: Icon(
+                                                Icons.picture_as_pdf_rounded,
+                                                color: isPremium
+                                                    ? AppTheme.primary
+                                                    : AppTheme.labelGray,
+                                              ),
+                                              tooltip: isPremium
+                                                  ? (isEs
+                                                      ? AppStringsES.exportPdf
+                                                      : AppStringsEN.exportPdf)
+                                                  : (isEs
+                                                      ? AppStringsES
+                                                          .exportLocked
+                                                      : AppStringsEN
+                                                          .exportLocked),
+                                              onPressed: () =>
+                                                  _exportPdf(isEs, isFr: isFr),
+                                            ),
+                                          ),
+                                        ]),
+                                        const SizedBox(height: 12),
+
+                                        // ── Mode-aware primary payment card ──────────────────
+                                        Builder(builder: (ctx) {
+                                          final isIO = _paymentMode ==
+                                              _PaymentMode.interestOnly;
+                                          final drawPayment = isIO
+                                              ? (_results!['interestOnly']
+                                                      as double? ??
+                                                  0)
+                                              : (_results!['fullPI']
+                                                      as double? ??
+                                                  0);
+                                          final totalInt = isIO
+                                              ? (_results!['totalInterest']
+                                                      as double? ??
+                                                  0)
+                                              : (_results![
+                                                          'totalInterestFullPI']
+                                                      as double? ??
+                                                  0);
+                                          final equity =
+                                              _results!['equity'] as double? ??
+                                                  0;
+                                          final drawYears =
+                                              _results!['drawYears'] as int? ??
+                                                  10;
+                                          return Container(
+                                            margin: const EdgeInsets.only(
+                                                top: AppSpacing.lg),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Theme.of(ctx)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.3),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: CalcwiseHeroCard(
+                                              label: isIO
+                                                  ? (isEs
+                                                      ? 'Pago Solo Interés'
+                                                      : 'Interest-Only Payment')
+                                                  : (isEs
+                                                      ? 'Pago P&I'
+                                                      : 'P&I Payment'),
+                                              value: AmountFormatter.ui(
+                                                  drawPayment, 'USD'),
+                                              rawValue: drawPayment,
+                                              valueFormatter: (v) =>
+                                                  AmountFormatter.ui(v, 'USD'),
+                                              secondary: isIO
+                                                  ? (isEs
+                                                      ? '$drawYears años de disposición'
+                                                      : '$drawYears-yr draw period')
+                                                  : (isEs
+                                                      ? 'P&I desde mes 1'
+                                                      : 'P&I from month 1'),
+                                              backgroundColor: AppTheme.primary,
+                                              stats: [
+                                                (
+                                                  label: isEs
+                                                      ? 'Interés total'
+                                                      : 'Total Interest',
+                                                  value: AmountFormatter.ui(
+                                                      totalInt, 'USD')
+                                                ),
+                                                (
+                                                  label: isEs
+                                                      ? 'Capital disponible'
+                                                      : 'Available Equity',
+                                                  value: AmountFormatter.ui(
+                                                      equity, 'USD')
+                                                ),
+                                              ],
+                                              rawStats: [
+                                                (
+                                                  label: isEs
+                                                      ? 'Interés total'
+                                                      : 'Total Interest',
+                                                  value: totalInt,
+                                                  formatter: (v) =>
+                                                      AmountFormatter.ui(
+                                                          v, 'USD'),
+                                                ),
+                                                (
+                                                  label: isEs
+                                                      ? 'Capital disponible'
+                                                      : 'Available Equity',
+                                                  value: equity,
+                                                  formatter: (v) =>
+                                                      AmountFormatter.ui(
+                                                          v, 'USD'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                        const SizedBox(height: 8),
+                                        Card(
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.xl),
+                                            side: BorderSide(
+                                                color: Theme.of(context)
+                                                    .dividerColor),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(
+                                                AppSpacing.lg),
+                                            child: Column(children: [
+                                              MetricRow(
+                                                label: isEs
+                                                    ? 'Capital disponible (85% LTV)'
+                                                    : 'Available Equity (85% LTV)',
+                                                value: AmountFormatter.ui(
+                                                    (_results!['equity']
+                                                            as double?) ??
+                                                        0.0,
+                                                    'USD'),
+                                                valueColor: AppTheme.success,
+                                              ),
+                                              const Divider(height: 16),
+                                              MetricRow(
+                                                label: isEs
+                                                    ? 'Capacidad máx. préstamo (85%)'
+                                                    : 'Max Borrow Capacity (85%)',
+                                                value: AmountFormatter.ui(
+                                                    (_results!['maxBorrow85']
+                                                            as double?) ??
+                                                        0.0,
+                                                    'USD'),
+                                                valueColor: AppTheme.primary,
+                                              ),
+                                              const Divider(height: 16),
+                                              MetricRow(
+                                                label: isEs
+                                                    ? 'LTV actual'
+                                                    : 'Current LTV',
+                                                value:
+                                                    '${_fmtPct.format(_results!['ltv'])}%',
+                                                valueColor:
+                                                    (_results!['ltv']
+                                                                as double) >
+                                                            85
+                                                        ? AppTheme.error
+                                                        : AppTheme.labelGray,
+                                              ),
+                                              Builder(builder: (ctx) {
+                                                final ltv =
+                                                    _results!['ltv'] as double;
+                                                final Color ltvTrafficColor;
+                                                final String ltvTrafficLabel;
+                                                if (ltv < 70) {
+                                                  ltvTrafficColor =
+                                                      CalcwiseTheme.of(ctx)
+                                                          .successGreen;
+                                                  ltvTrafficLabel = isEs
+                                                      ? 'LTV conservador — excelente posición de crédito'
+                                                      : 'Conservative LTV — excellent borrowing position';
+                                                } else if (ltv <= 80) {
+                                                  ltvTrafficColor =
+                                                      CalcwiseTheme.of(ctx)
+                                                          .successGreen;
+                                                  ltvTrafficLabel = isEs
+                                                      ? 'LTV estándar — califica para las mejores tasas'
+                                                      : 'Standard LTV — qualifies for best rates';
+                                                } else if (ltv <= 85) {
+                                                  ltvTrafficColor =
+                                                      CalcwiseTheme.of(ctx)
+                                                          .warningOrange;
+                                                  ltvTrafficLabel = isEs
+                                                      ? 'LTV elevado — puede requerir PMI o tasas más altas'
+                                                      : 'Elevated LTV — may require PMI or higher rates';
+                                                } else {
+                                                  ltvTrafficColor =
+                                                      CalcwiseTheme.of(ctx)
+                                                          .errorRed;
+                                                  ltvTrafficLabel = isEs
+                                                      ? 'LTV alto — la mayoría de prestamistas no aprobarán el HELOC'
+                                                      : 'High LTV — most lenders won\'t approve HELOC';
+                                                }
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 4, bottom: 4),
+                                                  child: Row(children: [
+                                                    Container(
+                                                      width: 10,
+                                                      height: 10,
+                                                      decoration: BoxDecoration(
+                                                        color: ltvTrafficColor,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Expanded(
+                                                      child: Text(
+                                                        ltvTrafficLabel,
+                                                        style: TextStyle(
+                                                          fontSize:
+                                                              AppTextSize.xs,
+                                                          color:
+                                                              ltvTrafficColor,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ]),
+                                                );
+                                              }),
+                                              const Divider(height: 16),
+                                              MetricRow(
+                                                label: _paymentMode ==
+                                                        _PaymentMode.interestOnly
+                                                    ? (isEs
+                                                        ? 'Interés total estimado'
+                                                        : 'Total Interest (Estimated)')
+                                                    : (isEs
+                                                        ? 'Interés total (P&I completo)'
+                                                        : 'Total Interest (Full P&I)'),
+                                                value: AmountFormatter.ui(
+                                                  (_paymentMode ==
+                                                              _PaymentMode
+                                                                  .interestOnly
+                                                          ? _results![
+                                                              'totalInterest']
+                                                          : _results![
+                                                              'totalInterestFullPI'])
+                                                      as double? ??
+                                                      0.0,
+                                                  'USD',
+                                                ),
+                                                valueColor: AppTheme.errorDark,
+                                              ),
+                                            ]),
+                                          ),
+                                        ),
+                                        // Tax savings + info banner
+                                        ValueListenableBuilder<bool>(
+                                          valueListenable: isSpanishNotifier,
+                                          builder: (_, isSpanish, __) =>
+                                              Container(
+                                            margin: const EdgeInsets.only(
+                                                top: 12),
+                                            padding: const EdgeInsets.all(
+                                                AppSpacing.md),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.infoBlue
+                                                  .withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      AppRadius.mdPlus),
+                                              border: Border.all(
+                                                  color:
+                                                      AppTheme.infoBlueLight),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Icon(
+                                                    Icons.info_outline_rounded,
+                                                    color: AppTheme.infoBlue,
+                                                    size: 18),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        isSpanish
+                                                            ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
+                                                            : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
+                                                        style: TextStyle(
+                                                            fontSize:
+                                                                AppTextSize.sm,
+                                                            color: AppTheme
+                                                                .infoBlueDark,
+                                                            height: 1.4),
+                                                      ),
+                                                      if ((_results?['taxSavings']
+                                                                  as double? ??
+                                                              0) >
+                                                          0) ...[
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Text(
+                                                          isSpanish
+                                                              ? 'Ahorro fiscal estimado (${_taxBracket.toStringAsFixed(0)}%): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/año'
+                                                              : 'Est. tax savings (${_taxBracket.toStringAsFixed(0)}% bracket): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/year',
+                                                          style: TextStyle(
+                                                              fontSize:
+                                                                  AppTextSize
+                                                                      .sm,
+                                                              color: AppTheme
+                                                                  .infoBlueDark,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              height: 1.4),
+                                                        ),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 24),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink(
+                                    key: ValueKey('results_top_empty')),
+                          ),
+
+                          // ── B. Divider between results summary and form ───────────
+                          const Divider(height: 40),
+
+                          // ── C. Form fields ────────────────────────────────────────
                           Text(
                             isEs
                                 ? 'Información de la Vivienda'
@@ -877,16 +1277,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                 ? (isEs ? 'Valor inválido' : 'Invalid value')
                                 : null,
                           ),
-                          const SizedBox(height: 12),
-
-                          // Live equity hero card
-                          _EquityCard(
-                            availableEquity: _availableEquity,
-                            ltvPct: _ltvPct,
-                            isEs: isEs,
-                            fmtPct: _fmtPct,
-                          ),
-
                           const SizedBox(height: 24),
                           Text(
                             isEs ? 'Detalles del HELOC' : 'HELOC Details',
@@ -939,11 +1329,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                   RegExp(r'[0-9.]')),
                             ],
                             decoration: InputDecoration(
-                              labelText: isFr
-                                  ? "Tranche d'imposition"
-                                  : (isEs
-                                      ? 'Tramo Impositivo (%)'
-                                      : 'Tax Bracket (%)'),
+                              labelText: isEs ? 'Tramo Impositivo (%)' : 'Tax Bracket (%)',
                               hintText: '22',
                               suffixText: '%',
                             ),
@@ -955,11 +1341,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                             validator: (v) {
                               final val = double.tryParse(v ?? '');
                               if (val == null || val < 0 || val > 50) {
-                                return isFr
-                                    ? 'Valeur entre 0 et 50'
-                                    : (isEs
-                                        ? 'Valor entre 0 y 50'
-                                        : 'Enter 0–50');
+                                return isEs ? 'Valor entre 0 y 50' : 'Enter 0–50';
                               }
                               return null;
                             },
@@ -1015,508 +1397,83 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                 isEs ? AppStringsES.reset : AppStringsEN.reset),
                           ),
 
-                          // Results
-                          AnimatedSwitcher(
-                            duration: AppDuration.base,
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                              opacity: animation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 0.04),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              ),
-                            ),
-                            child: _results != null
-                                ? KeyedSubtree(
-                                    key: const ValueKey('results'),
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const SizedBox(height: 24),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  isEs
-                                                      ? AppStringsES.results
-                                                      : AppStringsEN.results,
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize:
-                                                          AppTextSize.subtitle),
-                                                ),
-                                              ),
-                                              // Share button
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons.share_rounded,
-                                                    color: AppTheme.primary),
-                                                tooltip: isFr
-                                                    ? 'Partager'
-                                                    : (isEs
-                                                        ? 'Compartir'
-                                                        : 'Share'),
-                                                onPressed: () =>
-                                                    _share(isEs, isFr: isFr),
-                                              ),
-                                              // PDF export button
-                                              ValueListenableBuilder<bool>(
-                                                valueListenable: freemiumService
-                                                    .hasFullAccessNotifier,
-                                                builder: (_, isPremium, __) =>
-                                                    IconButton(
-                                                  icon: Icon(
-                                                    Icons
-                                                        .picture_as_pdf_rounded,
-                                                    color: isPremium
-                                                        ? AppTheme.primary
-                                                        : AppTheme.labelGray,
-                                                  ),
-                                                  tooltip: isPremium
-                                                      ? (isEs
-                                                          ? AppStringsES
-                                                              .exportPdf
-                                                          : AppStringsEN
-                                                              .exportPdf)
-                                                      : (isEs
-                                                          ? AppStringsES
-                                                              .exportLocked
-                                                          : AppStringsEN
-                                                              .exportLocked),
-                                                  onPressed: () =>
-                                                      _exportPdf(isEs,
-                                                          isFr: isFr),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-
-                                          // ── Mode-aware primary payment card ──────────────────
-                                          Builder(builder: (ctx) {
-                                            final isIO = _paymentMode ==
-                                                _PaymentMode.interestOnly;
-                                            final drawPayment = isIO
-                                                ? (_results!['interestOnly']
-                                                        as double? ??
-                                                    0)
-                                                : (_results!['fullPI']
-                                                        as double? ??
-                                                    0);
-                                            final totalInt = isIO
-                                                ? (_results!['totalInterest']
-                                                        as double? ??
-                                                    0)
-                                                : (_results![
-                                                            'totalInterestFullPI']
-                                                        as double? ??
-                                                    0);
-                                            final equity = _results!['equity']
-                                                    as double? ??
-                                                0;
-                                            final drawYears =
-                                                _results!['drawYears']
-                                                        as int? ??
-                                                    10;
-                                            return Container(
-                                              margin: const EdgeInsets.only(top: AppSpacing.lg),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(28),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Theme.of(ctx).colorScheme.primary.withValues(alpha: 0.3),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: CalcwiseHeroCard(
-                                              label: isIO
-                                                  ? (isEs
-                                                      ? 'Pago Solo Interés'
-                                                      : 'Interest-Only Payment')
-                                                  : (isEs
-                                                      ? 'Pago P&I'
-                                                      : 'P&I Payment'),
-                                              value:
-                                                  AmountFormatter.ui(drawPayment, 'USD'),
-                                              rawValue: drawPayment,
-                                              valueFormatter: (v) => AmountFormatter.ui(v, 'USD'),
-                                              secondary: isIO
-                                                  ? (isEs
-                                                      ? '$drawYears años de disposición'
-                                                      : '$drawYears-yr draw period')
-                                                  : (isEs
-                                                      ? 'P&I desde mes 1'
-                                                      : 'P&I from month 1'),
-                                              backgroundColor: AppTheme.primary,
-                                              stats: [
-                                                (
-                                                  label: isEs
-                                                      ? 'Interés total'
-                                                      : 'Total Interest',
-                                                  value: AmountFormatter.ui(totalInt, 'USD')
-                                                ),
-                                                (
-                                                  label: isEs
-                                                      ? 'Capital disponible'
-                                                      : 'Available Equity',
-                                                  value: AmountFormatter.ui(equity, 'USD')
-                                                ),
-                                              ],
-                                              rawStats: [
-                                                (
-                                                  label: isEs
-                                                      ? 'Interés total'
-                                                      : 'Total Interest',
-                                                  value: totalInt,
-                                                  formatter: (v) => AmountFormatter.ui(v, 'USD'),
-                                                ),
-                                                (
-                                                  label: isEs
-                                                      ? 'Capital disponible'
-                                                      : 'Available Equity',
-                                                  value: equity,
-                                                  formatter: (v) => AmountFormatter.ui(v, 'USD'),
-                                                ),
-                                              ],
-                                            ),
-                                            );
-                                          }),
-                                          const SizedBox(height: 8),
-                                          Card(
-                                            elevation: 0,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(AppRadius.xl),
-                                              side: BorderSide(color: Theme.of(context).dividerColor),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                  AppSpacing.lg),
-                                              child: Column(children: [
-                                                MetricRow(
-                                                  label: isEs
-                                                      ? 'Capital disponible (85% LTV)'
-                                                      : 'Available Equity (85% LTV)',
-                                                  value: AmountFormatter.ui(
-                                                      (_results!['equity'] as double?) ?? 0.0, 'USD'),
-                                                  valueColor: AppTheme.success,
-                                                ),
-                                                const Divider(height: 16),
-                                                MetricRow(
-                                                  label: isEs
-                                                      ? 'Capacidad máx. préstamo (85%)'
-                                                      : 'Max Borrow Capacity (85%)',
-                                                  value: AmountFormatter.ui(
-                                                      (_results!['maxBorrow85'] as double?) ?? 0.0, 'USD'),
-                                                  valueColor: AppTheme.primary,
-                                                ),
-                                                const Divider(height: 16),
-                                                MetricRow(
-                                                  label: isEs
-                                                      ? 'LTV actual'
-                                                      : 'Current LTV',
-                                                  value:
-                                                      '${_fmtPct.format(_results!['ltv'])}%',
-                                                  valueColor: (_results!['ltv']
-                                                              as double) >
-                                                          85
-                                                      ? AppTheme.error
-                                                      : AppTheme.labelGray,
-                                                ),
-                                                Builder(builder: (ctx) {
-                                                  final ltv = _results!['ltv']
-                                                      as double;
-                                                  final Color ltvTrafficColor;
-                                                  final String ltvTrafficLabel;
-                                                  if (ltv < 70) {
-                                                    ltvTrafficColor =
-                                                        CalcwiseTheme.of(ctx)
-                                                            .successGreen;
-                                                    ltvTrafficLabel = isEs
-                                                        ? 'LTV conservador — excelente posición de crédito'
-                                                        : 'Conservative LTV — excellent borrowing position';
-                                                  } else if (ltv <= 80) {
-                                                    ltvTrafficColor =
-                                                        CalcwiseTheme.of(ctx)
-                                                            .successGreen;
-                                                    ltvTrafficLabel = isEs
-                                                        ? 'LTV estándar — califica para las mejores tasas'
-                                                        : 'Standard LTV — qualifies for best rates';
-                                                  } else if (ltv <= 85) {
-                                                    ltvTrafficColor =
-                                                        CalcwiseTheme.of(ctx)
-                                                            .warningOrange;
-                                                    ltvTrafficLabel = isEs
-                                                        ? 'LTV elevado — puede requerir PMI o tasas más altas'
-                                                        : 'Elevated LTV — may require PMI or higher rates';
-                                                  } else {
-                                                    ltvTrafficColor =
-                                                        CalcwiseTheme.of(ctx)
-                                                            .errorRed;
-                                                    ltvTrafficLabel = isEs
-                                                        ? 'LTV alto — la mayoría de prestamistas no aprobarán el HELOC'
-                                                        : 'High LTV — most lenders won\'t approve HELOC';
-                                                  }
-                                                  return Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 4, bottom: 4),
-                                                    child: Row(children: [
-                                                      Container(
-                                                        width: 10,
-                                                        height: 10,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              ltvTrafficColor,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Expanded(
-                                                        child: Text(
-                                                          ltvTrafficLabel,
-                                                          style: TextStyle(
-                                                            fontSize:
-                                                                AppTextSize.xs,
-                                                            color:
-                                                                ltvTrafficColor,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ]),
-                                                  );
-                                                }),
-                                                const Divider(height: 16),
-                                                MetricRow(
-                                                  label: _paymentMode ==
-                                                          _PaymentMode
-                                                              .interestOnly
-                                                      ? (isEs
-                                                          ? 'Interés total estimado'
-                                                          : 'Total Interest (Estimated)')
-                                                      : (isEs
-                                                          ? 'Interés total (P&I completo)'
-                                                          : 'Total Interest (Full P&I)'),
-                                                  value: AmountFormatter.ui(
-                                                    (_paymentMode ==
-                                                            _PaymentMode
-                                                                .interestOnly
-                                                        ? _results!['totalInterest']
-                                                        : _results!['totalInterestFullPI']) as double? ?? 0.0,
-                                                    'USD',
-                                                  ),
-                                                  valueColor:
-                                                      AppTheme.errorDark,
-                                                ),
-                                              ]),
-                                            ),
-                                          ),
-                                          // Tax savings + info banner
-                                          ValueListenableBuilder<bool>(
-                                            valueListenable: isSpanishNotifier,
-                                            builder: (_, isSpanish, __) =>
-                                                Container(
-                                              margin: const EdgeInsets.only(
-                                                  top: 12),
-                                              padding: const EdgeInsets.all(
-                                                  AppSpacing.md),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.infoBlue
-                                                    .withValues(alpha: 0.08),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        AppRadius.mdPlus),
-                                                border: Border.all(
-                                                    color:
-                                                        AppTheme.infoBlueLight),
-                                              ),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Icon(
-                                                      Icons
-                                                          .info_outline_rounded,
-                                                      color: AppTheme.infoBlue,
-                                                      size: 18),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          isSpanish
-                                                              ? 'Los intereses del HELOC pueden ser deducibles de impuestos si se usan para mejoras del hogar. Consulta a un asesor fiscal.'
-                                                              : 'HELOC interest may be tax-deductible if used for home improvements. Consult a tax advisor.',
-                                                          style: TextStyle(
-                                                              fontSize:
-                                                                  AppTextSize
-                                                                      .sm,
-                                                              color: AppTheme
-                                                                  .infoBlueDark,
-                                                              height: 1.4),
-                                                        ),
-                                                        if ((_results?['taxSavings']
-                                                                    as double? ??
-                                                                0) >
-                                                            0) ...[
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(
-                                                            isSpanish
-                                                                ? 'Ahorro fiscal estimado (${_taxBracket.toStringAsFixed(0)}%): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/año'
-                                                                : isFr
-                                                                    ? "Économies fiscales est. (${_taxBracket.toStringAsFixed(0)}%) : ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/an"
-                                                                    : 'Est. tax savings (${_taxBracket.toStringAsFixed(0)}% bracket): ${AmountFormatter.ui((_results!['taxSavings'] as double?) ?? 0.0, 'USD')}/year',
-                                                            style: TextStyle(
-                                                                fontSize:
-                                                                    AppTextSize
-                                                                        .sm,
-                                                                color: AppTheme
-                                                                    .infoBlueDark,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                height: 1.4),
-                                                          ),
-                                                        ],
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          // Smart Insights
-                                          InsightCard(
-                                            insights: InsightEngine.generate(
-                                              homeValue: (_results!['homeValue']
-                                                      as double? ??
-                                                  0),
-                                              mortgageBalance:
-                                                  (_results!['mortgage']
-                                                          as double? ??
-                                                      0),
-                                              helocLimit: (_results!['draw']
-                                                      as double? ??
-                                                  0),
-                                              annualRatePct: (_results!['rate']
-                                                      as double? ??
-                                                  0),
-                                              drawPayment:
-                                                  (_results!['interestOnly']
-                                                          as double? ??
-                                                      0),
-                                              repaymentPayment:
-                                                  (_results!['repayment']
-                                                          as double? ??
-                                                      0),
-                                              totalInterest:
-                                                  (_results!['totalInterest']
-                                                          as double? ??
-                                                      0),
-                                              isEs: isEs,
-                                            ),
-                                            isSpanish: isEs,
-                                          ),
-                                          const SizedBox(height: 24),
-                                          _buildRateScenarios(isEs),
-                                          const SizedBox(height: 24),
-                                          // HELOC vs Home Equity Loan comparison
-                                          _buildHelVsHeloc(isEs),
-                                          const SizedBox(height: 24),
-                                          // Feature 3 — Interest-Only vs Fully Amortizing
-                                          _IoVsFullyAmortizingCard(
-                                            draw: (_results!['draw']
-                                                    as double?) ??
-                                                0,
-                                            rate: (_results!['rate']
-                                                    as double?) ??
-                                                0,
-                                            drawYears: (_results!['drawYears']
-                                                    as int?) ??
-                                                10,
-                                            repayYears: (_results!['repayYears']
-                                                    as int?) ??
-                                                20,
-                                            isEs: isEs,
-                                          ),
-                                          const SizedBox(height: 24),
-                                          // Feature 1 — Rate Sensitivity sliders
-                                          ValueListenableBuilder<bool>(
-                                            valueListenable: freemiumService
-                                                .hasFullAccessNotifier,
-                                            builder: (_, isPremium, __) {
-                                              if (!isPremium) {
-                                                return CalcwisePremiumGate(
-                                                  title: isEs
-                                                      ? 'Sensibilidad de Tasa'
-                                                      : 'Rate Sensitivity',
-                                                  description: isEs
-                                                      ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
-                                                      : 'Simulate how rate changes impact your monthly payment and total interest.',
-                                                  onUnlock: () => PaywallHard.show(context),
-                                                  price: IAPService.instance.localizedPrice,
-                                                );
-                                              }
-                                              return _RateSensitivityWidget(
-                                                draw: (_results!['draw']
-                                                        as double?) ??
-                                                    0,
-                                                baseRate: (_results!['rate']
-                                                        as double?) ??
-                                                    0,
-                                                drawYears:
-                                                    (_results!['drawYears']
-                                                            as int?) ??
-                                                        10,
-                                                repayYears:
-                                                    (_results!['repayYears']
-                                                            as int?) ??
-                                                        20,
-                                                isEs: isEs,
-                                              );
-                                            },
-                                          ),
-                                        ]))
-                                : Padding(
-                                    key: const ValueKey('heloc_empty'),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 32),
-                                    child: Column(children: [
-                                      Icon(Icons.account_balance_rounded,
-                                          size: 48,
-                                          color: CalcwiseTheme.of(context)
-                                              .textSecondary
-                                              .withValues(alpha: 0.4)),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                          isEs
-                                              ? 'Ingresa los detalles de la propiedad para calcular'
-                                              : 'Enter property details to calculate',
-                                          style: TextStyle(
-                                              color: CalcwiseTheme.of(context)
-                                                  .textSecondary,
-                                              fontSize: AppTextSize.body)),
-                                    ]),
-                                  ),
-                          ),
-
-                          // Save button + Compare Options — shown when results are available
+                          // ── D. Tools & analysis (below form, only when results available) ──
                           if (_results != null) ...[
+                            const SizedBox(height: 24),
+                            // Smart Insights
+                            InsightCard(
+                              insights: InsightEngine.generate(
+                                homeValue: (_results!['homeValue']
+                                        as double? ??
+                                    0),
+                                mortgageBalance:
+                                    (_results!['mortgage'] as double? ?? 0),
+                                helocLimit:
+                                    (_results!['draw'] as double? ?? 0),
+                                annualRatePct:
+                                    (_results!['rate'] as double? ?? 0),
+                                drawPayment: (_results!['interestOnly']
+                                        as double? ??
+                                    0),
+                                repaymentPayment:
+                                    (_results!['repayment'] as double? ?? 0),
+                                totalInterest: (_results!['totalInterest']
+                                        as double? ??
+                                    0),
+                                isEs: isEs,
+                              ),
+                              isSpanish: isEs,
+                            ),
+                            const SizedBox(height: 24),
+                            _buildRateScenarios(isEs),
+                            const SizedBox(height: 24),
+                            // HELOC vs Home Equity Loan comparison
+                            _buildHelVsHeloc(isEs),
+                            const SizedBox(height: 24),
+                            // Feature 3 — Interest-Only vs Fully Amortizing
+                            _IoVsFullyAmortizingCard(
+                              draw: (_results!['draw'] as double?) ?? 0,
+                              rate: (_results!['rate'] as double?) ?? 0,
+                              drawYears:
+                                  (_results!['drawYears'] as int?) ?? 10,
+                              repayYears:
+                                  (_results!['repayYears'] as int?) ?? 20,
+                              isEs: isEs,
+                            ),
+                            const SizedBox(height: 24),
+                            // Feature 1 — Rate Sensitivity sliders
+                            ValueListenableBuilder<bool>(
+                              valueListenable:
+                                  freemiumService.hasFullAccessNotifier,
+                              builder: (_, isPremium, __) {
+                                if (!isPremium) {
+                                  return CalcwisePremiumGate(
+                                    title: isEs
+                                        ? 'Sensibilidad de Tasa'
+                                        : 'Rate Sensitivity',
+                                    description: isEs
+                                        ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
+                                        : 'Simulate how rate changes impact your monthly payment and total interest.',
+                                    onUnlock: () {
+                                      AnalyticsService.instance.logPaywallHardShown();
+                                      PaywallHard.show(context);
+                                    },
+                                    price:
+                                        IAPService.instance.localizedPrice,
+                                  );
+                                }
+                                return _RateSensitivityWidget(
+                                  draw: (_results!['draw'] as double?) ?? 0,
+                                  baseRate:
+                                      (_results!['rate'] as double?) ?? 0,
+                                  drawYears:
+                                      (_results!['drawYears'] as int?) ?? 10,
+                                  repayYears:
+                                      (_results!['repayYears'] as int?) ?? 20,
+                                  isEs: isEs,
+                                );
+                              },
+                            ),
                             const SizedBox(height: 16),
                             SaveScenarioButton(onSave: _saveScenario),
                             const SizedBox(height: 8),
@@ -1551,15 +1508,15 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size(double.infinity, 48),
                                 foregroundColor: AppTheme.primary,
-                                side: const BorderSide(color: AppTheme.primary),
+                                side:
+                                    const BorderSide(color: AppTheme.primary),
                                 shape: RoundedRectangleBorder(
                                     borderRadius:
                                         BorderRadius.circular(AppRadius.xl)),
                               ),
                             ),
+                            const SizedBox(height: 16),
                           ],
-
-                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -1667,7 +1624,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
         ]),
         const SizedBox(height: 12),
         SizedBox(
-          height: 168,
+          height: 192,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1794,7 +1751,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
 
     final helocCheaper = helocTotalInterest < helTotalInterest;
     final verdictColor =
-        helocCheaper ? AppTheme.successDark : const Color(0xFFB71C1C);
+        helocCheaper ? AppTheme.successDark : AppTheme.errorDark;
 
     Widget _row(String left, String center, String right,
         {bool header = false}) {
@@ -1962,108 +1919,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
   }
 }
 
-class _EquityCard extends StatelessWidget {
-  final double availableEquity;
-  final double ltvPct;
-  final bool isEs;
-  final NumberFormat fmtPct;
-
-  const _EquityCard({
-    required this.availableEquity,
-    required this.ltvPct,
-    required this.isEs,
-    required this.fmtPct,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isOverLtv = ltvPct > 85;
-    final equityColor = availableEquity > 0
-        ? AppTheme.success
-        : CalcwiseTheme.of(context).warningOrange;
-    final ltvColor = isOverLtv ? AppTheme.error : AppTheme.success;
-    final ltvFraction = (ltvPct / 100).clamp(0.0, 1.0);
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primary.withValues(alpha: 0.08),
-            AppTheme.primary.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            const Icon(Icons.account_balance_wallet_rounded,
-                color: AppTheme.primary, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              isEs
-                  ? 'Tu capital disponible (85% LTV)'
-                  : 'Your available equity (85% LTV)',
-              style: TextStyle(
-                  fontSize: AppTextSize.sm,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primary.withValues(alpha: 0.85)),
-            ),
-          ]),
-          const SizedBox(height: 8),
-          Text(
-            isEs
-                ? 'Máx. disponible (85%): ${AmountFormatter.ui(availableEquity, 'USD')}'
-                : 'Max available (85% LTV): ${AmountFormatter.ui(availableEquity, 'USD')}',
-            style: TextStyle(
-              fontSize: AppTextSize.title,
-              fontWeight: FontWeight.w800,
-              color: equityColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(
-              child: ClipRoundedRect(
-                borderRadius: BorderRadius.circular(AppRadius.xs),
-                child: LinearProgressIndicator(
-                  value: ltvFraction,
-                  minHeight: 7,
-                  backgroundColor: CalcwiseTheme.of(context).cardBorder,
-                  valueColor: AlwaysStoppedAnimation<Color>(ltvColor),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'LTV ${fmtPct.format(ltvPct)}%',
-              style: TextStyle(
-                fontSize: AppTextSize.sm,
-                fontWeight: FontWeight.w700,
-                color: ltvColor,
-              ),
-            ),
-          ]),
-          if (isOverLtv) ...[
-            const SizedBox(height: 8),
-            Text(
-              isEs
-                  ? '⚠ LTV superior al 85% — sin capital HELOC disponible'
-                  : '⚠ LTV above 85% — no HELOC equity available',
-              style: const TextStyle(
-                  fontSize: AppTextSize.xs, color: AppTheme.error),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
 
 // Flutter doesn't have a built-in ClipRoundedRect — use ClipRRect
 class ClipRoundedRect extends StatelessWidget {

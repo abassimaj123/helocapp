@@ -352,16 +352,16 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
   Map<String, dynamic> get _results =>
       widget.entry['results'] as Map<String, dynamic>;
 
-  double get _homeValue => (_inputs['homeValue'] as num).toDouble();
-  double get _balance => (_inputs['balance'] as num).toDouble();
-  double get _draw => (_inputs['draw'] as num).toDouble();
-  double get _rate => (_inputs['rate'] as num).toDouble();
-  int get _drawYears => (_inputs['drawYears'] as num).toInt();
-  int get _repayYears => (_inputs['repayYears'] as num).toInt();
-  double get _equity => (_results['equity'] as num).toDouble();
-  double get _ltv => (_results['ltv'] as num).toDouble();
-  double get _interestOnly => (_results['interestOnly'] as num).toDouble();
-  double get _repayment => (_results['repayment'] as num).toDouble();
+  double get _homeValue => (_inputs['homeValue'] as num?)?.toDouble() ?? 0.0;
+  double get _balance => (_inputs['balance'] as num?)?.toDouble() ?? 0.0;
+  double get _draw => (_inputs['draw'] as num?)?.toDouble() ?? 0.0;
+  double get _rate => (_inputs['rate'] as num?)?.toDouble() ?? 0.0;
+  int get _drawYears => (_inputs['drawYears'] as num?)?.toInt() ?? 10;
+  int get _repayYears => (_inputs['repayYears'] as num?)?.toInt() ?? 20;
+  double get _equity => (_results['equity'] as num?)?.toDouble() ?? 0.0;
+  double get _ltv => (_results['ltv'] as num?)?.toDouble() ?? 0.0;
+  double get _interestOnly => (_results['interestOnly'] as num?)?.toDouble() ?? 0.0;
+  double get _repayment => (_results['repayment'] as num?)?.toDouble() ?? 0.0;
 
   /// Total interest computed from stored inputs (not saved to DB separately).
   double get _totalInterest {
@@ -441,6 +441,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
   Future<void> _exportPdf(BuildContext context, bool isEs) async {
     if (!freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallHardShown();
       await PaywallHard.show(context);
       return;
     }
@@ -741,6 +742,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                             onPressed: () async {
                               if (!isPremium) {
                                 if (context.mounted) {
+                                  AnalyticsService.instance.logPaywallHardShown();
                                   await PaywallHard.show(context);
                                 }
                                 return;

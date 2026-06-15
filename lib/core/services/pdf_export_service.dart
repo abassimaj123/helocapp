@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../firebase/analytics_service.dart';
 import '../freemium/iap_service.dart';
 import '../theme/app_theme.dart';
 import '../../main.dart';
@@ -1745,9 +1746,7 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
       await widget.onExport();
     } else
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isFrenchNotifier.value
-              ? 'Publicité non disponible. Réessaie plus tard.'
-              : isSpanishNotifier.value
+          content: Text(isSpanishNotifier.value
               ? 'Anuncio no disponible. Inténtalo más tarde.'
               : 'Ad not available. Try again later.')));
   }
@@ -1755,7 +1754,6 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
   @override
   Widget build(BuildContext context) {
     final adReady = adService.isRewardedReady;
-    final isFr = isFrenchNotifier.value;
     final isEs = isSpanishNotifier.value;
     return Padding(
       padding: EdgeInsets.only(
@@ -1775,14 +1773,12 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
         const Icon(Icons.picture_as_pdf_rounded,
             size: 36, color: AppTheme.primary),
         const SizedBox(height: 12),
-        Text(isFr ? 'Exporter PDF' : isEs ? 'Exportar PDF' : 'Export PDF',
+        Text(isEs ? 'Exportar PDF' : 'Export PDF',
             style: const TextStyle(
                 fontSize: AppTextSize.subtitle, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         Text(
-            isFr
-                ? 'Choisissez comment débloquer l\'export'
-                : isEs
+            isEs
                 ? 'Elige cómo desbloquear la exportación'
                 : 'Choose how to unlock PDF export',
             style: const TextStyle(
@@ -1815,9 +1811,7 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text(
-                              isFr
-                                  ? 'Regarder une courte vidéo'
-                                  : isEs
+                              isEs
                                   ? 'Ver un video corto'
                                   : 'Watch a short video',
                               style: const TextStyle(
@@ -1825,9 +1819,7 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
                                   fontSize: AppTextSize.bodyMd)),
                           const SizedBox(height: 2),
                           Text(
-                              isFr
-                                  ? 'Exporter une fois — gratuit'
-                                  : isEs
+                              isEs
                                   ? 'Exportar una vez — gratis'
                                   : 'Export once — free',
                               style: const TextStyle(
@@ -1849,14 +1841,13 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
+                AnalyticsService.instance.logPaywallHardShown();
                 Navigator.pop(context);
                 IAPService.instance.buy();
               },
               icon: const Icon(Icons.workspace_premium, size: 18),
               label: Text(
-                  isFr
-                      ? 'Premium (illimité)'
-                      : isEs
+                  isEs
                       ? 'Premium (ilimitado)'
                       : 'Premium (unlimited)',
                   style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -1870,7 +1861,7 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
         const SizedBox(height: 10),
         TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isFr ? 'Pas maintenant' : isEs ? 'Ahora no' : 'Not now',
+            child: Text(isEs ? 'Ahora no' : 'Not now',
                 style: const TextStyle(color: Color(0xFF64748B)))),
       ]),
     );

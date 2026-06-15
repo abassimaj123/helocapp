@@ -36,54 +36,65 @@ class _ToolsScreenState extends State<ToolsScreen> {
           body: Column(
             children: [
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  children: [
-                    _ToolCard(
-                      icon: Icons.tune_rounded,
-                      color: _toolTealColor,
-                      title: isEs ? 'Optimizador de retiro' : 'Draw Optimizer',
-                      subtitle: isEs
-                          ? 'Optimice su calendario de retiro'
-                          : 'Optimize your draw schedule',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DrawOptimizerScreen(),
+                child: CalcwisePageEntrance(
+                  child: ListView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    children: [
+                      CalcwiseStaggerItem(
+                        index: 0,
+                        child: _ToolCard(
+                          icon: Icons.tune_rounded,
+                          color: _toolTealColor,
+                          title: isEs ? 'Optimizador de retiro' : 'Draw Optimizer',
+                          subtitle: isEs
+                              ? 'Optimice su calendario de retiro'
+                              : 'Optimize your draw schedule',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DrawOptimizerScreen(),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _ToolCard(
-                      icon: Icons.trending_up_rounded,
-                      color: _toolOrangeColor,
-                      title: isEs ? 'Choque de pago' : 'Payment Shock',
-                      subtitle: isEs
-                          ? 'Vea cómo cambian los pagos después del período de retiro'
-                          : 'See how payments change after draw period',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PaymentShockScreen(),
+                      const SizedBox(height: AppSpacing.md),
+                      CalcwiseStaggerItem(
+                        index: 1,
+                        child: _ToolCard(
+                          icon: Icons.trending_up_rounded,
+                          color: _toolOrangeColor,
+                          title: isEs ? 'Choque de pago' : 'Payment Shock',
+                          subtitle: isEs
+                              ? 'Vea cómo cambian los pagos después del período de retiro'
+                              : 'See how payments change after draw period',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PaymentShockScreen(),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _ToolCard(
-                      icon: Icons.compare_arrows_rounded,
-                      color: _toolIndigoColor,
-                      title: isEs ? 'HELOC vs Refinanciamiento' : 'HELOC vs Cash-Out Refi',
-                      subtitle: isEs
-                          ? 'Compare HELOC con refinanciamiento con retiro de efectivo'
-                          : 'Compare HELOC with cash-out refinance',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HelocVsCashoutScreen(),
+                      const SizedBox(height: AppSpacing.md),
+                      CalcwiseStaggerItem(
+                        index: 2,
+                        child: _ToolCard(
+                          icon: Icons.compare_arrows_rounded,
+                          color: _toolIndigoColor,
+                          title: isEs ? 'HELOC vs Refinanciamiento' : 'HELOC vs Cash-Out Refi',
+                          subtitle: isEs
+                              ? 'Compare HELOC con refinanciamiento con retiro de efectivo'
+                              : 'Compare HELOC with cash-out refinance',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const HelocVsCashoutScreen(),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const CalcwiseAdFooter(),

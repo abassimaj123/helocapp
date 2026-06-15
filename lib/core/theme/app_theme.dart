@@ -22,7 +22,7 @@ class AppTheme {
   static const Color labelGray = Color(0xFF64748B);
   static const Color divider = Color(0xFFE2E8F0);
 
-  static ThemeData get theme =>
+  static ThemeData get light =>
       CalcwiseThemeFactory.buildLight(primary: primary, accent: accent);
   static ThemeData get dark =>
       CalcwiseThemeFactory.buildDark(primary: primary, accent: accent);

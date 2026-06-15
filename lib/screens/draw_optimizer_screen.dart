@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show pow;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -12,6 +13,8 @@ import '../core/services/pdf_export_service.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../core/freemium/iap_service.dart';
+import '../widgets/paywall_hard.dart';
+import '../widgets/paywall_soft.dart';
 import '../widgets/save_scenario_button.dart';
 import 'history_screen.dart';
 
@@ -199,7 +202,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     final optimalIdx = _optimalIndex;
     if (results == null || optimalIdx == null) return;
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
     final opt = results[optimalIdx];
     final totalDraw = _draws.fold(0.0, (s, d) => s + d.amount);
     Future<void> doExport() => PdfExportService.exportDrawOptimizer(
@@ -218,7 +220,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
           optimalBalanceAtDrawEnd: opt.balanceAtDrawEnd,
           optimalPayoffMonths: opt.payoffMonths,
           isEs: isEs,
-          isFr: isFr,
+          isFr: false,
         );
     if (freemiumService.hasFullAccess) {
       await doExport();
@@ -227,7 +229,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     }
   }
 
-  void _optimize() {
+  Future<void> _optimize() async {
     final rate = _parseCtrl(_rateCtrl);
     final drawYears = _parseInt(_drawYearsCtrl);
     final repayYears = _parseInt(_repayYearsCtrl);
@@ -305,8 +307,20 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       _optimalIndex = optimal;
     });
     _scheduleAutoSave(results, optimal);
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
 
     HapticFeedback.mediumImpact();
+    adService.onAction();
+    final trigger = await paywallSession.recordAction();
+    if (trigger != PaywallTrigger.none && mounted && !freemiumService.hasFullAccess) {
+      if (trigger == PaywallTrigger.soft) {
+        AnalyticsService.instance.logPaywallSoftShown();
+        PaywallSoft.show(context);
+      } else {
+        AnalyticsService.instance.logPaywallHardShown();
+        PaywallHard.show(context);
+      }
+    }
   }
 
   @override
@@ -325,12 +339,13 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
 
   Map<String, String> _buildL1(List<_StrategyResult> results, int optimalIdx) {
     final opt = results[optimalIdx];
+    final isEs = isSpanishNotifier.value;
     return {
-      'Best Strategy': opt.label,
-      'Best Total Interest': AmountFormatter.ui(opt.totalInterest, 'USD'),
-      'Draw Phase Interest': AmountFormatter.ui(opt.interestDuringDraw, 'USD'),
-      'Balance at Draw End': AmountFormatter.ui(opt.balanceAtDrawEnd, 'USD'),
-      'Payoff Timeline': '${(opt.payoffMonths / 12).toStringAsFixed(1)} yrs',
+      isEs ? 'Mejor Estrategia' : 'Best Strategy': opt.label,
+      isEs ? 'Mejor Interés Total' : 'Best Total Interest': AmountFormatter.ui(opt.totalInterest, 'USD'),
+      isEs ? 'Interés Fase Disposición' : 'Draw Phase Interest': AmountFormatter.ui(opt.interestDuringDraw, 'USD'),
+      isEs ? 'Balance al Final' : 'Balance at Draw End': AmountFormatter.ui(opt.balanceAtDrawEnd, 'USD'),
+      isEs ? 'Plazo Total' : 'Payoff Timeline': '${(opt.payoffMonths / 12).toStringAsFixed(1)} ${isEs ? 'años' : 'yrs'}',
     };
   }
 
@@ -387,7 +402,9 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       inputHash: hash,
       l1: _buildL1(_results!, _optimalIndex!),
       l2: _buildL2(_results!, _optimalIndex!),
-      label: label ?? 'Draw Optimizer \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%',
+      label: label ?? (isSpanishNotifier.value
+          ? 'Optimizador \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%'
+          : 'Draw Optimizer \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%'),
     );
   }
 
@@ -624,7 +641,10 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                           description: isEs
                               ? 'Simula cómo los cambios en la tasa prime afectan tu costo total de interés.'
                               : 'Simulate how prime rate changes affect your total interest cost.',
-                          onUnlock: () => PaywallHard.show(context),
+                          onUnlock: () {
+                            AnalyticsService.instance.logPaywallHardShown();
+                            PaywallHard.show(context);
+                          },
                           price: IAPService.instance.localizedPrice,
                         );
                       }

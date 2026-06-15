@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show pow;
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -139,13 +140,16 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
 
   double _roundTo(double v, double step) => (v / step).round() * step;
 
-  Map<String, String> _buildL1(_CompareCashoutResult r) => {
-        'Winner': r.winnerIndex == 0 ? 'HELOC' : 'Cash-Out Refi',
-        'HELOC Total Interest 30y': AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
-        'Refi Total Cost': AmountFormatter.ui(r.scenarioBTotalCost, 'USD'),
-        'HELOC Monthly (initial)': AmountFormatter.ui(r.scenarioATotalMonthly, 'USD'),
-        'Refi Monthly': AmountFormatter.ui(r.refiMonthly, 'USD'),
-      };
+  Map<String, String> _buildL1(_CompareCashoutResult r) {
+    final isEs = isSpanishNotifier.value;
+    return {
+      isEs ? 'Ganador' : 'Winner': r.winnerIndex == 0 ? 'HELOC' : (isEs ? 'Refi con Retiro' : 'Cash-Out Refi'),
+      isEs ? 'Interés Total HELOC 30a' : 'HELOC Total Interest 30y': AmountFormatter.ui(r.scenarioATotalInterest30y, 'USD'),
+      isEs ? 'Costo Total Refi' : 'Refi Total Cost': AmountFormatter.ui(r.scenarioBTotalCost, 'USD'),
+      isEs ? 'HELOC Mensual (inicial)' : 'HELOC Monthly (initial)': AmountFormatter.ui(r.scenarioATotalMonthly, 'USD'),
+      isEs ? 'Refi Mensual' : 'Refi Monthly': AmountFormatter.ui(r.refiMonthly, 'USD'),
+    };
+  }
 
   Map<String, dynamic> _buildL2(_CompareCashoutResult r) => {
         'inputs': {
@@ -205,7 +209,9 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       inputHash: hash,
       l1: _buildL1(_result!),
       l2: _buildL2(_result!),
-      label: label ?? 'HELOC vs Refi \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k',
+      label: label ?? (isSpanishNotifier.value
+          ? 'HELOC vs Refinanc. \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k'
+          : 'HELOC vs Refi \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k'),
     );
   }
 
@@ -213,7 +219,6 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
     Future<void> doExport() => PdfExportService.exportHelocVsCashout(
           context: context,
           homeValue: _parseN(_homeValueCtrl.text),
@@ -237,7 +242,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
           breakevenMonths: r.breakevenMonths,
           winnerIndex: r.winnerIndex,
           isEs: isEs,
-          isFr: isFr,
+          isFr: false,
         );
     if (freemiumService.hasFullAccess) {
       await doExport();
@@ -341,12 +346,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     if (silent) return;
     adService.onAction();
     AnalyticsService.instance.log('heloc_vs_cashout_calculated');
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallHardShown();
       PaywallHard.show(context);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallSoftShown();
       PaywallSoft.show(context);
     }
   }
@@ -531,8 +539,18 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                     const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.04),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
                       child: _result == null
-                          ? const SizedBox.shrink()
+                          ? const SizedBox.shrink(key: ValueKey('empty'))
                           : _buildResults(isEs, _result!),
                     ),
                     const SizedBox(height: AppSpacing.listBottomInset),

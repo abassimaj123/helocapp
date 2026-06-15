@@ -13,7 +13,10 @@ import 'package:flutter/foundation.dart';
 class AdConfig {
   AdConfig._();
 
-  static const bool adsEnabled = true;
+  // ⚠️ SCREENSHOT MODE — set to true for store captures, revert to false before release
+  static const bool screenshotMode = false;
+
+  static const bool adsEnabled = !screenshotMode;
 
   // ── App IDs ──────────────────────────────────────────────────────────────────
   static const String androidAppId =
@@ -69,6 +72,13 @@ class AdConfig {
       : _testRewardedIOS;
 
   // ── Gate settings ─────────────────────────────────────────────────────────────
-  static const int calcThreshold = 3; // interstitial every N calcs
+  static const int calcThreshold =
+      8; // interstitial every N actions — 3 was too aggressive, 8 reduces 1★ "too many ads"
   static const int cooldownMinutes = 5; // min between interstitials
+  static const int timeThresholdSeconds =
+      240; // interstitial after ~4 min of usage
+  static const int rewardedDurationMinutes =
+      60; // ad-free window after rewarded ad
+  static const int rewardedMinSession =
+      2; // show rewarded option only from session 2+
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show pow;
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -84,13 +85,16 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
 
   double _roundTo(double v, double step) => (v / step).round() * step;
 
-  Map<String, String> _buildL1(_ShockResult r) => {
-        'IO Payment': AmountFormatter.ui(r.ioPayment, 'USD'),
-        'PI Payment': AmountFormatter.ui(r.piPayment, 'USD'),
-        'Payment Shock': '+${r.shockPct.toStringAsFixed(1)}%',
-        'Dollar Increase': '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
-        'Total Interest': AmountFormatter.ui(r.totalInterest, 'USD'),
-      };
+  Map<String, String> _buildL1(_ShockResult r) {
+    final isEs = isSpanishNotifier.value;
+    return {
+      isEs ? 'Pago Solo Interés' : 'IO Payment': AmountFormatter.ui(r.ioPayment, 'USD'),
+      isEs ? 'Pago P+I' : 'PI Payment': AmountFormatter.ui(r.piPayment, 'USD'),
+      isEs ? 'Choque de Pago' : 'Payment Shock': '+${r.shockPct.toStringAsFixed(1)}%',
+      isEs ? 'Aumento en Dólares' : 'Dollar Increase': '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
+      isEs ? 'Interés Total' : 'Total Interest': AmountFormatter.ui(r.totalInterest, 'USD'),
+    };
+  }
 
   Map<String, dynamic> _buildL2(_ShockResult r) => {
         'inputs': {
@@ -139,7 +143,9 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
       inputHash: hash,
       l1: _buildL1(_result!),
       l2: _buildL2(_result!),
-      label: label ?? 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%',
+      label: label ?? (isSpanishNotifier.value
+          ? 'Choque de Pago \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'
+          : 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'),
     );
   }
 
@@ -147,7 +153,6 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    final isFr = isFrenchNotifier.value;
     Future<void> doExport() => PdfExportService.exportPaymentShock(
           context: context,
           helocBalance: _parseN(_balanceCtrl.text),
@@ -160,7 +165,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           dollarIncrease: r.dollarIncrease,
           totalInterest: r.totalInterest,
           isEs: isEs,
-          isFr: isFr,
+          isFr: false,
         );
     if (freemiumService.hasFullAccess) {
       await doExport();
@@ -204,12 +209,15 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     if (silent) return;
     adService.onAction();
     AnalyticsService.instance.log('payment_shock_calculated');
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallHardShown();
       PaywallHard.show(context);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
+      AnalyticsService.instance.logPaywallSoftShown();
       PaywallSoft.show(context);
     }
   }
@@ -371,6 +379,16 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     const SizedBox(height: AppSpacing.xl),
                     AnimatedSwitcher(
                       duration: AppDuration.base,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.04),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
                       child: _result == null
                           ? Padding(
                               key: const ValueKey('empty'),
@@ -496,7 +514,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                 description: isEs
                     ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
                     : 'View the full payment comparison with an interactive bar chart.',
-                onUnlock: () => PaywallHard.show(context),
+                onUnlock: () {
+                  AnalyticsService.instance.logPaywallHardShown();
+                  PaywallHard.show(context);
+                },
                 price: IAPService.instance.localizedPrice,
               );
             }
