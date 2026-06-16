@@ -287,7 +287,7 @@ class _CompareScreenState extends State<CompareScreen>
 
   void _reset() {
     _drawCtrl.text = '100000';
-    _helocRateCtrl.text = '8.5';
+    _helocRateCtrl.text = '7.5';
     _drawYearsCtrl.text = '10';
     _repayYearsCtrl.text = '20';
     _refiRateCtrl.text = '6.5';
@@ -363,7 +363,7 @@ class _CompareScreenState extends State<CompareScreen>
                   _field(
                     ctrl: _helocRateCtrl,
                     label: isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)',
-                    hint: '8.5',
+                    hint: '7.5',
                     validator: (v) => _parseN(v ?? '') <= 0
                         ? (isEs ? 'Ingresa una tasa' : 'Enter rate')
                         : null,

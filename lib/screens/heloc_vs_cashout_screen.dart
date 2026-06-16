@@ -365,7 +365,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     _existingRateCtrl.text = '4.0';
     _existingYearsCtrl.text = '25';
     _cashCtrl.text = '75000';
-    _helocRateCtrl.text = '8.5';
+    _helocRateCtrl.text = '7.5';
     _refiRateCtrl.text = '6.5';
     _closingPctCtrl.text = '3';
     setState(() {
@@ -464,7 +464,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                           child: _field(
                               ctrl: _helocRateCtrl,
                               label: isEs ? 'Tasa HELOC (%)' : 'HELOC rate (%)',
-                              hint: '8.5')),
+                              hint: '7.5')),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                           child: _field(

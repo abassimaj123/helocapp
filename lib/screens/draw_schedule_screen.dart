@@ -80,7 +80,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   Future<void> _saveScenario(String? label) async {
     if (_schedule == null) return;
     final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
-    final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
+    final rate = double.tryParse(_rateCtrl.text) ?? 7.5;
     final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
     final repayYears = int.tryParse(_repayYearsCtrl.text) ?? 20;
 
@@ -134,7 +134,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
 
   Future<void> _generate({bool isManual = false}) async {
     final draw = double.tryParse(_drawCtrl.text.replaceAll(',', '')) ?? 100000;
-    final rate = double.tryParse(_rateCtrl.text) ?? 8.5;
+    final rate = double.tryParse(_rateCtrl.text) ?? 7.5;
     final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
     final repayYears = int.tryParse(_repayYearsCtrl.text) ?? 20;
 
@@ -283,7 +283,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                     '100000'),
                 const SizedBox(height: 12),
                 _buildField(_rateCtrl,
-                    isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)', '8.5'),
+                    isEs ? 'Tasa HELOC (%)' : 'HELOC Rate (%)', '7.5'),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(
