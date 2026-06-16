@@ -66,6 +66,9 @@ class AnalyticsService extends CalcwiseAnalytics {
   Future<void> logHelocComparatorUsed() => log('heloc_comparator_used');
   Future<void> logLtvCalculated() => log('ltv_calculated');
 
+  Future<void> logPaywallConverted(String source) =>
+      log('paywall_converted', {'source': source});
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   String _valueBucket(double v) {
