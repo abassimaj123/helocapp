@@ -302,10 +302,20 @@ class CalculatorScreen extends StatefulWidget {
 
 double _parseNum(String v) {
   if (v.isEmpty) return 0.0;
-  final s = (v.contains('.') && v.contains(','))
-      ? v.replaceAll(',', '')
-      : v.replaceAll(',', '.');
-  return double.tryParse(s) ?? 0.0;
+  String s;
+  if (v.contains('.') && v.contains(',')) {
+    s = v.lastIndexOf('.') > v.lastIndexOf(',')
+        ? v.replaceAll(',', '')
+        : v.replaceAll('.', '').replaceAll(',', '.');
+  } else if (v.contains(',')) {
+    final parts = v.split(',');
+    s = parts.sublist(1).every((p) => p.length == 3)
+        ? v.replaceAll(',', '')
+        : v.replaceAll(',', '.');
+  } else {
+    s = v;
+  }
+  return double.tryParse(s.trim()) ?? 0.0;
 }
 
 /// Payment mode selected by the IO vs P&I toggle.
@@ -839,10 +849,9 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
-                  child: CalcwisePageEntrance(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // ── A. Result summary (TOP) ───────────────────────────────
@@ -862,11 +871,11 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                             child: _results != null
                                 ? KeyedSubtree(
                                     key: const ValueKey('results_top'),
-                                    child: Column(
+                                    child: CalcwisePageEntrance(child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // Row header: "Results" title + Share + PDF
+                                        // Row header: "Results" title
                                         Row(children: [
                                           Expanded(
                                             child: Text(
@@ -875,40 +884,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                   fontWeight: FontWeight.bold,
                                                   fontSize:
                                                       AppTextSize.bodyLg),
-                                            ),
-                                          ),
-                                          // Share button
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.share_rounded,
-                                                color: AppTheme.primary),
-                                            tooltip: isEs ? 'Compartir' : 'Share',
-                                            onPressed: () =>
-                                                _share(isEs, isFr: isFr),
-                                          ),
-                                          // PDF export button
-                                          ValueListenableBuilder<bool>(
-                                            valueListenable: freemiumService
-                                                .hasFullAccessNotifier,
-                                            builder: (_, isPremium, __) =>
-                                                IconButton(
-                                              icon: Icon(
-                                                Icons.picture_as_pdf_rounded,
-                                                color: isPremium
-                                                    ? AppTheme.primary
-                                                    : AppTheme.labelGray,
-                                              ),
-                                              tooltip: isPremium
-                                                  ? (isEs
-                                                      ? AppStringsES.exportPdf
-                                                      : AppStringsEN.exportPdf)
-                                                  : (isEs
-                                                      ? AppStringsES
-                                                          .exportLocked
-                                                      : AppStringsEN
-                                                          .exportLocked),
-                                              onPressed: () =>
-                                                  _exportPdf(isEs, isFr: isFr),
                                             ),
                                           ),
                                         ]),
@@ -1234,7 +1209,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                         ),
                                         const SizedBox(height: 24),
                                       ],
-                                    ),
+                                    )),
                                   )
                                 : const SizedBox.shrink(
                                     key: ValueKey('results_top_empty')),
@@ -1478,6 +1453,62 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                             const SizedBox(height: 16),
                             SaveScenarioButton(onSave: _saveScenario),
                             const SizedBox(height: 8),
+                            // ── Grouped action bar: Share + Export ──────────────
+                            Row(children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _share(isEs, isFr: isFr),
+                                  icon: const Icon(Icons.share_rounded,
+                                      size: 18),
+                                  label: Text(isEs ? 'Compartir' : 'Share'),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size(0, 44),
+                                    foregroundColor: AppTheme.primary,
+                                    side: const BorderSide(
+                                        color: AppTheme.primary),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.xl)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable:
+                                      freemiumService.hasFullAccessNotifier,
+                                  builder: (_, isPremium, __) =>
+                                      OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _exportPdf(isEs, isFr: isFr),
+                                    icon: Icon(
+                                      Icons.picture_as_pdf_rounded,
+                                      size: 18,
+                                      color: isPremium
+                                          ? AppTheme.primary
+                                          : AppTheme.labelGray,
+                                    ),
+                                    label: Text(isEs
+                                        ? AppStringsES.exportPdf
+                                        : AppStringsEN.exportPdf),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 44),
+                                      foregroundColor: isPremium
+                                          ? AppTheme.primary
+                                          : AppTheme.labelGray,
+                                      side: BorderSide(
+                                          color: isPremium
+                                              ? AppTheme.primary
+                                              : AppTheme.labelGray),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.xl)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ]),
+                            const SizedBox(height: 8),
                             OutlinedButton.icon(
                               onPressed: () {
                                 // Switch to the Compare tab (index 2)
@@ -1519,9 +1550,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                             const SizedBox(height: 16),
                           ],
                         ],
-                      ),
                     ),
-                  ), // CalcwisePageEntrance closes
+                  ),
                 ),
               ),
             ),
