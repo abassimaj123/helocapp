@@ -131,6 +131,8 @@ class _IapErrorWrapper extends StatefulWidget {
 }
 
 class _IapErrorWrapperState extends State<_IapErrorWrapper> {
+  final _smKey = GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
@@ -150,7 +152,7 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
     if (msg == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _smKey.currentState?.showSnackBar(SnackBar(content: Text(msg)));
       iapErrorNotifier.value = null;
     });
   }
@@ -164,7 +166,7 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
       final msg = result == 'restored'
           ? (isEs ? '¡Premium restaurado!' : 'Premium restored!')
           : (isEs ? 'No hay compras para restaurar.' : 'No purchases to restore.');
-      ScaffoldMessenger.of(context).showSnackBar(
+      _smKey.currentState?.showSnackBar(
         SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
       );
       iapRestoreResultNotifier.value = null;
@@ -172,11 +174,12 @@ class _IapErrorWrapperState extends State<_IapErrorWrapper> {
   }
 
   @override
-  Widget build(BuildContext context) => const HELOCApp();
+  Widget build(BuildContext context) => HELOCApp(smKey: _smKey);
 }
 
 class HELOCApp extends StatelessWidget {
-  const HELOCApp({super.key});
+  const HELOCApp({super.key, required this.smKey});
+  final GlobalKey<ScaffoldMessengerState> smKey;
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +189,7 @@ class HELOCApp extends StatelessWidget {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: themeModeService.notifier,
           builder: (context, themeMode, child) => MaterialApp(
+                scaffoldMessengerKey: smKey,
                 title: isEs ? AppStringsES.appName : AppStringsEN.appName,
                 theme: AppTheme.light,
                 darkTheme: AppTheme.dark,
