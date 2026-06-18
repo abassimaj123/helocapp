@@ -33,8 +33,6 @@ import 'widgets/paywall_soft.dart';
 final paywallSession = PaywallSessionService(
   appKey: 'helocapp',
   hasFullAccess: () => freemiumService.hasFullAccess,
-  softSessionStart: 4,
-  hardSessionStart: 7,
 );
 
 final adService = CalcwiseAdService(
