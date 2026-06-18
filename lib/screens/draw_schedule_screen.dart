@@ -61,13 +61,17 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
     ]) {
       c.addListener(() => scheduleCalc(_generate));
     }
+    isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _generate();
     });
   }
 
+  void _onLangChange() => setState(() {});
+
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     _drawCtrl.dispose();
     _rateCtrl.dispose();
     _drawYearsCtrl.dispose();

@@ -72,11 +72,15 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
       c.addListener(() => scheduleCalc(_tryCompute));
     }
+    isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
   }
 
+  void _onLangChange() => setState(() {});
+
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     smartHistoryService.cancelPendingSave('helocapp', 'payment_shock');
     _balanceCtrl.dispose();
     _currentRateCtrl.dispose();

@@ -99,13 +99,17 @@ class _CompareScreenState extends State<CompareScreen>
     ]) {
       c.addListener(() => scheduleCalc(_compare));
     }
+    isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _compare();
     });
   }
 
+  void _onLangChange() => setState(() {});
+
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     smartHistoryService.cancelPendingSave('helocapp', 'compare');
     for (final c in [
       _drawCtrl,

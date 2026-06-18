@@ -366,9 +366,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       _taxBracket = (double.tryParse(_taxBracketCtrl.text) ?? 22.0).clamp(0.0, 50.0);
     });
     _updateEquity();
+    isSpanishNotifier.addListener(_onLangChange);
     // Run initial calculation with default values
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCalculate());
   }
+
+  void _onLangChange() => setState(() {});
 
   void _updateEquity() {
     final homeValue = _parseNum(_homeValueCtrl.text);
@@ -522,6 +525,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     smartHistoryService.cancelPendingSave('helocapp', 'calculator');
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);

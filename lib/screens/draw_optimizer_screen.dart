@@ -173,10 +173,13 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     ]) {
       c.addListener(() => scheduleCalc(_optimize));
     }
+    isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _optimize();
     });
   }
+
+  void _onLangChange() => setState(() {});
 
   double _parseCtrl(TextEditingController c) {
     final s = c.text.replaceAll(',', '');
@@ -325,6 +328,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
 
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     smartHistoryService.cancelPendingSave('helocapp', 'draw_optimizer');
     _creditLimitCtrl.dispose();
     _rateCtrl.dispose();
