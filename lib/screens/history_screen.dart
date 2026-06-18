@@ -54,10 +54,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     AnalyticsService.instance.logScreenView('history');
     _load();
     HistoryScreen.refreshNotifier.addListener(_silentRefresh);
+    isSpanishNotifier.addListener(_onLangChange);
   }
+
+  void _onLangChange() => setState(() {});
 
   @override
   void dispose() {
+    isSpanishNotifier.removeListener(_onLangChange);
     HistoryScreen.refreshNotifier.removeListener(_silentRefresh);
     super.dispose();
   }
@@ -608,7 +612,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               color: AppTheme.labelGray),
                         ),
                         Text(
-                          '${AmountFormatter.ui(interestOnly, 'USD')}/mo',
+                          '${AmountFormatter.ui(interestOnly, 'USD')}/${isEs ? 'mes' : 'mo'}',
                           style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: AppTextSize.bodyMd,
