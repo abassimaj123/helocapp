@@ -72,9 +72,6 @@ class AdConfig {
       : _testRewardedIOS;
 
   // ── Gate settings ─────────────────────────────────────────────────────────────
-  static const int calcThreshold =
-      8; // interstitial every N actions — 3 was too aggressive, 8 reduces 1★ "too many ads"
-  static const int cooldownMinutes = 5; // min between interstitials
   static const int timeThresholdSeconds =
       240; // interstitial after ~4 min of usage
   static const int rewardedDurationMinutes =
