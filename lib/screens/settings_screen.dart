@@ -48,12 +48,12 @@ class SettingsScreen extends StatelessWidget {
                         ? AppStringsES.premium.toUpperCase()
                         : AppStringsEN.premium.toUpperCase()),
                     ValueListenableBuilder<bool>(
-                      valueListenable: freemiumService.hasFullAccessNotifier,
+                      valueListenable: freemiumService.isPremiumNotifier,
                       builder: (_, isPremium, __) {
                         if (isPremium) {
                           return ListTile(
                             leading: const Icon(Icons.verified_rounded,
-                                color: CalcwiseSemanticColors.warnIcon),
+                                color: CalcwiseSemanticColors.premiumGold),
                             title: Text(isEs
                                 ? AppStringsES.premiumActive
                                 : AppStringsEN.premiumActive),
@@ -102,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
                                   final earned =
                                       await adService.showRewarded();
                                   if (earned)
-                                    freemiumService.activateRewarded();
+                                    await freemiumService.activateRewarded();
                                   if (!earned && context.mounted) {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
