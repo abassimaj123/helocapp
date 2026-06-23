@@ -4,6 +4,7 @@ import 'package:calcwise_core/calcwise_core.dart'
 import 'core/ads/ad_config.dart';
 import 'core/db/heloc_database_adapter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -191,6 +192,7 @@ class HELOCApp extends StatelessWidget {
                 darkTheme: AppTheme.dark,
                 themeMode: themeMode,
                 debugShowCheckedModeBanner: false,
+                navigatorObservers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
                 builder: (context, child) {
                   if (!MediaQuery.of(context).disableAnimations) return child!;
                   return Theme(
