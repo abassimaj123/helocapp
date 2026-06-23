@@ -442,6 +442,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     // Update global notifier so secondary tools can pre-fill from latest values.
     helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
 
+    // Analytics — fires after each debounced calculation.
+    AnalyticsService.instance.logCalculation(homeValue: homeValue, ratePct: rate);
+    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
+    adService.onAction();
+
     // Auto-save: debounced ring-buffer via SmartHistory.
     final inputs = _resultsToInputs();
     final results = _resultsToResults();
@@ -452,12 +457,27 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       l1: _buildL1(inputs, results),
       l2: {'inputs': inputs, 'results': results},
       onSaved: () {
-        if (mounted) {
-          setState(() {});
-          HistoryScreen.refreshNotifier.value++;
-        }
+        if (!mounted) return;
+        setState(() {});
+        HistoryScreen.refreshNotifier.value++;
+        adService.onSave();
+        unawaited(_maybeShowPaywall());
       },
     );
+  }
+
+  Future<void> _maybeShowPaywall() async {
+    final trigger = await paywallSession.recordAction();
+    if (trigger == PaywallTrigger.none || !mounted || freemiumService.hasFullAccess) {
+      return;
+    }
+    if (trigger == PaywallTrigger.soft) {
+      AnalyticsService.instance.logPaywallSoftShown();
+      PaywallSoft.show(context);
+    } else {
+      AnalyticsService.instance.logPaywallHardShown();
+      PaywallHard.show(context);
+    }
   }
 
   // ── SmartHistory payload helpers ───────────────────────────────────────────
