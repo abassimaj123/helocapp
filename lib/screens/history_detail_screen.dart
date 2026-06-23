@@ -713,7 +713,41 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+                            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg)),
+                              side: BorderSide(color: AppTheme.primary),
+                            ),
+                            icon: const Icon(Icons.edit_rounded, size: 20),
+                            label: Text(
+                              isEs ? 'Cargar en calculadora' : 'Load into Calculator',
+                              style: const TextStyle(
+                                  fontSize: AppTextSize.body,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            onPressed: () {
+                              helocNotifier.value = (
+                                creditLimit: _draw,
+                                balance: _draw,
+                                rate: _rate,
+                              );
+                              tabSwitchNotifier.value = 0;
+                              Navigator.of(context)
+                                  .popUntil((route) => route.isFirst);
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.sm),
                         child: SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
