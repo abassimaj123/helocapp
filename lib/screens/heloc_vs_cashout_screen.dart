@@ -94,6 +94,8 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   final _closingPctCtrl = TextEditingController(text: '3');
 
   bool _financeClosing = true;
+  int _helocDrawYears = 10;
+  int _helocRepayYears = 20;
 
   _CompareCashoutResult? _result;
 
@@ -290,13 +292,13 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final existingPI =
         _amortizedPayment(existingBal, existingRate, existingYears);
     final helocIO = cash * (helocRate / 100) / 12;
-    final helocPI = _amortizedPayment(cash, helocRate, 20);
+    final helocPI = _amortizedPayment(cash, helocRate, _helocRepayYears);
     final aMonthly = existingPI + helocIO;
-    // Total interest 30y: existing mortgage interest + heloc IO (10y) + heloc P&I (20y)
+    // Total interest 30y: existing mortgage interest + heloc IO (draw years) + heloc P&I (repay years)
     final existingTotalInt =
         _totalInterestAmort(existingBal, existingRate, existingYears);
-    final helocIOTotal = helocIO * 12 * 10;
-    final helocPITotal = (helocPI * 12 * 20) - cash;
+    final helocIOTotal = helocIO * 12 * _helocDrawYears;
+    final helocPITotal = (helocPI * 12 * _helocRepayYears) - cash;
     final aTotalInterest = existingTotalInt + helocIOTotal + helocPITotal;
 
     // Scenario B — Cash-Out Refi
@@ -316,7 +318,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     double bCum = bUpfront;
     // Use IO for first 120 months on A, then PI; B is constant
     for (int m = 1; m <= 360; m++) {
-      final aPay = existingPI + (m <= 120 ? helocIO : helocPI);
+      final aPay = existingPI + (m <= _helocDrawYears * 12 ? helocIO : helocPI);
       aCum += aPay;
       bCum += refiMonthly;
       if (aCum >= bCum && breakeven == 9999) {
@@ -374,6 +376,8 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     _closingPctCtrl.text = '3';
     setState(() {
       _financeClosing = true;
+      _helocDrawYears = 10;
+      _helocRepayYears = 20;
       _result = null;
     });
   }
@@ -460,6 +464,48 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                         ctrl: _cashCtrl,
                         label: isEs ? 'Monto (\$)' : 'Amount (\$)',
                         hint: '75000'),
+                    const SizedBox(height: AppSpacing.xl),
+                    _sectionHeader(isEs ? 'Períodos HELOC' : 'HELOC Periods'),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: _helocDrawYears.toString(),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                          decoration: InputDecoration(
+                            labelText: isEs ? 'Años disposición' : 'Draw years',
+                            hintText: '10',
+                          ),
+                          onChanged: (v) {
+                            final val = int.tryParse(v);
+                            if (val != null && val > 0) {
+                              setState(() => _helocDrawYears = val);
+                              scheduleCalc(_tryCompute);
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: _helocRepayYears.toString(),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                          decoration: InputDecoration(
+                            labelText: isEs ? 'Años pago' : 'Repay years',
+                            hintText: '20',
+                          ),
+                          onChanged: (v) {
+                            final val = int.tryParse(v);
+                            if (val != null && val > 0) {
+                              setState(() => _helocRepayYears = val);
+                              scheduleCalc(_tryCompute);
+                            }
+                          },
+                        ),
+                      ),
+                    ]),
                     const SizedBox(height: AppSpacing.xl),
                     _sectionHeader(isEs ? 'Tasas' : 'Rates', color: _refiColor),
                     const SizedBox(height: AppSpacing.md),

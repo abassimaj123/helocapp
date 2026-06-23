@@ -34,6 +34,7 @@ class _HistoryDetailPdfParams {
   final double repayment;
   final double totalInterest;
   final double taxSavings;
+  final double taxBracket;
   final bool isEs;
   final int createdAtMs;
   const _HistoryDetailPdfParams({
@@ -49,6 +50,7 @@ class _HistoryDetailPdfParams {
     required this.repayment,
     required this.totalInterest,
     required this.taxSavings,
+    required this.taxBracket,
     required this.isEs,
     required this.createdAtMs,
   });
@@ -210,7 +212,7 @@ Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
                       ],
                       ['LTV actual', '${fmtPct.format(p.ltv)}%'],
                       [
-                        'Ahorro fiscal estimado (22%)',
+                        'Ahorro fiscal estimado (${p.taxBracket.toStringAsFixed(0)}%)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/año'
                       ],
                     ]
@@ -226,7 +228,7 @@ Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
                       ['Available Equity (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
                       ['Current LTV', '${fmtPct.format(p.ltv)}%'],
                       [
-                        'Est. Tax Savings (22% bracket)',
+                        'Est. Tax Savings (${p.taxBracket.toStringAsFixed(0)}% bracket)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/year'
                       ],
                     ],
@@ -378,11 +380,18 @@ class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
     return ioPhaseInterest + repayPhaseInterest;
   }
 
+  /// Tax bracket: stored if available, else default 22%
+  double get _taxBracket {
+    final stored = _inputs['taxBracket'];
+    if (stored != null) return (stored as num).toDouble();
+    return 22.0;
+  }
+
   /// Tax savings: stored if available, else estimated at 22%
   double get _taxSavings {
     final stored = _results['taxSavings'];
     if (stored != null) return (stored as num).toDouble();
-    return _draw * (_rate / 100) * 0.22;
+    return _draw * (_rate / 100) * (_taxBracket / 100);
   }
 
   DateTime get _createdAt =>
@@ -469,6 +478,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
       repayment: _repayment,
       totalInterest: _totalInterest,
       taxSavings: _taxSavings,
+      taxBracket: _taxBracket,
       isEs: isEs,
       createdAtMs: _createdAt.millisecondsSinceEpoch,
     );

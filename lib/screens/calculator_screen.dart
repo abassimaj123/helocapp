@@ -49,6 +49,7 @@ class _CalculatorPdfParams {
   final double interestOnly;
   final double repayment;
   final double taxSavings;
+  final double taxBracket;
   final bool isEs;
   final bool isFr;
   final int nowMs;
@@ -64,6 +65,7 @@ class _CalculatorPdfParams {
     required this.interestOnly,
     required this.repayment,
     required this.taxSavings,
+    required this.taxBracket,
     required this.isEs,
     required this.isFr,
     required this.nowMs,
@@ -217,7 +219,7 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
                       ['Capital disponible (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
                       ['LTV actual', '${fmtPct.format(p.ltv)}%'],
                       [
-                        'Ahorro fiscal estimado (22%)',
+                        'Ahorro fiscal estimado (${p.taxBracket.toStringAsFixed(0)}%)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/año'
                       ],
                     ]
@@ -233,7 +235,7 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
                       ['Available Equity (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
                       ['Current LTV', '${fmtPct.format(p.ltv)}%'],
                       [
-                        'Est. Tax Savings (22% bracket)',
+                        'Est. Tax Savings (${p.taxBracket.toStringAsFixed(0)}% bracket)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/year'
                       ],
                     ],
@@ -467,6 +469,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         'rate': (_results!['rate'] as double?) ?? 0,
         'drawYears': (_results!['drawYears'] as int?) ?? 10,
         'repayYears': (_results!['repayYears'] as int?) ?? 20,
+        'taxBracket': _taxBracket,
       };
 
   Map<String, dynamic> _resultsToResults() => {
@@ -828,6 +831,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
       interestOnly: (r['interestOnly'] as num?)?.toDouble() ?? 0.0,
       repayment: (r['repayment'] as num?)?.toDouble() ?? 0.0,
       taxSavings: (r['taxSavings'] as num?)?.toDouble() ?? 0.0,
+      taxBracket: _taxBracket,
       isEs: isEs,
       isFr: isFr,
       nowMs: DateTime.now().millisecondsSinceEpoch,

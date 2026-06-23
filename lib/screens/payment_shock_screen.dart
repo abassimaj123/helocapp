@@ -94,7 +94,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     return {
       isEs ? 'Pago Solo Interés' : 'IO Payment': AmountFormatter.ui(r.ioPayment, 'USD'),
       isEs ? 'Pago P+I' : 'PI Payment': AmountFormatter.ui(r.piPayment, 'USD'),
-      isEs ? 'Choque de Pago' : 'Payment Shock': '+${r.shockPct.toStringAsFixed(1)}%',
+      isEs ? 'Choque de Pago' : 'Payment Shock': '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%',
       isEs ? 'Aumento en Dólares' : 'Dollar Increase': '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
       isEs ? 'Interés Total' : 'Total Interest': AmountFormatter.ui(r.totalInterest, 'USD'),
     };
@@ -481,7 +481,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
               children: [
                 Expanded(
                     child: _metricCard(isEs ? 'Choque' : 'Shock',
-                        '+${r.shockPct.toStringAsFixed(1)}%', _piColor)),
+                        '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%', _piColor)),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                     child: _metricCard(isEs ? 'Aumento' : 'Increase',
