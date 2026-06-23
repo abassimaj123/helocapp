@@ -349,7 +349,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       isEs ? 'Mejor Interés Total' : 'Best Total Interest': AmountFormatter.ui(opt.totalInterest, 'USD'),
       isEs ? 'Interés Fase Disposición' : 'Draw Phase Interest': AmountFormatter.ui(opt.interestDuringDraw, 'USD'),
       isEs ? 'Balance al Final' : 'Balance at Draw End': AmountFormatter.ui(opt.balanceAtDrawEnd, 'USD'),
-      isEs ? 'Plazo Total' : 'Payoff Timeline': '${(opt.payoffMonths / 12).toStringAsFixed(1)} ${isEs ? 'años' : 'yrs'}',
+      isEs ? 'Plazo Total' : 'Payoff Timeline': '${(opt.payoffMonths / 12).toStringAsFixed(1)} ${isEs ? 'años' : 'years'}',
     };
   }
 
@@ -956,7 +956,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
                 value: isEs
                     ? '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} años'
-                    : '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} yrs',
+                    : '${(optimalResult.payoffMonths / 12).toStringAsFixed(1)} years',
               ),
             ],
             rawStats: [
@@ -968,7 +968,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
               (
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
                 value: optimalResult.payoffMonths / 12,
-                formatter: (v) => '${v.toStringAsFixed(1)} ${isEs ? "años" : "yrs"}',
+                formatter: (v) => '${v.toStringAsFixed(1)} ${isEs ? "años" : "years"}',
               ),
             ],
           ),
@@ -1301,7 +1301,7 @@ class _StrategyCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               _Metric(
                 label: isEs ? 'Plazo total' : 'Payoff Timeline',
-                value: isEs ? '$years años' : '$years yrs',
+                value: isEs ? '$years años' : '$years years',
                 color: AppTheme.labelGray,
               ),
             ]),

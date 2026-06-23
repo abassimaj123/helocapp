@@ -640,7 +640,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       inputHash: _resultHash(inputs),
       l1: _buildL1(inputs, results),
       l2: {'inputs': inputs, 'results': results},
-      label: freemiumService.hasFullAccess ? label : null,
+      label: label,
     );
     adService.onSave();
   }

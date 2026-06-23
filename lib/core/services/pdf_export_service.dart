@@ -7,10 +7,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../firebase/analytics_service.dart';
-import '../freemium/iap_service.dart';
 import '../theme/app_theme.dart';
 import '../../main.dart';
+import '../../widgets/paywall_hard.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 
 const _teal = PdfColor(0.039, 0.475, 0.490); // HELOC teal
@@ -1722,14 +1721,18 @@ class PdfExportService {
       context: context,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _PdfUnlockSheet(onExport: onExport),
+      builder: (ctx) => _PdfUnlockSheet(
+        onExport: onExport,
+        onBuyPremium: () => PaywallHard.show(context),
+      ),
     );
   }
 }
 
 class _PdfUnlockSheet extends StatefulWidget {
   final Future<void> Function() onExport;
-  const _PdfUnlockSheet({required this.onExport});
+  final VoidCallback onBuyPremium;
+  const _PdfUnlockSheet({required this.onExport, required this.onBuyPremium});
   @override
   State<_PdfUnlockSheet> createState() => _PdfUnlockSheetState();
 }
@@ -1841,9 +1844,8 @@ class _PdfUnlockSheetState extends State<_PdfUnlockSheet> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                AnalyticsService.instance.logPaywallHardShown();
                 Navigator.pop(context);
-                IAPService.instance.buy();
+                widget.onBuyPremium();
               },
               icon: const Icon(Icons.workspace_premium, size: 18),
               label: Text(
