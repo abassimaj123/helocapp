@@ -2,6 +2,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'dart:io';
@@ -327,6 +328,7 @@ pw.TableRow _tr2Strategy(String label, String value,
 // ── Top-level isolate build functions ───────────────────────────────────────
 
 Future<Uint8List> _buildHelocPdf(_HelocPdfParams p) async {
+  await initializeDateFormatting();
   final cur2 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
@@ -536,6 +538,7 @@ Future<Uint8List> _buildHelocPdf(_HelocPdfParams p) async {
 }
 
 Future<Uint8List> _buildComparePdf(_ComparePdfParams p) async {
+  await initializeDateFormatting();
   final cur2 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
@@ -762,6 +765,7 @@ Future<Uint8List> _buildComparePdf(_ComparePdfParams p) async {
 }
 
 Future<Uint8List> _buildDrawOptimizerPdf(_DrawOptimizerPdfParams p) async {
+  await initializeDateFormatting();
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
   final dateF = DateFormat('MMMM d, yyyy');
@@ -1032,6 +1036,7 @@ Future<Uint8List> _buildDrawOptimizerPdf(_DrawOptimizerPdfParams p) async {
 }
 
 Future<Uint8List> _buildHelocVsCashoutPdf(_HelocVsCashoutPdfParams p) async {
+  await initializeDateFormatting();
   final cur2 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
@@ -1286,6 +1291,7 @@ Future<Uint8List> _buildHelocVsCashoutPdf(_HelocVsCashoutPdfParams p) async {
 }
 
 Future<Uint8List> _buildPaymentShockPdf(_PaymentShockPdfParams p) async {
+  await initializeDateFormatting();
   final cur2 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
