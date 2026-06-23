@@ -67,6 +67,7 @@ class HelocEngine {
   // Amortized payment after draw period
   static double amortizedPayment(
       double balance, double annualRate, int repaymentYears) {
+    if (repaymentYears <= 0) return annualRate == 0 ? double.infinity : balance;
     if (annualRate == 0) return balance / (repaymentYears * 12);
     final r = annualRate / 100 / 12;
     final n = repaymentYears * 12;
