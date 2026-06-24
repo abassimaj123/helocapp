@@ -1143,6 +1143,7 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
               const Spacer(),
               if (widget.onRemove != null)
                 IconButton(
+                  tooltip: 'Remove draw',
                   icon: const Icon(Icons.close_rounded,
                       size: 18, color: AppTheme.labelGray),
                   padding: EdgeInsets.zero,
@@ -1472,6 +1473,7 @@ class _RateStepCardState extends State<_RateStepCard> {
         ),
         const SizedBox(width: AppSpacing.xs),
         IconButton(
+          tooltip: 'Remove',
           icon: const Icon(Icons.close_rounded,
               size: 16, color: AppTheme.labelGray),
           padding: EdgeInsets.zero,
