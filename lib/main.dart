@@ -101,7 +101,7 @@ Future<void> main() async {
       );
     }
   } catch (e) {
-    debugPrint('AdMob init error: $e');
+    if (kDebugMode) debugPrint('AdMob init error: $e');
   }
 
   CalcwiseAdFooter.configure(
