@@ -163,10 +163,8 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
           mounted &&
           !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
-          AnalyticsService.instance.logPaywallSoftShown();
           PaywallSoft.show(context);
         } else {
-          AnalyticsService.instance.logPaywallHardShown();
           PaywallHard.show(context);
         }
       }
@@ -338,7 +336,6 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                               ? 'Accede al calendario completo, gráfico de balance y exportación PDF.'
                               : 'Access the full amortization schedule, balance chart, and PDF export.',
                           onUnlock: () {
-                            AnalyticsService.instance.logPaywallHardShown();
                             PaywallHard.show(context);
                           },
                           price: IAPService.instance.localizedPrice,

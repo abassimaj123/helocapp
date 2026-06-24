@@ -77,7 +77,6 @@ class SettingsScreen extends StatelessWidget {
                                     Icons.chevron_right_rounded,
                                     color: AppTheme.labelGray),
                                 onTap: () {
-                                  AnalyticsService.instance.logPaywallHardShown();
                                   AnalyticsService.instance.logUpgradeButtonTapped('settings');
                                   PaywallHard.show(context);
                                 },

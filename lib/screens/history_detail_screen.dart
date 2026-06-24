@@ -450,7 +450,6 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
   Future<void> _exportPdf(BuildContext context, bool isEs) async {
     if (!freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallHardShown();
       await PaywallHard.show(context);
       return;
     }
@@ -786,7 +785,6 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                             onPressed: () async {
                               if (!isPremium) {
                                 if (context.mounted) {
-                                  AnalyticsService.instance.logPaywallHardShown();
                                   await PaywallHard.show(context);
                                 }
                                 return;

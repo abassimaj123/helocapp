@@ -317,10 +317,8 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     final trigger = await paywallSession.recordAction();
     if (trigger != PaywallTrigger.none && mounted && !freemiumService.hasFullAccess) {
       if (trigger == PaywallTrigger.soft) {
-        AnalyticsService.instance.logPaywallSoftShown();
         PaywallSoft.show(context);
       } else {
-        AnalyticsService.instance.logPaywallHardShown();
         PaywallHard.show(context);
       }
     }
@@ -646,7 +644,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                               ? 'Simula cómo los cambios en la tasa prime afectan tu costo total de interés.'
                               : 'Simulate how prime rate changes affect your total interest cost.',
                           onUnlock: () {
-                            AnalyticsService.instance.logPaywallHardShown();
                             PaywallHard.show(context);
                           },
                           price: IAPService.instance.localizedPrice,

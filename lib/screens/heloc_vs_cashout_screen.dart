@@ -356,11 +356,9 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallHardShown();
       PaywallHard.show(context);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallSoftShown();
       PaywallSoft.show(context);
     }
   }

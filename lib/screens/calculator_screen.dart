@@ -472,10 +472,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       return;
     }
     if (trigger == PaywallTrigger.soft) {
-      AnalyticsService.instance.logPaywallSoftShown();
       PaywallSoft.show(context);
     } else {
-      AnalyticsService.instance.logPaywallHardShown();
       PaywallHard.show(context);
     }
   }
@@ -626,10 +624,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         mounted &&
         !freemiumService.hasFullAccess) {
       if (trigger == PaywallTrigger.soft) {
-        AnalyticsService.instance.logPaywallSoftShown();
         PaywallSoft.show(context);
       } else {
-        AnalyticsService.instance.logPaywallHardShown();
         PaywallHard.show(context);
       }
     }
@@ -797,7 +793,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
     if (_results == null) return;
 
     if (!freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallHardShown();
       await PaywallHard.show(context);
       return;
     }
@@ -1459,7 +1454,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                         ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
                                         : 'Simulate how rate changes impact your monthly payment and total interest.',
                                     onUnlock: () {
-                                      AnalyticsService.instance.logPaywallHardShown();
                                       PaywallHard.show(context);
                                     },
                                     price:

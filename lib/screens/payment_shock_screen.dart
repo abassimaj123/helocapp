@@ -217,11 +217,9 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallHardShown();
       PaywallHard.show(context);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
-      AnalyticsService.instance.logPaywallSoftShown();
       PaywallSoft.show(context);
     }
   }
@@ -519,7 +517,6 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
                     : 'View the full payment comparison with an interactive bar chart.',
                 onUnlock: () {
-                  AnalyticsService.instance.logPaywallHardShown();
                   PaywallHard.show(context);
                 },
                 price: IAPService.instance.localizedPrice,

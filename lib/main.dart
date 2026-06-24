@@ -313,7 +313,6 @@ class _MainShellState extends State<MainShell> {
             },
             onRewardAd: () => CalcwiseRewardAdSheet.show(context),
             onPremium: () {
-              AnalyticsService.instance.logPaywallHardShown();
               PaywallHard.show(context);
             },
           ),
@@ -346,10 +345,8 @@ class _MainShellState extends State<MainShell> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               if (trigger == PaywallTrigger.soft) {
-                AnalyticsService.instance.logPaywallSoftShown();
                 PaywallSoft.show(context);
               } else {
-                AnalyticsService.instance.logPaywallHardShown();
                 PaywallHard.show(context);
               }
             });

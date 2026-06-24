@@ -80,10 +80,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           mounted &&
           !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
-          AnalyticsService.instance.logPaywallSoftShown();
           PaywallSoft.show(context);
         } else {
-          AnalyticsService.instance.logPaywallHardShown();
           PaywallHard.show(context);
         }
       }
@@ -421,7 +419,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        AnalyticsService.instance.logPaywallSoftShown();
                         PaywallSoft.show(context);
                       },
                       style: TextButton.styleFrom(

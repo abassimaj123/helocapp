@@ -279,11 +279,9 @@ class _CompareScreenState extends State<CompareScreen>
       adService.onAction();
       final trigger = await paywallSession.recordAction();
       if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-        AnalyticsService.instance.logPaywallHardShown();
         PaywallHard.show(context);
       } else if (trigger == PaywallTrigger.soft &&
           !freemiumService.hasFullAccess) {
-        AnalyticsService.instance.logPaywallSoftShown();
         PaywallSoft.show(context);
       }
     }
