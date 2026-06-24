@@ -125,6 +125,7 @@ pw.Widget _histPdfTable(List<List<String>> rows, {bool highlightFirst = false}) 
 }
 
 Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
+  await initializeDateFormatting();
   final fmtPct = NumberFormat('##0.0#');
   final dateFmt = DateFormat('MMM d, yyyy');
   final createdAt = DateTime.fromMillisecondsSinceEpoch(p.createdAtMs);

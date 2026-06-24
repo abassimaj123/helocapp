@@ -279,6 +279,7 @@ class _CompareScreenState extends State<CompareScreen>
     if (isManual) {
       adService.onAction();
       final trigger = await paywallSession.recordAction();
+      if (!mounted) return;
       if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
         PaywallHard.show(context);
       } else if (trigger == PaywallTrigger.soft &&
