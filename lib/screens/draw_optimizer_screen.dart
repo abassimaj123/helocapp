@@ -203,6 +203,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   }
 
   Future<void> _exportPdf() async {
+    HapticFeedback.mediumImpact();
     final results = _results;
     final optimalIdx = _optimalIndex;
     if (results == null || optimalIdx == null) return;

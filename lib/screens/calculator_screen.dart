@@ -598,6 +598,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   // ── Share ──────────────────────────────────────────────────────────────────
 
   Future<void> _share(bool isEs, {bool isFr = false}) async {
+    HapticFeedback.mediumImpact();
     if (_results == null) return;
 
     final text = _buildShareText(isEs, isFr: isFr);
@@ -709,6 +710,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
   // ── PDF Export ─────────────────────────────────────────────────────────────
 
   Future<void> _exportPdf(bool isEs, {bool isFr = false}) async {
+    HapticFeedback.mediumImpact();
     if (_results == null) return;
 
     if (!freemiumService.hasFullAccess) {
