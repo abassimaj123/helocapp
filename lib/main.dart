@@ -120,6 +120,7 @@ Future<void> main() async {
     isSpanishNotifier: isSpanishNotifier,
   );
   PaywallHard.setAnalytics(AnalyticsService.instance);
+  PaywallSoft.setAnalytics(AnalyticsService.instance);
   runApp(const _IapErrorWrapper());
 }
 
