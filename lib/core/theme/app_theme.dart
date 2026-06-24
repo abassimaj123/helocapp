@@ -10,7 +10,6 @@ class AppTheme {
   static const Color accentGood = Color(0xFF34D399);
 
   static const Color background = Color(0xFFF8FAFC);
-  static const Color cardWhite = Colors.white;
   static const Color success = Color(0xFF34C759);
   static const Color successDark = Color(0xFF15803D); // green.shade700 equiv
   static const Color warning = Color(0xFFFFA500);
