@@ -408,6 +408,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
           ? 'Optimizador \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%'
           : 'Draw Optimizer \$${(_parseCtrl(_creditLimitCtrl) / 1000).toStringAsFixed(0)}k @ ${_parseCtrl(_rateCtrl).toStringAsFixed(1)}%'),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   // ── Variable rate helpers ─────────────────────────────────────────────────

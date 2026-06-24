@@ -219,6 +219,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
           ? 'HELOC vs Refinanc. \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k'
           : 'HELOC vs Refi \$${(_parseN(_cashCtrl.text) / 1000).toStringAsFixed(0)}k'),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _exportPdf() async {

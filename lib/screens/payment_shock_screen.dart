@@ -151,6 +151,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
           ? 'Choque de Pago \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'
           : 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'),
     );
+    HistoryScreen.refreshNotifier.value++;
   }
 
   Future<void> _exportPdf() async {
