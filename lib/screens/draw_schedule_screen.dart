@@ -134,6 +134,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
               : 'Draw Schedule \$${(draw / 1000).toStringAsFixed(0)}k @ ${rate.toStringAsFixed(1)}%'),
     );
     HistoryScreen.refreshNotifier.value++;
+    adService.onSave();
   }
 
   Future<void> _generate({bool isManual = false}) async {
@@ -157,6 +158,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
 
     AnalyticsService.instance.logDrawScheduleViewed();
     unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
+    adService.onAction();
     if (isManual) {
       final trigger = await paywallSession.recordAction();
       if (trigger != PaywallTrigger.none &&

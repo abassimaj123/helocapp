@@ -203,6 +203,7 @@ class _CompareScreenState extends State<CompareScreen>
           : 'Compare \$${(_parseN(_drawCtrl.text) / 1000).toStringAsFixed(0)}k'),
     );
     HistoryScreen.refreshNotifier.value++;
+    adService.onSave();
   }
 
   Future<void> _exportPdf() async {
