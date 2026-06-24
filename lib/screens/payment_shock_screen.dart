@@ -341,7 +341,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     ]),
                     const SizedBox(height: AppSpacing.xl),
                     ElevatedButton.icon(
-                      onPressed: () => _compute(),
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        _compute();
+                      },
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 52),
                         shape: RoundedRectangleBorder(
@@ -352,7 +355,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     OutlinedButton(
-                      onPressed: _reset,
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        _reset();
+                      },
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
@@ -369,7 +375,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                     if (_result != null) ...[
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
-                        onPressed: _exportPdf,
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          _exportPdf();
+                        },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(

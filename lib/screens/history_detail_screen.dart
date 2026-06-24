@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -733,6 +734,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                   fontWeight: FontWeight.w600),
                             ),
                             onPressed: () {
+                              HapticFeedback.mediumImpact();
                               helocNotifier.value = (
                                 creditLimit: _draw,
                                 balance: _draw,
@@ -784,6 +786,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                   fontWeight: FontWeight.w600),
                             ),
                             onPressed: () async {
+                              HapticFeedback.mediumImpact();
                               if (!isPremium) {
                                 if (context.mounted) {
                                   await PaywallHard.show(context);

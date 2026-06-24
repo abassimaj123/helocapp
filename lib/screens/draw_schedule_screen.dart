@@ -302,7 +302,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                 ]),
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: () => _generate(isManual: true),
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    _generate(isManual: true);
+                  },
                   icon: const Icon(Icons.timeline),
                   label:
                       Text(isEs ? 'Generar calendario' : 'Generate Schedule'),
@@ -367,7 +370,10 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
 
                           // PDF export
                           OutlinedButton.icon(
-                            onPressed: () => _exportPdf(context, isEs),
+                            onPressed: () {
+                              HapticFeedback.mediumImpact();
+                              _exportPdf(context, isEs);
+                            },
                             icon: const Icon(Icons.picture_as_pdf_rounded),
                             label: Text(isEs
                                 ? AppStringsES.exportPdf

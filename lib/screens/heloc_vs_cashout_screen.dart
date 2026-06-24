@@ -547,7 +547,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     ElevatedButton.icon(
-                      onPressed: () => _compute(),
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        _compute();
+                      },
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 52),
                         shape: RoundedRectangleBorder(
@@ -558,7 +561,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     OutlinedButton(
-                      onPressed: _reset,
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        _reset();
+                      },
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
@@ -575,7 +581,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                     if (_result != null) ...[
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
-                        onPressed: _exportPdf,
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          _exportPdf();
+                        },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(
