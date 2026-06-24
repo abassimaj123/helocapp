@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:calcwise_core/calcwise_core.dart'
     hide CrashlyticsService, iapErrorNotifier, PaywallHard;
 import 'core/ads/ad_config.dart';
@@ -64,6 +65,8 @@ final ValueNotifier<({double creditLimit, double balance, double rate})>
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('en_US', null);
+  await initializeDateFormatting('es_US', null);
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AnalyticsService.instance.initialize();
