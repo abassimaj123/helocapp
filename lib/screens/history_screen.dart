@@ -99,11 +99,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _delete(int id) async {
     await smartHistoryService.delete(id);
+    if (!mounted) return;
     await _load();
   }
 
   Future<void> _unpin(int id) async {
     await smartHistoryService.unpin(id);
+    if (!mounted) return;
     await _load();
   }
 
@@ -172,6 +174,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       smartHistoryService.cancelPendingSave('helocapp', 'heloc_vs_cashout');
       smartHistoryService.cancelPendingSave('helocapp', 'payment_shock');
       await DatabaseService.instance.clearHistory();
+      if (!mounted) return;
       await _load();
     }
   }
