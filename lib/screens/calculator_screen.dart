@@ -347,6 +347,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
 
   Map<String, dynamic>? _results;
   List<Map<String, dynamic>>? _cachedScenarios;
+  bool _paywallChecked = false;
 
   @override
   void initState() {
@@ -468,6 +469,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   }
 
   Future<void> _maybeShowPaywall() async {
+    if (_paywallChecked) return;
+    _paywallChecked = true;
     final trigger = await paywallSession.recordAction();
     if (trigger == PaywallTrigger.none || !mounted || freemiumService.hasFullAccess) {
       return;
@@ -559,93 +562,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     _drawYearsCtrl.dispose();
     _repayYearsCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _calculate() async {
-    smartHistoryService.cancelPendingSave('helocapp', 'calculator');
-    if (!_formKey.currentState!.validate()) return;
-    final homeValue = _parseNum(_homeValueCtrl.text);
-    final mortgage = _parseNum(_mortgageCtrl.text);
-    final draw = _parseNum(_drawCtrl.text);
-    final rate = _parseNum(_rateCtrl.text);
-    final drawYears = int.tryParse(_drawYearsCtrl.text) ?? 10;
-    final repayYears = int.tryParse(_repayYearsCtrl.text) ?? 20;
-
-    final equity = HelocEngine.availableEquity(homeValue, mortgage);
-    final ltv = HelocEngine.ltv(mortgage, homeValue);
-    final interestOnly = HelocEngine.interestOnlyPayment(draw, rate);
-    final repayment = HelocEngine.amortizedPayment(draw, rate, repayYears);
-    final totalInterest =
-        HelocEngine.totalInterestPaid(draw, rate, drawYears, repayYears);
-    final maxBorrow85 =
-        HelocEngine.maxBorrowCapacity(homeValue, mortgage, ltvLimit: 0.85);
-    final taxSavings = HelocEngine.estimatedAnnualTaxSavings(draw, rate, _taxBracket);
-    final fullTotalMonths = (drawYears + repayYears) * 12;
-    final fullTermYears = fullTotalMonths ~/ 12;
-    final fullPI = HelocEngine.amortizedPayment(
-        draw, rate, fullTermYears > 0 ? fullTermYears : 1);
-    final totalInterestFullPI = HelocEngine.totalInterestFullAmortizing(
-        draw, rate, drawYears, repayYears);
-
-    setState(() {
-      _results = {
-        'homeValue': homeValue,
-        'mortgage': mortgage,
-        'draw': draw,
-        'rate': rate,
-        'drawYears': drawYears,
-        'repayYears': repayYears,
-        'equity': equity,
-        'ltv': ltv,
-        'interestOnly': interestOnly,
-        'repayment': repayment,
-        'totalInterest': totalInterest,
-        'maxBorrow85': maxBorrow85,
-        'taxSavings': taxSavings,
-        'fullPI': fullPI,
-        'totalInterestFullPI': totalInterestFullPI,
-      };
-      _cachedScenarios = _computeScenarioData(
-          draw: draw,
-          baseRate: rate,
-          drawYears: drawYears,
-          repayYears: repayYears);
-    });
-
-    AnalyticsService.instance.logCalculation(
-      homeValue: homeValue,
-      ratePct: rate,
-    );
-    unawaited(AnalyticsService.instance.maybeLogFirstCalculate());
-    adService.onAction();
-    HapticFeedback.mediumImpact();
-
-    final trigger = await paywallSession.recordAction();
-    if (trigger != PaywallTrigger.none &&
-        mounted &&
-        !freemiumService.hasFullAccess) {
-      if (trigger == PaywallTrigger.soft) {
-        PaywallSoft.show(context);
-      } else {
-        PaywallHard.show(context);
-      }
-    }
-
-    // Immediate auto-save into the ring buffer (bypass debounce).
-    final inputs = _resultsToInputs();
-    final results = _resultsToResults();
-    smartHistoryService.scheduleAutoSave(
-      appKey: 'helocapp',
-      screenId: 'calculator',
-      inputHash: _resultHash(inputs),
-      l1: _buildL1(inputs, results),
-      l2: {'inputs': inputs, 'results': results},
-      onSaved: () {
-        if (mounted) setState(() {});
-      },
-    );
-    HistoryScreen.refreshNotifier.value++;
-    adService.onSave();
   }
 
   /// Pin the current result as a saved scenario via SmartHistory.

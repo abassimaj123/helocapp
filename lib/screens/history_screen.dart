@@ -27,6 +27,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
+  bool _paywallChecked = false;
 
   final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
 
@@ -54,6 +55,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     AnalyticsService.instance.logScreenView('history');
     _load();
     HistoryScreen.refreshNotifier.addListener(_silentRefresh);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPaywall());
     isSpanishNotifier.addListener(_onLangChange);
   }
 
@@ -75,16 +77,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
         _loading = false;
       });
       AnalyticsService.instance.logHistoryViewed();
-      final trigger = await paywallSession.recordAction();
-      if (trigger != PaywallTrigger.none &&
-          mounted &&
-          !freemiumService.hasFullAccess) {
-        if (trigger == PaywallTrigger.soft) {
-          PaywallSoft.show(context);
-        } else {
-          PaywallHard.show(context);
-        }
-      }
+    }
+  }
+
+  Future<void> _checkPaywall() async {
+    if (_paywallChecked) return;
+    _paywallChecked = true;
+    final trigger = await paywallSession.recordAction();
+    if (trigger == PaywallTrigger.none || !mounted || freemiumService.hasFullAccess) return;
+    if (trigger == PaywallTrigger.soft) {
+      PaywallSoft.show(context);
+    } else {
+      PaywallHard.show(context);
     }
   }
 
