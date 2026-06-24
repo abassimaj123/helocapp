@@ -578,6 +578,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       l2: {'inputs': inputs, 'results': results},
       label: label,
     );
+    HistoryScreen.refreshNotifier.value++;
     adService.onSave();
   }
 
