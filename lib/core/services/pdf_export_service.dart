@@ -333,7 +333,7 @@ Future<Uint8List> _buildHelocPdf(_HelocPdfParams p) async {
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final dateF = DateFormat('MMMM d, yyyy');
+  final dateF = DateFormat('MMMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   final ltv = p.homeValue > 0 ? (p.mortgageBalance / p.homeValue * 100) : 0.0;
@@ -543,7 +543,7 @@ Future<Uint8List> _buildComparePdf(_ComparePdfParams p) async {
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final dateF = DateFormat('MMMM d, yyyy');
+  final dateF = DateFormat('MMMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   final minTotal = [p.helocTotalInterest, p.refiTotalInterest, p.loanTotalInterest]
@@ -768,7 +768,7 @@ Future<Uint8List> _buildDrawOptimizerPdf(_DrawOptimizerPdfParams p) async {
   await initializeDateFormatting();
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final dateF = DateFormat('MMMM d, yyyy');
+  final dateF = DateFormat('MMMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   String localLabel(String label) {
@@ -1041,7 +1041,7 @@ Future<Uint8List> _buildHelocVsCashoutPdf(_HelocVsCashoutPdfParams p) async {
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final dateF = DateFormat('MMMM d, yyyy');
+  final dateF = DateFormat('MMMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   final winnerLabel = p.winnerIndex == 0
@@ -1296,7 +1296,7 @@ Future<Uint8List> _buildPaymentShockPdf(_PaymentShockPdfParams p) async {
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
   final cur0 =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
-  final dateF = DateFormat('MMMM d, yyyy');
+  final dateF = DateFormat('MMMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   final page = pw.Column(

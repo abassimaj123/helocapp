@@ -129,7 +129,7 @@ pw.Widget _histPdfTable(List<List<String>> rows, {bool highlightFirst = false}) 
 Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
   await initializeDateFormatting();
   final fmtPct = NumberFormat('##0.0#');
-  final dateFmt = DateFormat('MMM d, yyyy');
+  final dateFmt = DateFormat('MMM d, yyyy', p.isEs ? 'es' : 'en');
   final createdAt = DateTime.fromMillisecondsSinceEpoch(p.createdAtMs);
 
   final doc = pw.Document();
@@ -343,7 +343,8 @@ class _HistoryDetailBody extends StatefulWidget {
 }
 
 class _HistoryDetailBodyState extends State<_HistoryDetailBody> {
-  final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
+  DateFormat get _fmtDate =>
+      DateFormat('MMM d, yyyy – h:mm a', isSpanishNotifier.value ? 'es' : 'en');
   final _fmtPct = NumberFormat('##0.0#');
 
   @override

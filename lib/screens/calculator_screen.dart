@@ -140,7 +140,7 @@ pw.Widget _calcPdfTable(List<List<String>> rows, {bool highlightFirst = false}) 
 Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
   await initializeDateFormatting();
   final fmtPct = NumberFormat('##0.0#');
-  final dateFmt = DateFormat('MMM d, yyyy');
+  final dateFmt = DateFormat('MMM d, yyyy', p.isEs ? 'es' : 'en');
   final now = DateTime.fromMillisecondsSinceEpoch(p.nowMs);
 
   final doc = pw.Document();

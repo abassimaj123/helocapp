@@ -29,7 +29,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _loading = true;
   bool _paywallChecked = false;
 
-  final _fmtDate = DateFormat('MMM d, yyyy – h:mm a');
+  DateFormat get _fmtDate =>
+      DateFormat('MMM d, yyyy – h:mm a', isSpanishNotifier.value ? 'es' : 'en');
 
   String _dateGroup(DateTime d, bool isEs) {
     final now = DateTime.now();
