@@ -28,6 +28,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
   bool _paywallChecked = false;
+  String _searchQuery = '';
 
   DateFormat get _fmtDate =>
       DateFormat('MMM d, yyyy – h:mm a', isSpanishNotifier.value ? 'es' : 'en');
@@ -194,6 +195,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return _autoSaves.take(MonetizationConfig.freeRingBufferSize).toList();
   }
 
+  bool _matchesSearch(Map<String, dynamic> row) {
+    if (_searchQuery.isEmpty) return true;
+    final q = _searchQuery.toLowerCase();
+    final pinLabel = (row['pin_label'] as String? ?? '').toLowerCase();
+    final inputs = row['inputs'] as Map<String, dynamic>? ?? {};
+    final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
+    final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
+    final humanLabel =
+        '${_shortK(draw)} draw @ ${rate.toStringAsFixed(1)}%'.toLowerCase();
+    return pinLabel.contains(q) || humanLabel.contains(q);
+  }
+
+  List<Map<String, dynamic>> get _filteredPinned =>
+      _pinned.where(_matchesSearch).toList();
+
+  List<Map<String, dynamic>> get _filteredAutoSaves =>
+      _visibleAutoSaves.where(_matchesSearch).toList();
+
   @override
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
@@ -209,6 +228,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(child: _buildHeader(context, isEs)),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.lg, AppSpacing.sm,
+                              AppSpacing.lg, AppSpacing.xs),
+                          child: CalcwiseSearchBar(
+                            onChanged: (q) =>
+                                setState(() => _searchQuery = q),
+                          ),
+                        ),
+                      ),
                       if (_history.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
@@ -226,9 +256,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             onAction: () => tabSwitchNotifier.value = 0,
                           ),
                         )
+                      else if (_searchQuery.isNotEmpty &&
+                          _filteredPinned.isEmpty &&
+                          _filteredAutoSaves.isEmpty)
+                        SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.xl),
+                              child: Text(isEs ? 'Sin resultados' : 'No results'),
+                            ),
+                          ),
+                        )
                       else ...[
                         // ── Saved Scenarios (pinned) ─────────────────────────
-                        if (_pinned.isNotEmpty) ...[
+                        if (_filteredPinned.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: _sectionHeader(
                                 context,
@@ -240,15 +281,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               (ctx, i) => Padding(
                                 padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
                                     0, AppSpacing.lg, AppSpacing.smPlus),
-                                child:
-                                    _buildCard(_pinned[i], isEs, pinned: true),
+                                child: _buildCard(_filteredPinned[i], isEs,
+                                    pinned: true),
                               ),
-                              childCount: _pinned.length,
+                              childCount: _filteredPinned.length,
                             ),
                           ),
                         ],
                         // ── Recent Calculations (auto-saves) ─────────────────
-                        if (_visibleAutoSaves.isNotEmpty) ...[
+                        if (_filteredAutoSaves.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: _sectionHeader(
                                 context,
@@ -260,7 +301,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
-                                final list = _visibleAutoSaves;
+                                final list = _filteredAutoSaves;
                                 final row = list[i];
                                 final id = row['id'] as int;
                                 final createdAt =
@@ -332,7 +373,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   ],
                                 );
                               },
-                              childCount: _visibleAutoSaves.length,
+                              childCount: _filteredAutoSaves.length,
                             ),
                           ),
                         ],
