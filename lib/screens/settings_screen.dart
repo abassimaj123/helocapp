@@ -12,8 +12,18 @@ import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView('settings');
+  }
 
   Future<void> _setLanguage(String lang) async {
     isSpanishNotifier.value = lang == 'es';
