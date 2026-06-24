@@ -237,6 +237,7 @@ class _CompareScreenState extends State<CompareScreen>
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
+    AnalyticsService.instance.logPdfExported();
   }
 
   Future<void> _compare({bool isManual = false}) async {

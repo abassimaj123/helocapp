@@ -233,6 +233,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
+    AnalyticsService.instance.logPdfExported();
   }
 
   Future<void> _optimize() async {

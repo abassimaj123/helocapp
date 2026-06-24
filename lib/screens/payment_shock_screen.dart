@@ -178,6 +178,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
+    AnalyticsService.instance.logPdfExported();
   }
 
   void _tryCompute() {

@@ -257,6 +257,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
+    AnalyticsService.instance.logPdfExported();
   }
 
   void _tryCompute() {
