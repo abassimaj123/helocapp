@@ -178,7 +178,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _optimize();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPaywall());
   }
 
   void _onLangChange() => setState(() {});

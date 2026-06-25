@@ -57,7 +57,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     AnalyticsService.instance.logScreenView('history');
     _load();
     HistoryScreen.refreshNotifier.addListener(_silentRefresh);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPaywall());
     isSpanishNotifier.addListener(_onLangChange);
   }
 
