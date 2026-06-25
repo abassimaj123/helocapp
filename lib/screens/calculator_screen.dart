@@ -463,7 +463,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
         if (!mounted) return;
         setState(() {});
         HistoryScreen.refreshNotifier.value++;
-        adService.onSave();
         unawaited(_maybeShowPaywall());
       },
     );

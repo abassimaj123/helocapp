@@ -42,6 +42,8 @@ final adService = CalcwiseAdService(
     bannerAndroid: AdConfig.bannerAndroid,
     interstitialAndroid: AdConfig.interstitialAndroid,
     rewardedAndroid: AdConfig.rewardedAndroid,
+    calcThreshold: 7,
+    cooldownMinutes: 5,
   ),
   freemium: freemiumService,
   analytics: AnalyticsService.instance,
@@ -338,7 +340,6 @@ class _MainShellState extends State<MainShell> {
           if (i == _index) return;
           setState(() => _index = i);
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
-          adService.onAction();
           // Calculator tab (index 0) is always free — no action recording.
           if (i == 0) return;
           final trigger = await paywallSession.recordAction();
