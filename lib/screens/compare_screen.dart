@@ -561,7 +561,6 @@ class _CompareScreenState extends State<CompareScreen>
         [helocTotal, refiTotal, loanTotal].reduce((a, b) => a < b ? a : b);
     final bestIsHeloc = helocTotal == minTotal;
     final bestIsRefi = refiTotal == minTotal && !bestIsHeloc;
-    final bestIsLoan = loanTotal == minTotal && !bestIsHeloc && !bestIsRefi;
 
     String bestName;
     if (bestIsHeloc)

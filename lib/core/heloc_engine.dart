@@ -278,9 +278,14 @@ class HelocEngine {
       final r = rate / 100 / 12;
       // Remaining months in repayment
       final remaining = repayYears * 12 - m + 1;
-      final payment = remaining > 0
-          ? balance * r * pow(1 + r, remaining) / (pow(1 + r, remaining) - 1)
-          : balance;
+      final payment = remaining <= 0
+          ? balance
+          : r == 0
+              // 0% rate: standard amortization formula divides by r (NaN).
+              // Use simple linear amortization instead — equal principal,
+              // no interest, matching how a 0%-interest loan should behave.
+              ? balance / remaining
+              : balance * r * pow(1 + r, remaining) / (pow(1 + r, remaining) - 1);
       final interest = balance * r;
       final principal = (payment - interest).clamp(0.0, balance);
       balance = (balance - principal);

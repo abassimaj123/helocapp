@@ -1,9 +1,6 @@
 import 'package:calcwise_core/calcwise_core.dart';
 import 'package:flutter/material.dart';
 import '../core/firebase/analytics_service.dart';
-import '../core/theme/app_theme.dart';
-import '../l10n/strings_en.dart';
-import '../l10n/strings_es.dart';
 import '../main.dart' show isSpanishNotifier;
 import 'draw_optimizer_screen.dart';
 import 'heloc_vs_cashout_screen.dart';

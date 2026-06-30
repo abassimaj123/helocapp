@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 import '../core/theme/app_theme.dart';
-import '../core/firebase/analytics_service.dart';
 import '../main.dart' show isSpanishNotifier;
 import 'onboarding_screen.dart';
 

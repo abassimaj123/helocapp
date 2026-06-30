@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:calcwise_core/calcwise_core.dart' show AppRadius;
 
-import '../core/freemium/freemium_service.dart';
 import '../main.dart' show isSpanishNotifier;
 
 /// A "Save Scenario" button that pins the current calculator result.

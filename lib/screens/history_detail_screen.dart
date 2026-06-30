@@ -19,7 +19,6 @@ import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
 import '../widgets/paywall_hard.dart';
-import '../widgets/paywall_soft.dart';
 
 // -- PDF params (only sendable primitives) ------------------------------------
 

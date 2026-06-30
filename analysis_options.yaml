@@ -48,9 +48,6 @@ analyzer:
     library_private_types_in_public_api: ignore
     avoid_relative_lib_imports: ignore
     comment_references: ignore
-    unused_import: ignore
-    unused_local_variable: ignore
-    unused_element: ignore
     inference_failure_on_function_invocation: ignore
     inference_failure_on_instance_creation: ignore
     inference_failure_on_function_return_type: ignore

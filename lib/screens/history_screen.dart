@@ -9,7 +9,6 @@ import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
-import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import 'history_detail_screen.dart';
 
@@ -27,7 +26,6 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
-  bool _paywallChecked = false;
   String _searchQuery = '';
 
   DateFormat get _fmtDate =>
@@ -78,18 +76,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         _loading = false;
       });
       AnalyticsService.instance.logHistoryViewed();
-    }
-  }
-
-  Future<void> _checkPaywall() async {
-    if (_paywallChecked) return;
-    _paywallChecked = true;
-    final trigger = await paywallSession.recordAction();
-    if (trigger == PaywallTrigger.none || !mounted || freemiumService.hasFullAccess) return;
-    if (trigger == PaywallTrigger.soft) {
-      PaywallSoft.show(context);
-    } else {
-      PaywallHard.show(context);
     }
   }
 
@@ -520,15 +506,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final results = row['results'] as Map<String, dynamic>;
     final createdAt = DateTime.parse(row['created_at'] as String);
 
-    final balance = (inputs['balance'] as num?)?.toDouble() ?? 0.0;
     final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
     final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
-    final drawYears = (inputs['drawYears'] as num?)?.toInt() ?? 10;
-    final repayYears = (inputs['repayYears'] as num?)?.toInt() ?? 20;
     final equity = (results['equity'] as num?)?.toDouble() ?? 0.0;
-    final ltv = (results['ltv'] as num?)?.toDouble() ?? 0.0;
     final interestOnly = (results['interestOnly'] as num?)?.toDouble() ?? 0.0;
-    final repayment = (results['repayment'] as num?)?.toDouble() ?? 0.0;
     final pinLabel = row['pin_label'] as String?;
 
     final humanLabel =

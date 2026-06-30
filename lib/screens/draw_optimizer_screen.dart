@@ -14,7 +14,6 @@ import '../core/theme/app_theme.dart';
 import '../main.dart';
 import '../core/freemium/iap_service.dart';
 import '../widgets/paywall_hard.dart';
-import '../widgets/paywall_soft.dart';
 import '../widgets/save_scenario_button.dart';
 import 'history_screen.dart';
 
@@ -144,7 +143,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
 
   List<_StrategyResult>? _results;
   int? _optimalIndex;
-  bool _paywallChecked = false;
 
   // ── Variable rate simulation state ────────────────────────────────────────
   final _primeRateCtrl = TextEditingController(text: '7.5');
@@ -330,18 +328,6 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
 
     HapticFeedback.mediumImpact();
     adService.onAction();
-  }
-
-  Future<void> _checkPaywall() async {
-    if (_paywallChecked) return;
-    _paywallChecked = true;
-    final trigger = await paywallSession.recordAction();
-    if (trigger == PaywallTrigger.none || !mounted || freemiumService.hasFullAccess) return;
-    if (trigger == PaywallTrigger.soft) {
-      PaywallSoft.show(context);
-    } else {
-      PaywallHard.show(context);
-    }
   }
 
   @override

@@ -28,9 +28,6 @@ import '../core/freemium/iap_service.dart';
 import '../widgets/result_card.dart';
 import '../core/insight_engine.dart';
 import 'compare_screen.dart';
-import 'draw_optimizer_screen.dart';
-import 'heloc_vs_cashout_screen.dart';
-import 'payment_shock_screen.dart';
 import 'history_screen.dart';
 
 const _chartAmberColor = Color(0xFFF9A825);
@@ -382,7 +379,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     final homeValue = _parseNum(_homeValueCtrl.text);
     final mortgage = _parseNum(_mortgageCtrl.text);
     final equity = HelocEngine.availableEquity(homeValue, mortgage);
-    final ltv = HelocEngine.ltv(mortgage, homeValue);
     if (mounted)
       setState(() {
         _availableEquity = equity;

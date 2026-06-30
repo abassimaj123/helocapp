@@ -336,26 +336,12 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) async {
+        onDestinationSelected: (i) {
           if (i == _index) return;
           setState(() => _index = i);
           AnalyticsService.instance.logTabSwitched(tabIndex: i);
-          // Calculator tab (index 0) is always free — no action recording.
-          if (i == 0) return;
-          final trigger = await paywallSession.recordAction();
-          if (trigger != PaywallTrigger.none &&
-              mounted &&
-              (ModalRoute.of(context)?.isCurrent ?? false) &&
-              !freemiumService.hasFullAccess) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              if (trigger == PaywallTrigger.soft) {
-                PaywallSoft.show(context);
-              } else {
-                PaywallHard.show(context);
-              }
-            });
-          }
+          // Paywall action counting happens on the screen-level Calculate
+          // action (one trigger per user intent), not on tab switches.
         },
         destinations: [
           NavigationDestination(
@@ -366,7 +352,7 @@ class _MainShellState extends State<MainShell> {
           NavigationDestination(
             icon: const Icon(Icons.timeline_rounded),
             selectedIcon: const Icon(Icons.timeline),
-            label: isEs ? 'Calendario' : 'Draw Schedule',
+            label: isEs ? 'Calendario' : 'Schedule',
           ),
           NavigationDestination(
             icon: const Icon(Icons.compare_arrows_rounded),

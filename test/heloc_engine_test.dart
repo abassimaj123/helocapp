@@ -491,4 +491,50 @@ void main() {
       expect(r.refiBreakEvenMonths, equals(9999));
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // variableRateSchedule — 0% rate regression (NaN guard)
+  // ─────────────────────────────────────────────────────────────────────────
+  group('variableRateSchedule', () {
+    test('0% rate in repayment phase does not produce NaN payments', () {
+      final rows = HelocEngine.variableRateSchedule(
+        drawAmount: 24000,
+        drawYears: 1,
+        repayYears: 2,
+        rateSteps: const [(startYear: 1, ratePct: 0.0)],
+      );
+
+      expect(rows, isNotEmpty);
+      for (final row in rows) {
+        expect(row['payment']!.isNaN, isFalse,
+            reason: 'month ${row['month']} payment is NaN');
+        expect(row['balance']!.isNaN, isFalse,
+            reason: 'month ${row['month']} balance is NaN');
+      }
+
+      // Repayment phase at 0% should amortize linearly: equal principal,
+      // no interest, balance reaches 0 by the end of the term.
+      final repayRows = rows.where((r) => r['phase'] == 1).toList();
+      expect(repayRows, isNotEmpty);
+      final expectedMonthlyPrincipal = 24000 / (2 * 12);
+      expect(repayRows.first['payment'],
+          closeTo(expectedMonthlyPrincipal, 0.01));
+      expect(repayRows.last['balance'], closeTo(0.0, 0.01));
+    });
+
+    test('non-zero rate still amortizes normally (no regression)', () {
+      final rows = HelocEngine.variableRateSchedule(
+        drawAmount: 24000,
+        drawYears: 1,
+        repayYears: 2,
+        rateSteps: const [(startYear: 1, ratePct: 6.0)],
+      );
+      final repayRows = rows.where((r) => r['phase'] == 1).toList();
+      expect(repayRows, isNotEmpty);
+      for (final row in repayRows) {
+        expect(row['payment']!.isNaN, isFalse);
+      }
+      expect(repayRows.last['balance'], closeTo(0.0, 0.01));
+    });
+  });
 }
