@@ -632,7 +632,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Pago mensual (solo interés)'
                                     : 'Monthly IO Payment',
-                                value: '${AmountFormatter.ui(_interestOnly, 'USD')}/mo',
+                                value: '${AmountFormatter.ui(_interestOnly, 'USD')}${isEs ? '/mes' : '/mo'}',
                                 valueColor: AppTheme.primary,
                                 bold: true,
                               ),
@@ -641,7 +641,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Pago mensual amortizado'
                                     : 'Monthly Amortizing Payment',
-                                value: '${AmountFormatter.ui(_repayment, 'USD')}/mo',
+                                value: '${AmountFormatter.ui(_repayment, 'USD')}${isEs ? '/mes' : '/mo'}',
                               ),
                               _DetailRow(
                                 label: isEs
@@ -666,7 +666,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                                 label: isEs
                                     ? 'Ahorro fiscal est. (22%)'
                                     : 'Est. Tax Savings (22%)',
-                                value: '${AmountFormatter.ui(_taxSavings, 'USD')}/yr',
+                                value: '${AmountFormatter.ui(_taxSavings, 'USD')}${isEs ? '/año' : '/yr'}',
                                 valueColor: Theme.of(context).colorScheme.primary,
                               ),
                             ]),

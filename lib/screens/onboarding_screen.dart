@@ -18,7 +18,7 @@ class OnboardingScreen extends StatelessWidget {
               'Draw Optimizer',
               'Rate Stress Test',
               'HELOC vs HEL',
-              'Canadian Ready'
+              '85% LTV'
             ],
             titleFr: 'Libérez votre\nvaleur nette',
             subtitleFr:
@@ -27,7 +27,7 @@ class OnboardingScreen extends StatelessWidget {
               'Optimiseur retraits',
               'Test de stress',
               'HELOC vs MFVP',
-              'Canada'
+              'RPV 85 %'
             ],
             titleEs: 'Libera el valor\nde tu hogar',
             subtitleEs:
@@ -36,7 +36,7 @@ class OnboardingScreen extends StatelessWidget {
               'Optimizador retiros',
               'Test de estrés',
               'HELOC vs HEL',
-              'Canadá'
+              '85% LTV'
             ],
           ),
           OnboardingPage(

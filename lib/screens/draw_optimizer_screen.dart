@@ -138,11 +138,9 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   final _drawYearsCtrl = TextEditingController(text: '10');
   final _repayYearsCtrl = TextEditingController(text: '20');
 
-  final List<_PlannedDraw> _draws = [
-    _PlannedDraw(name: 'Kitchen Renovation', amount: 40000, month: 1),
-    _PlannedDraw(name: 'Bathroom Remodel', amount: 25000, month: 6),
-    _PlannedDraw(name: 'Roof Repair', amount: 15000, month: 18),
-  ];
+  // Sample draws, seeded with localized names in initState (so Spanish users
+  // don't see English example names). User-editable thereafter.
+  late final List<_PlannedDraw> _draws;
 
   List<_StrategyResult>? _results;
   int? _optimalIndex;
@@ -160,6 +158,21 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   void initState() {
     super.initState();
     AnalyticsService.instance.logScreenView('draw_optimizer');
+    final seedEs = isSpanishNotifier.value;
+    _draws = [
+      _PlannedDraw(
+          name: seedEs ? 'Remodelación de cocina' : 'Kitchen Renovation',
+          amount: 40000,
+          month: 1),
+      _PlannedDraw(
+          name: seedEs ? 'Renovación de baño' : 'Bathroom Remodel',
+          amount: 25000,
+          month: 6),
+      _PlannedDraw(
+          name: seedEs ? 'Reparación del techo' : 'Roof Repair',
+          amount: 15000,
+          month: 18),
+    ];
     // Pre-fill credit limit and rate from the last calculator result.
     final h = helocNotifier.value;
     _creditLimitCtrl.text = h.creditLimit.toStringAsFixed(0);
@@ -1145,7 +1158,8 @@ class _DrawEntryCardState extends State<_DrawEntryCard> {
               const Spacer(),
               if (widget.onRemove != null)
                 IconButton(
-                  tooltip: 'Remove draw',
+                  tooltip:
+                      isSpanishNotifier.value ? 'Eliminar disposición' : 'Remove draw',
                   icon: const Icon(Icons.close_rounded,
                       size: 18, color: AppTheme.labelGray),
                   padding: EdgeInsets.zero,
@@ -1475,7 +1489,7 @@ class _RateStepCardState extends State<_RateStepCard> {
         ),
         const SizedBox(width: AppSpacing.xs),
         IconButton(
-          tooltip: 'Remove',
+          tooltip: isSpanishNotifier.value ? 'Eliminar' : 'Remove',
           icon: const Icon(Icons.close_rounded,
               size: 16, color: AppTheme.labelGray),
           padding: EdgeInsets.zero,
