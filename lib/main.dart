@@ -61,9 +61,25 @@ final smartHistoryService = SmartHistoryService(
 final ValueNotifier<int> tabSwitchNotifier = ValueNotifier<int>(-1);
 
 /// Last-calculated HELOC values for pre-filling secondary tools.
+///
+/// `creditLimit` carries the HELOC draw amount (consumed by
+/// draw_schedule_screen.dart and compare_screen.dart as the amount to
+/// finance), while `balance` carries the *existing mortgage balance*
+/// (consumed by payment_shock_screen.dart and heloc_vs_cashout_screen.dart).
+/// These are two distinct values from the calculator — draw amount and
+/// existing mortgage balance — and must not be conflated.
 final ValueNotifier<({double creditLimit, double balance, double rate})>
     helocNotifier =
-    ValueNotifier((creditLimit: 100000.0, balance: 100000.0, rate: 7.5));
+    ValueNotifier((creditLimit: 100000.0, balance: 250000.0, rate: 7.5));
+
+/// Fired by history_detail_screen's "Load into Calculator" action to push a
+/// full saved scenario into the (persistently-mounted) CalculatorScreen.
+/// CalculatorScreen never gets recreated (it lives in MainShell's Stack), so
+/// simply writing to `helocNotifier` isn't visible there — this notifier
+/// carries the full input set and an incrementing `seq` so the listener can
+/// detect repeat loads of the same values.
+final ValueNotifier<Map<String, dynamic>?> calculatorRestoreNotifier =
+    ValueNotifier<Map<String, dynamic>?>(null);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

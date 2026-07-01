@@ -738,9 +738,22 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                               HapticFeedback.mediumImpact();
                               helocNotifier.value = (
                                 creditLimit: _draw,
-                                balance: _draw,
+                                balance: _balance,
                                 rate: _rate,
                               );
+                              calculatorRestoreNotifier.value = {
+                                'homeValue': _homeValue,
+                                'balance': _balance,
+                                'draw': _draw,
+                                'rate': _rate,
+                                'drawYears': _drawYears,
+                                'repayYears': _repayYears,
+                                'taxBracket': _taxBracket,
+                                'seq': (calculatorRestoreNotifier.value?['seq']
+                                        as int? ??
+                                    0) +
+                                    1,
+                              };
                               tabSwitchNotifier.value = 0;
                               Navigator.of(context)
                                   .popUntil((route) => route.isFirst);

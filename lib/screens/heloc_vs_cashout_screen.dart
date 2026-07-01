@@ -103,10 +103,15 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   void initState() {
     super.initState();
     AnalyticsService.instance.logScreenView('heloc_vs_cashout');
-    // Pre-fill balance and rate from the last calculator result.
+    // Pre-fill existing mortgage balance from the last calculator result;
+    // pre-fill the HELOC rate too since that's the only rate we have.
     final h = helocNotifier.value;
-    _existingBalCtrl.text = h.balance.toStringAsFixed(0);
-    _helocRateCtrl.text = h.rate.toStringAsFixed(1);
+    if (h.balance > 0) {
+      _existingBalCtrl.text = h.balance.toStringAsFixed(0);
+    }
+    if (h.rate > 0) {
+      _helocRateCtrl.text = h.rate.toStringAsFixed(1);
+    }
     for (final c in [
       _homeValueCtrl,
       _existingBalCtrl,

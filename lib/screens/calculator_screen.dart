@@ -369,11 +369,34 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     });
     _updateEquity();
     isSpanishNotifier.addListener(_onLangChange);
+    calculatorRestoreNotifier.addListener(_onRestoreRequested);
     // Run initial calculation with default values
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCalculate());
   }
 
   void _onLangChange() => setState(() {});
+
+  /// Applies a saved scenario pushed via history_detail_screen's
+  /// "Load into Calculator" action. CalculatorScreen is kept alive in
+  /// MainShell's Stack and never rebuilt from scratch, so this listener is
+  /// the only way a history restore can reach the visible controllers.
+  void _onRestoreRequested() {
+    final data = calculatorRestoreNotifier.value;
+    if (data == null || !mounted) return;
+    _homeValueCtrl.text =
+        ((data['homeValue'] as num?) ?? 400000).toStringAsFixed(0);
+    _mortgageCtrl.text =
+        ((data['balance'] as num?) ?? 250000).toStringAsFixed(0);
+    _drawCtrl.text = ((data['draw'] as num?) ?? 100000).toStringAsFixed(0);
+    _rateCtrl.text = ((data['rate'] as num?) ?? 7.5).toStringAsFixed(2);
+    _drawYearsCtrl.text = ((data['drawYears'] as num?) ?? 10).toStringAsFixed(0);
+    _repayYearsCtrl.text =
+        ((data['repayYears'] as num?) ?? 20).toStringAsFixed(0);
+    _taxBracket = ((data['taxBracket'] as num?) ?? 22.0).toDouble().clamp(0.0, 50.0);
+    _taxBracketCtrl.text = _taxBracket.toStringAsFixed(0);
+    _updateEquity();
+    _tryCalculate();
+  }
 
   void _updateEquity() {
     final homeValue = _parseNum(_homeValueCtrl.text);
@@ -439,7 +462,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
           repayYears: repayYears);
     });
     // Update global notifier so secondary tools can pre-fill from latest values.
-    helocNotifier.value = (creditLimit: draw, balance: draw, rate: rate);
+    // creditLimit carries the draw amount (consumed by draw_schedule/compare);
+    // balance carries the existing mortgage balance (consumed by
+    // payment_shock/heloc_vs_cashout) — these are two distinct inputs and
+    // must not both be set to `draw`.
+    helocNotifier.value = (creditLimit: draw, balance: mortgage, rate: rate);
 
     // Analytics — fires after each debounced calculation.
     AnalyticsService.instance.logCalculation(homeValue: homeValue, ratePct: rate);
@@ -547,6 +574,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   @override
   void dispose() {
     isSpanishNotifier.removeListener(_onLangChange);
+    calculatorRestoreNotifier.removeListener(_onRestoreRequested);
     smartHistoryService.cancelPendingSave('helocapp', 'calculator');
     _homeValueCtrl.removeListener(_updateEquity);
     _mortgageCtrl.removeListener(_updateEquity);

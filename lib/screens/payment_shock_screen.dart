@@ -65,10 +65,14 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   void initState() {
     super.initState();
     AnalyticsService.instance.logScreenView('payment_shock');
-    // Pre-fill balance and rate from the last calculator result.
+    // Pre-fill existing mortgage balance and rate from the last calculator result.
     final h = helocNotifier.value;
-    _balanceCtrl.text = h.balance.toStringAsFixed(0);
-    _currentRateCtrl.text = h.rate.toStringAsFixed(1);
+    if (h.balance > 0) {
+      _balanceCtrl.text = h.balance.toStringAsFixed(0);
+    }
+    if (h.rate > 0) {
+      _currentRateCtrl.text = h.rate.toStringAsFixed(1);
+    }
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
       c.addListener(() => scheduleCalc(_tryCompute));
     }
