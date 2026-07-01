@@ -188,7 +188,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: isEs
                           ? 'Configuración de privacidad'
                           : 'Privacy Settings',
-                      onTap: showCalcwisePrivacyOptions,
+                      onTap: () async {
+                        final shown = await showCalcwisePrivacyOptions();
+                        if (!shown && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(isEs
+                                  ? 'Opciones de privacidad no disponibles en tu región.'
+                                  : 'Privacy options are not available in your region.'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     CalcwiseRateAppTile(
                         label: isEs ? 'Calificar la app' : 'Rate the App'),

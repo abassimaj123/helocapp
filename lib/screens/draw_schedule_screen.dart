@@ -658,73 +658,90 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
   }
 
   Widget _buildTable(bool isEs, List<Map<String, double>> rows) {
+    // Long schedules (full premium view) are virtualized in a bounded-height
+    // ListView.builder so only visible rows are built — avoids the jank of
+    // rendering 300+ rows eagerly in a Column. Short tables (free 12-month
+    // preview) stay an eager Column since they fit on screen.
+    const virtualizeThreshold = 24;
+    final virtualize = rows.length > virtualizeThreshold;
+
+    final header = Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      decoration: BoxDecoration(
+          color: AppTheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppRadius.sm)),
+      child: Row(children: [
+        _tableHeader(isEs ? 'Mes' : 'Month', flex: 1),
+        _tableHeader(isEs ? 'Tipo' : 'Type', flex: 2),
+        _tableHeader(isEs ? 'Pago' : 'Payment', flex: 2),
+        _tableHeader(isEs ? 'Balance' : 'Balance', flex: 2),
+      ]),
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppRadius.sm)),
-              child: Row(children: [
-                _tableHeader(isEs ? 'Mes' : 'Month', flex: 1),
-                _tableHeader(isEs ? 'Tipo' : 'Type', flex: 2),
-                _tableHeader(isEs ? 'Pago' : 'Payment', flex: 2),
-                _tableHeader(isEs ? 'Balance' : 'Balance', flex: 2),
-              ]),
-            ),
+            header,
             const SizedBox(height: 4),
-            ...rows.map((row) {
-              final month = row['month']!.toInt();
-              final isDrawPhase = row['type'] == 0;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Row(children: [
-                  Expanded(
-                      flex: 1,
-                      child: Text('$month',
-                          style: const TextStyle(fontSize: AppTextSize.sm))),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color:
-                            (isDrawPhase ? AppTheme.primary : AppTheme.success)
-                                .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                      ),
-                      child: Text(
-                        isDrawPhase
-                            ? (isEs ? 'Disposición' : 'Draw')
-                            : (isEs ? 'Pago' : 'Repay'),
-                        style: TextStyle(
-                            fontSize: AppTextSize.xs,
-                            color: isDrawPhase
-                                ? AppTheme.primary
-                                : AppTheme.success,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                      flex: 2,
-                      child: Text(AmountFormatter.ui(row['payment']!, 'USD'),
-                          style: const TextStyle(fontSize: AppTextSize.sm))),
-                  Expanded(
-                      flex: 2,
-                      child: Text(AmountFormatter.ui(row['balance']!, 'USD'),
-                          style: const TextStyle(fontSize: AppTextSize.sm))),
-                ]),
-              );
-            }),
+            if (virtualize)
+              SizedBox(
+                height: 420,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: rows.length,
+                  itemExtent: 32,
+                  itemBuilder: (_, i) => _buildScheduleRow(isEs, rows[i]),
+                ),
+              )
+            else
+              ...rows.map((row) => _buildScheduleRow(isEs, row)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildScheduleRow(bool isEs, Map<String, double> row) {
+    final month = row['month']!.toInt();
+    final isDrawPhase = row['type'] == 0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(children: [
+        Expanded(
+            flex: 1,
+            child: Text('$month',
+                style: const TextStyle(fontSize: AppTextSize.sm))),
+        Expanded(
+          flex: 2,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: (isDrawPhase ? AppTheme.primary : AppTheme.success)
+                  .withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+            ),
+            child: Text(
+              isDrawPhase
+                  ? (isEs ? 'Disposición' : 'Draw')
+                  : (isEs ? 'Pago' : 'Repay'),
+              style: TextStyle(
+                  fontSize: AppTextSize.xs,
+                  color: isDrawPhase ? AppTheme.primary : AppTheme.success,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        Expanded(
+            flex: 2,
+            child: Text(AmountFormatter.ui(row['payment']!, 'USD'),
+                style: const TextStyle(fontSize: AppTextSize.sm))),
+        Expanded(
+            flex: 2,
+            child: Text(AmountFormatter.ui(row['balance']!, 'USD'),
+                style: const TextStyle(fontSize: AppTextSize.sm))),
+      ]),
     );
   }
 
