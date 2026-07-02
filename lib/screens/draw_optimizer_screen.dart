@@ -1596,18 +1596,21 @@ class _VarRateResults extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 6,
                   children: rateSteps
-                      .map((s) => Container(
+                      .map((s) {
+                        final alertColor = CalcwiseSemanticColors.alert(
+                            Theme.of(context).brightness);
+                        return Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: s.startYear == 1
                                   ? AppTheme.primary.withValues(alpha: 0.1)
-                                  : CalcwiseSemanticColors.alertText,
+                                  : alertColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               border: Border.all(
                                 color: s.startYear == 1
                                     ? AppTheme.primary.withValues(alpha: 0.3)
-                                    : CalcwiseSemanticColors.alertText,
+                                    : alertColor.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
@@ -1617,10 +1620,11 @@ class _VarRateResults extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: s.startYear == 1
                                     ? AppTheme.primary
-                                    : CalcwiseSemanticColors.alertText,
+                                    : alertColor,
                               ),
                             ),
-                          ))
+                          );
+                      })
                       .toList(),
                 ),
                 const SizedBox(height: AppSpacing.mdPlus),
