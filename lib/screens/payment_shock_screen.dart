@@ -18,7 +18,6 @@ import '../widgets/save_scenario_button.dart';
 import 'history_screen.dart';
 
 const _ioColor = AppTheme.primary;
-const _piColor = Color(0xFFC62828);
 
 double _parseN(String v) {
   if (v.isEmpty) return 0.0;
@@ -51,7 +50,8 @@ class PaymentShockScreen extends StatefulWidget {
   State<PaymentShockScreen> createState() => _PaymentShockScreenState();
 }
 
-class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAutoCalcMixin {
+class _PaymentShockScreenState extends State<PaymentShockScreen>
+    with CalcwiseAutoCalcMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _balanceCtrl = TextEditingController(text: '100000');
@@ -60,6 +60,9 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   double _projectedRate = 9.5;
 
   _ShockResult? _result;
+
+  Color get _piColor =>
+      CalcwiseSemanticColors.error(Theme.of(context).brightness);
 
   @override
   void initState() {
@@ -96,11 +99,15 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
   Map<String, String> _buildL1(_ShockResult r) {
     final isEs = isSpanishNotifier.value;
     return {
-      isEs ? 'Pago Solo Interés' : 'IO Payment': AmountFormatter.ui(r.ioPayment, 'USD'),
+      isEs ? 'Pago Solo Interés' : 'IO Payment':
+          AmountFormatter.ui(r.ioPayment, 'USD'),
       isEs ? 'Pago P+I' : 'PI Payment': AmountFormatter.ui(r.piPayment, 'USD'),
-      isEs ? 'Choque de Pago' : 'Payment Shock': '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%',
-      isEs ? 'Aumento en Dólares' : 'Dollar Increase': '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
-      isEs ? 'Interés Total' : 'Total Interest': AmountFormatter.ui(r.totalInterest, 'USD'),
+      isEs ? 'Choque de Pago' : 'Payment Shock':
+          '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%',
+      isEs ? 'Aumento en Dólares' : 'Dollar Increase':
+          '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
+      isEs ? 'Interés Total' : 'Total Interest':
+          AmountFormatter.ui(r.totalInterest, 'USD'),
     };
   }
 
@@ -151,9 +158,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
       inputHash: hash,
       l1: _buildL1(_result!),
       l2: _buildL2(_result!),
-      label: label ?? (isSpanishNotifier.value
-          ? 'Choque de Pago \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'
-          : 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'),
+      label: label ??
+          (isSpanishNotifier.value
+              ? 'Choque de Pago \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'
+              : 'Payment Shock \$${(_parseN(_balanceCtrl.text) / 1000).toStringAsFixed(0)}k @ ${_projectedRate.toStringAsFixed(1)}%'),
     );
     HistoryScreen.refreshNotifier.value++;
     adService.onSave();
@@ -256,179 +264,185 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: CalcwisePageEntrance(
                 child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.mdPlus),
-                      decoration: BoxDecoration(
-                        color: _piColor.withValues(alpha: 0.07),
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        border:
-                            Border.all(color: _piColor.withValues(alpha: 0.2)),
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.mdPlus),
+                        decoration: BoxDecoration(
+                          color: _piColor.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(
+                              color: _piColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.warning_amber_rounded,
+                              color: _piColor, size: 18),
+                          const SizedBox(width: AppSpacing.smPlus),
+                          Expanded(
+                            child: Text(
+                              isEs
+                                  ? 'Al final del período de disposición, tu pago puede duplicarse o triplicarse.'
+                                  : 'When your draw period ends, your payment may double or triple.',
+                              style: TextStyle(
+                                  fontSize: AppTextSize.sm, color: _piColor),
+                            ),
+                          ),
+                        ]),
                       ),
-                      child: Row(children: [
-                        const Icon(Icons.warning_amber_rounded,
-                            color: _piColor, size: 18),
-                        const SizedBox(width: AppSpacing.smPlus),
+                      const SizedBox(height: AppSpacing.xl),
+                      _sectionHeader(isEs
+                          ? 'Saldo al final del período'
+                          : 'Balance at End of Draw'),
+                      const SizedBox(height: AppSpacing.md),
+                      _field(
+                        ctrl: _balanceCtrl,
+                        label: isEs ? 'Saldo (\$)' : 'Balance (\$)',
+                        hint: '100000',
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _sectionHeader(
+                          isEs ? 'Período de pago' : 'Repayment Period'),
+                      const SizedBox(height: AppSpacing.sm),
+                      SegmentedButton<int>(
+                        segments: const [
+                          ButtonSegment(value: 10, label: Text('10 yr')),
+                          ButtonSegment(value: 15, label: Text('15 yr')),
+                          ButtonSegment(value: 20, label: Text('20 yr')),
+                        ],
+                        selected: {_repayYears},
+                        onSelectionChanged: (s) {
+                          setState(() => _repayYears = s.first);
+                          scheduleCalc(_tryCompute);
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _sectionHeader(isEs ? 'Tasa actual' : 'Current Rate'),
+                      const SizedBox(height: AppSpacing.md),
+                      _field(
+                        ctrl: _currentRateCtrl,
+                        label: isEs ? 'Tasa actual (%)' : 'Current Rate (%)',
+                        hint: '7.5',
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _sectionHeader(isEs
+                          ? 'Tasa proyectada al final'
+                          : 'Projected Rate at End of Draw'),
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(children: [
                         Expanded(
+                          child: Slider(
+                            value: _projectedRate,
+                            min: 3,
+                            max: 15,
+                            divisions: 120,
+                            label: '${_projectedRate.toStringAsFixed(2)}%',
+                            onChanged: (v) {
+                              setState(() => _projectedRate = v);
+                              scheduleCalc(_tryCompute);
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 64,
                           child: Text(
-                            isEs
-                                ? 'Al final del período de disposición, tu pago puede duplicarse o triplicarse.'
-                                : 'When your draw period ends, your payment may double or triple.',
-                            style: const TextStyle(
-                                fontSize: AppTextSize.sm, color: _piColor),
+                            '${_projectedRate.toStringAsFixed(2)}%',
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ]),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    _sectionHeader(isEs
-                        ? 'Saldo al final del período'
-                        : 'Balance at End of Draw'),
-                    const SizedBox(height: AppSpacing.md),
-                    _field(
-                      ctrl: _balanceCtrl,
-                      label: isEs ? 'Saldo (\$)' : 'Balance (\$)',
-                      hint: '100000',
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _sectionHeader(
-                        isEs ? 'Período de pago' : 'Repayment Period'),
-                    const SizedBox(height: AppSpacing.sm),
-                    SegmentedButton<int>(
-                      segments: const [
-                        ButtonSegment(value: 10, label: Text('10 yr')),
-                        ButtonSegment(value: 15, label: Text('15 yr')),
-                        ButtonSegment(value: 20, label: Text('20 yr')),
-                      ],
-                      selected: {_repayYears},
-                      onSelectionChanged: (s) {
-                        setState(() => _repayYears = s.first);
-                        scheduleCalc(_tryCompute);
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _sectionHeader(isEs ? 'Tasa actual' : 'Current Rate'),
-                    const SizedBox(height: AppSpacing.md),
-                    _field(
-                      ctrl: _currentRateCtrl,
-                      label: isEs ? 'Tasa actual (%)' : 'Current Rate (%)',
-                      hint: '7.5',
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _sectionHeader(isEs
-                        ? 'Tasa proyectada al final'
-                        : 'Projected Rate at End of Draw'),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(children: [
-                      Expanded(
-                        child: Slider(
-                          value: _projectedRate,
-                          min: 3,
-                          max: 15,
-                          divisions: 120,
-                          label: '${_projectedRate.toStringAsFixed(2)}%',
-                          onChanged: (v) {
-                            setState(() => _projectedRate = v);
-                            scheduleCalc(_tryCompute);
-                          },
-                        ),
-                      ),
-                      SizedBox(
-                        width: 64,
-                        child: Text(
-                          '${_projectedRate.toStringAsFixed(2)}%',
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: AppSpacing.xl),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        _compute();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.xl)),
-                      ),
-                      icon: const Icon(Icons.bolt),
-                      label: Text(isEs ? 'Calcular choque' : 'Calculate Shock'),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    OutlinedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        _reset();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.xl)),
-                      ),
-                      child: Text(isEs ? 'Limpiar' : 'Reset'),
-                    ),
-                    if (_result != null &&
-                        (freemiumService.hasFullAccess ||
-                            freemiumService.isRewarded)) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      SaveScenarioButton(onSave: _saveScenario),
-                    ],
-                    if (_result != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      OutlinedButton.icon(
+                      const SizedBox(height: AppSpacing.xl),
+                      ElevatedButton.icon(
                         onPressed: () {
                           HapticFeedback.mediumImpact();
-                          _exportPdf();
+                          _compute();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 52),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.xl)),
+                        ),
+                        icon: const Icon(Icons.bolt),
+                        label:
+                            Text(isEs ? 'Calcular choque' : 'Calculate Shock'),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          _reset();
                         },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.xl)),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.xl)),
                         ),
-                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
-                        label: Text(isEs ? 'Exportar PDF' : 'Export PDF'),
+                        child: Text(isEs ? 'Limpiar' : 'Reset'),
                       ),
-                    ],
-                    const SizedBox(height: AppSpacing.xl),
-                    AnimatedSwitcher(
-                      duration: AppDuration.base,
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.04),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
+                      if (_result != null &&
+                          (freemiumService.hasFullAccess ||
+                              freemiumService.isRewarded)) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        SaveScenarioButton(onSave: _saveScenario),
+                      ],
+                      if (_result != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            _exportPdf();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.xl)),
+                          ),
+                          icon: const Icon(Icons.picture_as_pdf_rounded,
+                              size: 18),
+                          label: Text(isEs ? 'Exportar PDF' : 'Export PDF'),
                         ),
-                      ),
-                      child: _result == null
-                          ? Padding(
-                              key: const ValueKey('empty'),
-                              padding: const EdgeInsets.only(top: AppSpacing.xl),
-                              child: Center(
-                                child: Text(
-                                  isEs
-                                      ? 'Ingresa el saldo y la tasa para ver el impacto'
-                                      : 'Enter balance and rate to see the payment impact',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: AppTheme.labelGray,
-                                      fontSize: AppTextSize.md),
+                      ],
+                      const SizedBox(height: AppSpacing.xl),
+                      AnimatedSwitcher(
+                        duration: AppDuration.base,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.04),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        ),
+                        child: _result == null
+                            ? Padding(
+                                key: const ValueKey('empty'),
+                                padding:
+                                    const EdgeInsets.only(top: AppSpacing.xl),
+                                child: Center(
+                                  child: Text(
+                                    isEs
+                                        ? 'Ingresa el saldo y la tasa para ver el impacto'
+                                        : 'Enter balance and rate to see the payment impact',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        color: AppTheme.labelGray,
+                                        fontSize: AppTextSize.md),
+                                  ),
                                 ),
-                              ),
-                            )
-                          : _buildResults(isEs, _result!),
-                    ),
-                    const SizedBox(height: AppSpacing.listBottomInset),
-                  ],
-                ),
-              ), // Form
+                              )
+                            : _buildResults(isEs, _result!),
+                      ),
+                      const SizedBox(height: AppSpacing.listBottomInset),
+                    ],
+                  ),
+                ), // Form
               ), // CalcwisePageEntrance
             ),
           ),
@@ -466,7 +480,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
                   const SizedBox(height: 6),
                   Text(
                     AmountFormatter.ui(r.piPayment, 'USD'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppTextSize.hero,
                       fontWeight: FontWeight.bold,
                       color: _piColor,
@@ -494,12 +508,16 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                    child: _metricCard(isEs ? 'Choque' : 'Shock',
-                        '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%', _piColor)),
+                    child: _metricCard(
+                        isEs ? 'Choque' : 'Shock',
+                        '${r.shockPct >= 0 ? '+' : ''}${r.shockPct.toStringAsFixed(1)}%',
+                        _piColor)),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                    child: _metricCard(isEs ? 'Aumento' : 'Increase',
-                        '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}', _piColor)),
+                    child: _metricCard(
+                        isEs ? 'Aumento' : 'Increase',
+                        '+${AmountFormatter.ui(r.dollarIncrease, 'USD')}',
+                        _piColor)),
               ],
             ),
           ),
@@ -522,41 +540,42 @@ class _PaymentShockScreenState extends State<PaymentShockScreen> with CalcwiseAu
         CalcwiseStaggerItem(
           index: 3,
           child: ValueListenableBuilder<bool>(
-          valueListenable: freemiumService.hasFullAccessNotifier,
-          builder: (_, isPremium, __) {
-            if (!isPremium) {
-              return CalcwisePremiumGate(
-                title: isEs
-                    ? 'Proyección completa y gráfico'
-                    : 'Full Projection & Chart',
-                description: isEs
-                    ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
-                    : 'View the full payment comparison with an interactive bar chart.',
-                onUnlock: () {
-                  PaywallHard.show(context);
-                },
-                price: IAPService.instance.localizedPrice,
-              );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEs ? 'Comparación mensual' : 'Monthly payment comparison',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: AppTextSize.body),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  height: 200,
-                  child: CalcwiseChartReveal(
-                    child: _buildBarChart(isEs, r),
+            valueListenable: freemiumService.hasFullAccessNotifier,
+            builder: (_, isPremium, __) {
+              if (!isPremium) {
+                return CalcwisePremiumGate(
+                  title: isEs
+                      ? 'Proyección completa y gráfico'
+                      : 'Full Projection & Chart',
+                  description: isEs
+                      ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
+                      : 'View the full payment comparison with an interactive bar chart.',
+                  onUnlock: () {
+                    PaywallHard.show(context);
+                  },
+                  price: IAPService.instance.localizedPrice,
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isEs ? 'Comparación mensual' : 'Monthly payment comparison',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: AppTextSize.body),
                   ),
-                ),
-              ],
-            );
-          },
-        ),
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    height: 200,
+                    child: CalcwiseChartReveal(
+                      child: _buildBarChart(isEs, r),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ],
     );

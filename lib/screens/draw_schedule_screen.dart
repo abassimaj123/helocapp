@@ -108,12 +108,15 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
       screenId: 'draw_schedule',
       inputHash: hash,
       l1: {
-        isEs ? 'Monto de Disposición' : 'Draw Amount': AmountFormatter.ui(draw, 'USD'),
+        isEs ? 'Monto de Disposición' : 'Draw Amount':
+            AmountFormatter.ui(draw, 'USD'),
         isEs ? 'Tasa HELOC' : 'HELOC Rate': '${rate.toStringAsFixed(2)}%',
         isEs ? 'Período de Disposición' : 'Draw Period': '${drawYears}y',
         isEs ? 'Período de Repago' : 'Repay Period': '${repayYears}y',
-        isEs ? 'Pago durante Disposición' : 'Draw Payment': AmountFormatter.ui(drawPayment, 'USD'),
-        isEs ? 'Interés Total' : 'Total Interest': AmountFormatter.ui(totalInterest, 'USD'),
+        isEs ? 'Pago durante Disposición' : 'Draw Payment':
+            AmountFormatter.ui(drawPayment, 'USD'),
+        isEs ? 'Interés Total' : 'Total Interest':
+            AmountFormatter.ui(totalInterest, 'USD'),
       },
       l2: {
         'inputs': {
@@ -453,92 +456,98 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                     (constraints.maxWidth < 400) ? 200.0 : 240.0;
                 return SizedBox(
                   height: chartHeight,
-                  child: LineChart(
-                    LineChartData(
-                      lineTouchData: LineTouchData(
-                        enabled: true,
-                        handleBuiltInTouches: true,
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipColor: (_) =>
-                              Theme.of(context).colorScheme.inverseSurface,
-                          getTooltipItems: (spots) => spots
-                              .map((s) => LineTooltipItem(
-                                    '\$${(s.y / 1000).toStringAsFixed(1)}k',
-                                    TextStyle(
-                                        color: Theme.of(context).colorScheme.onInverseSurface,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: AppTextSize.sm),
-                                  ))
-                              .toList(),
+                  child: CalcwiseChartReveal(
+                    child: LineChart(
+                      LineChartData(
+                        lineTouchData: LineTouchData(
+                          enabled: true,
+                          handleBuiltInTouches: true,
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipColor: (_) =>
+                                Theme.of(context).colorScheme.inverseSurface,
+                            getTooltipItems: (spots) => spots
+                                .map((s) => LineTooltipItem(
+                                      '\$${(s.y / 1000).toStringAsFixed(1)}k',
+                                      TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onInverseSurface,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: AppTextSize.sm),
+                                    ))
+                                .toList(),
+                          ),
                         ),
-                      ),
-                      gridData: FlGridData(
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (_) => FlLine(
-                            color: CalcwiseTheme.of(context).cardBorder,
-                            strokeWidth: 1),
-                      ),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 60,
-                            getTitlesWidget: (v, _) => Text(
-                              '\$${(v / 1000).toStringAsFixed(0)}k',
-                              style: const TextStyle(
-                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
+                        gridData: FlGridData(
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine: (_) => FlLine(
+                              color: CalcwiseTheme.of(context).cardBorder,
+                              strokeWidth: 1),
+                        ),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 60,
+                              getTitlesWidget: (v, _) => Text(
+                                '\$${(v / 1000).toStringAsFixed(0)}k',
+                                style: const TextStyle(
+                                    fontSize: AppTextSize.xxs,
+                                    color: AppTheme.labelGray),
+                              ),
                             ),
                           ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 60,
-                            getTitlesWidget: (v, _) => Text(
-                              '${v ~/ 12}y',
-                              style: const TextStyle(
-                                  fontSize: AppTextSize.xxs, color: AppTheme.labelGray),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 60,
+                              getTitlesWidget: (v, _) => Text(
+                                '${v ~/ 12}y',
+                                style: const TextStyle(
+                                    fontSize: AppTextSize.xxs,
+                                    color: AppTheme.labelGray),
+                              ),
                             ),
                           ),
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
                         ),
-                        topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                        borderData: FlBorderData(show: false),
+                        extraLinesData: ExtraLinesData(verticalLines: [
+                          VerticalLine(
+                            x: drawEndMonth,
+                            color: CalcwiseSemanticColors.warnIcon
+                                .withValues(alpha: 0.6),
+                            strokeWidth: 1.5,
+                            dashArray: [5, 4],
+                            label: VerticalLineLabel(
+                              show: true,
+                              labelResolver: (_) =>
+                                  isEs ? 'Fin disposición' : 'Draw End',
+                              style: const TextStyle(
+                                  fontSize: AppTextSize.xxs,
+                                  color: CalcwiseSemanticColors.warnIcon),
+                            ),
+                          ),
+                        ]),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: spots,
+                            isCurved: true,
+                            color: AppTheme.primary,
+                            barWidth: 2.5,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: AppTheme.primary.withValues(alpha: 0.08),
+                            ),
+                          ),
+                        ],
                       ),
-                      borderData: FlBorderData(show: false),
-                      extraLinesData: ExtraLinesData(verticalLines: [
-                        VerticalLine(
-                          x: drawEndMonth,
-                          color:
-                              CalcwiseSemanticColors.warnIcon.withValues(alpha: 0.6),
-                          strokeWidth: 1.5,
-                          dashArray: [5, 4],
-                          label: VerticalLineLabel(
-                            show: true,
-                            labelResolver: (_) =>
-                                isEs ? 'Fin disposición' : 'Draw End',
-                            style: const TextStyle(
-                                fontSize: AppTextSize.xxs,
-                                color: CalcwiseSemanticColors.warnIcon),
-                          ),
-                        ),
-                      ]),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: AppTheme.primary,
-                          barWidth: 2.5,
-                          dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: AppTheme.primary.withValues(alpha: 0.08),
-                          ),
-                        ),
-                      ],
+                      duration: CalcwiseChartTokens.swapDuration,
                     ),
-                    duration: CalcwiseChartTokens.swapDuration,
                   ),
                 );
               },
