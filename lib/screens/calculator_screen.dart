@@ -267,8 +267,8 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
                   pw.SizedBox(height: 4),
                   pw.Text(
                     p.isEs
-                        ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del 22%. Consulte a un asesor fiscal calificado.'
-                        : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the 22% tax bracket. Consult a qualified tax advisor.',
+                        ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del ${p.taxBracket.toStringAsFixed(0)}%. Consulte a un asesor fiscal calificado.'
+                        : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the ${p.taxBracket.toStringAsFixed(0)}% tax bracket. Consult a qualified tax advisor.',
                     style: const pw.TextStyle(
                         fontSize: 10, color: PdfColor.fromInt(0xFF1565C0)),
                   ),
@@ -741,7 +741,6 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
       return;
     }
 
-    AnalyticsService.instance.logPdfExported();
     try {
       final bytes = await _buildPdf(isEs, isFr: isFr);
       if (!mounted) return;
@@ -750,6 +749,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
         filename:
             'HELOC_Calculator_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
       );
+      AnalyticsService.instance.logPdfExported();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

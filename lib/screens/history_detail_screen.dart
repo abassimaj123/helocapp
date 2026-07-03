@@ -265,8 +265,8 @@ Future<Uint8List> _buildHistoryDetailPdf(_HistoryDetailPdfParams p) async {
                   pw.SizedBox(height: 4),
                   pw.Text(
                     p.isEs
-                        ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del 22%. Consulte a un asesor fiscal calificado para obtener asesoramiento personalizado.'
-                        : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the 22% tax bracket. Consult a qualified tax advisor for personalized guidance.',
+                        ? 'Los intereses del HELOC pueden ser deducibles de impuestos si los fondos se utilizan para mejoras sustanciales del hogar. El ahorro fiscal estimado se basa en un tramo impositivo del ${p.taxBracket.toStringAsFixed(0)}%. Consulte a un asesor fiscal calificado para obtener asesoramiento personalizado.'
+                        : 'HELOC interest may be tax-deductible when funds are used for substantial home improvements. Estimated tax savings are based on the ${p.taxBracket.toStringAsFixed(0)}% tax bracket. Consult a qualified tax advisor for personalized guidance.',
                     style: const pw.TextStyle(
                       fontSize: 10,
                       color: PdfColor.fromInt(0xFF1565C0),
@@ -456,14 +456,22 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
       await PaywallHard.show(context);
       return;
     }
-    AnalyticsService.instance.logPdfExported();
-    final bytes = await _buildPdf(isEs);
-    if (!mounted) return;
-    await Printing.sharePdf(
-      bytes: bytes,
-      filename:
-          'HELOC_Calculator_${DateFormat('yyyyMMdd').format(_createdAt)}.pdf',
-    );
+    try {
+      final bytes = await _buildPdf(isEs);
+      if (!mounted) return;
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename:
+            'HELOC_Calculator_${DateFormat('yyyyMMdd').format(_createdAt)}.pdf',
+      );
+      AnalyticsService.instance.logPdfExported();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isEs ? 'Error al exportar PDF' : 'Export failed')),
+        );
+      }
+    }
   }
 
   Future<Uint8List> _buildPdf(bool isEs) async {

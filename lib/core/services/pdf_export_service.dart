@@ -30,6 +30,7 @@ class _HelocPdfParams {
   final double interestOnlyPayment;
   final double repaymentPayment;
   final double totalInterest;
+  final double taxBracket;
   final bool isEs;
   final int nowMs;
   const _HelocPdfParams({
@@ -43,6 +44,7 @@ class _HelocPdfParams {
     required this.interestOnlyPayment,
     required this.repaymentPayment,
     required this.totalInterest,
+    required this.taxBracket,
     required this.isEs,
     required this.nowMs,
   });
@@ -1441,6 +1443,7 @@ class PdfExportService {
     required double interestOnlyPayment,
     required double repaymentPayment,
     required double totalInterest,
+    double taxBracket = 22.0,
     bool isEs = false,
   }) async {
     final params = _HelocPdfParams(
@@ -1454,6 +1457,7 @@ class PdfExportService {
       interestOnlyPayment: interestOnlyPayment,
       repaymentPayment: repaymentPayment,
       totalInterest: totalInterest,
+      taxBracket: taxBracket,
       isEs: isEs,
       nowMs: DateTime.now().millisecondsSinceEpoch,
     );

@@ -171,26 +171,28 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    Future<void> doExport() => PdfExportService.exportPaymentShock(
-          context: context,
-          helocBalance: _parseN(_balanceCtrl.text),
-          currentRate: _parseN(_currentRateCtrl.text),
-          projectedRate: _projectedRate,
-          repayYears: _repayYears,
-          ioPayment: r.ioPayment,
-          piPayment: r.piPayment,
-          shockPct: r.shockPct,
-          dollarIncrease: r.dollarIncrease,
-          totalInterest: r.totalInterest,
-          isEs: isEs,
-          isFr: false,
-        );
+    Future<void> doExport() async {
+      await PdfExportService.exportPaymentShock(
+        context: context,
+        helocBalance: _parseN(_balanceCtrl.text),
+        currentRate: _parseN(_currentRateCtrl.text),
+        projectedRate: _projectedRate,
+        repayYears: _repayYears,
+        ioPayment: r.ioPayment,
+        piPayment: r.piPayment,
+        shockPct: r.shockPct,
+        dollarIncrease: r.dollarIncrease,
+        totalInterest: r.totalInterest,
+        isEs: isEs,
+        isFr: false,
+      );
+      AnalyticsService.instance.logPdfExported();
+    }
     if (freemiumService.hasFullAccess) {
       await doExport();
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
-    AnalyticsService.instance.logPdfExported();
   }
 
   void _tryCompute() {

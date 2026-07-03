@@ -220,30 +220,32 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
     final isEs = isSpanishNotifier.value;
     final opt = results[optimalIdx];
     final totalDraw = _draws.fold(0.0, (s, d) => s + d.amount);
-    Future<void> doExport() => PdfExportService.exportDrawOptimizer(
-          context: context,
-          creditLimit: _parseCtrl(_creditLimitCtrl),
-          rate: _parseCtrl(_rateCtrl),
-          drawYears: _parseInt(_drawYearsCtrl),
-          repayYears: _parseInt(_repayYearsCtrl),
-          totalDraw: totalDraw,
-          optimalStrategy: opt.label,
-          yourPlanInterest: results[0].totalInterest,
-          allAtOnceInterest: results[1].totalInterest,
-          spreadEvenlyInterest: results[2].totalInterest,
-          optimalTotalInterest: opt.totalInterest,
-          optimalDrawInterest: opt.interestDuringDraw,
-          optimalBalanceAtDrawEnd: opt.balanceAtDrawEnd,
-          optimalPayoffMonths: opt.payoffMonths,
-          isEs: isEs,
-          isFr: false,
-        );
+    Future<void> doExport() async {
+      await PdfExportService.exportDrawOptimizer(
+        context: context,
+        creditLimit: _parseCtrl(_creditLimitCtrl),
+        rate: _parseCtrl(_rateCtrl),
+        drawYears: _parseInt(_drawYearsCtrl),
+        repayYears: _parseInt(_repayYearsCtrl),
+        totalDraw: totalDraw,
+        optimalStrategy: opt.label,
+        yourPlanInterest: results[0].totalInterest,
+        allAtOnceInterest: results[1].totalInterest,
+        spreadEvenlyInterest: results[2].totalInterest,
+        optimalTotalInterest: opt.totalInterest,
+        optimalDrawInterest: opt.interestDuringDraw,
+        optimalBalanceAtDrawEnd: opt.balanceAtDrawEnd,
+        optimalPayoffMonths: opt.payoffMonths,
+        isEs: isEs,
+        isFr: false,
+      );
+      AnalyticsService.instance.logPdfExported();
+    }
     if (freemiumService.hasFullAccess) {
       await doExport();
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
-    AnalyticsService.instance.logPdfExported();
   }
 
   Future<void> _optimize() async {

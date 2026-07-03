@@ -210,34 +210,36 @@ class _CompareScreenState extends State<CompareScreen>
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    Future<void> doExport() => PdfExportService.exportCompare(
-          context: context,
-          drawAmount: _parseN(_drawCtrl.text),
-          helocRate: _parseN(_helocRateCtrl.text),
-          helocDrawYears: int.tryParse(_drawYearsCtrl.text) ?? 10,
-          helocRepayYears: int.tryParse(_repayYearsCtrl.text) ?? 20,
-          refiRate: _parseN(_refiRateCtrl.text),
-          refiTermYears: int.tryParse(_refiTermCtrl.text) ?? 30,
-          closingCosts: _parseN(_closingCtrl.text),
-          loanRate: _parseN(_loanRateCtrl.text),
-          loanTermYears: int.tryParse(_loanTermCtrl.text) ?? 5,
-          helocDrawPayment: r.heloc.helocDrawPayment,
-          helocRepayPayment: r.heloc.helocRepayPayment,
-          helocTotalInterest: r.heloc.helocTotalInterest,
-          refiMonthlyPayment: r.heloc.refiMonthlyPayment,
-          refiTotalInterest: r.heloc.refiTotalInterest,
-          loanMonthlyPayment: r.loanMonthlyPayment,
-          loanTotalInterest: r.loanTotalInterest,
-          bestOption: '',
-          isEs: isEs,
-          isFr: false,
-        );
+    Future<void> doExport() async {
+      await PdfExportService.exportCompare(
+        context: context,
+        drawAmount: _parseN(_drawCtrl.text),
+        helocRate: _parseN(_helocRateCtrl.text),
+        helocDrawYears: int.tryParse(_drawYearsCtrl.text) ?? 10,
+        helocRepayYears: int.tryParse(_repayYearsCtrl.text) ?? 20,
+        refiRate: _parseN(_refiRateCtrl.text),
+        refiTermYears: int.tryParse(_refiTermCtrl.text) ?? 30,
+        closingCosts: _parseN(_closingCtrl.text),
+        loanRate: _parseN(_loanRateCtrl.text),
+        loanTermYears: int.tryParse(_loanTermCtrl.text) ?? 5,
+        helocDrawPayment: r.heloc.helocDrawPayment,
+        helocRepayPayment: r.heloc.helocRepayPayment,
+        helocTotalInterest: r.heloc.helocTotalInterest,
+        refiMonthlyPayment: r.heloc.refiMonthlyPayment,
+        refiTotalInterest: r.heloc.refiTotalInterest,
+        loanMonthlyPayment: r.loanMonthlyPayment,
+        loanTotalInterest: r.loanTotalInterest,
+        bestOption: '',
+        isEs: isEs,
+        isFr: false,
+      );
+      AnalyticsService.instance.logPdfExported();
+    }
     if (freemiumService.hasFullAccess) {
       await doExport();
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
-    AnalyticsService.instance.logPdfExported();
   }
 
   Future<void> _compare({bool isManual = false}) async {

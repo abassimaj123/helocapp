@@ -261,8 +261,16 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (_) => doc.save());
-    AnalyticsService.instance.logPdfExported();
+    try {
+      await Printing.layoutPdf(onLayout: (_) => doc.save());
+      AnalyticsService.instance.logPdfExported();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isSpanish ? 'Error al exportar PDF' : 'Export failed')),
+        );
+      }
+    }
   }
 
   @override

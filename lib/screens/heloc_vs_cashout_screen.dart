@@ -232,37 +232,39 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final r = _result;
     if (r == null) return;
     final isEs = isSpanishNotifier.value;
-    Future<void> doExport() => PdfExportService.exportHelocVsCashout(
-          context: context,
-          homeValue: _parseN(_homeValueCtrl.text),
-          existingBalance: _parseN(_existingBalCtrl.text),
-          existingRate: _parseN(_existingRateCtrl.text),
-          existingYears: int.tryParse(_existingYearsCtrl.text) ?? 0,
-          cashNeeded: _parseN(_cashCtrl.text),
-          helocRate: _parseN(_helocRateCtrl.text),
-          refiRate: _parseN(_refiRateCtrl.text),
-          closingPct: _parseN(_closingPctCtrl.text),
-          financeClosing: _financeClosing,
-          helocIOPayment: r.helocIO,
-          helocPIPayment: r.existingMortgagePI + r.helocPI,
-          helocTotalMonthly: r.scenarioATotalMonthly,
-          helocTotalInterest30y: r.scenarioATotalInterest30y,
-          refiNewBalance: r.refiNewBalance,
-          refiMonthly: r.refiMonthly,
-          refiClosingCosts: r.refiClosingCosts,
-          refiTotalInterest30y: r.scenarioBTotalInterest30y,
-          refiTotalCost: r.scenarioBTotalCost,
-          breakevenMonths: r.breakevenMonths,
-          winnerIndex: r.winnerIndex,
-          isEs: isEs,
-          isFr: false,
-        );
+    Future<void> doExport() async {
+      await PdfExportService.exportHelocVsCashout(
+        context: context,
+        homeValue: _parseN(_homeValueCtrl.text),
+        existingBalance: _parseN(_existingBalCtrl.text),
+        existingRate: _parseN(_existingRateCtrl.text),
+        existingYears: int.tryParse(_existingYearsCtrl.text) ?? 0,
+        cashNeeded: _parseN(_cashCtrl.text),
+        helocRate: _parseN(_helocRateCtrl.text),
+        refiRate: _parseN(_refiRateCtrl.text),
+        closingPct: _parseN(_closingPctCtrl.text),
+        financeClosing: _financeClosing,
+        helocIOPayment: r.helocIO,
+        helocPIPayment: r.existingMortgagePI + r.helocPI,
+        helocTotalMonthly: r.scenarioATotalMonthly,
+        helocTotalInterest30y: r.scenarioATotalInterest30y,
+        refiNewBalance: r.refiNewBalance,
+        refiMonthly: r.refiMonthly,
+        refiClosingCosts: r.refiClosingCosts,
+        refiTotalInterest30y: r.scenarioBTotalInterest30y,
+        refiTotalCost: r.scenarioBTotalCost,
+        breakevenMonths: r.breakevenMonths,
+        winnerIndex: r.winnerIndex,
+        isEs: isEs,
+        isFr: false,
+      );
+      AnalyticsService.instance.logPdfExported();
+    }
     if (freemiumService.hasFullAccess) {
       await doExport();
     } else {
       await PdfExportService.showUnlockOrPay(context, doExport);
     }
-    AnalyticsService.instance.logPdfExported();
   }
 
   void _tryCompute() {
