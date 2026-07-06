@@ -887,12 +887,17 @@ class _DetailRow extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: AppTextSize.md,
-                fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-                color: valueColor,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: AppTextSize.md,
+                  fontWeight: bold ? FontWeight.bold : FontWeight.w600,
+                  color: valueColor,
+                ),
               ),
             ),
           ],
