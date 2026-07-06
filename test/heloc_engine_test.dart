@@ -88,6 +88,74 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
+  // HELOC-vs-Cashout-Refi screen guard — combined LTV / 85% CLTV ceiling
+  // (heloc_vs_cashout_screen.dart uses HelocEngine.maxBorrowCapacity with the
+  // default 85% ltvLimit to flag requests that exceed available equity)
+  // ─────────────────────────────────────────────────────────────────────────
+  group('vs-cashout screen — combined LTV ceiling guard', () {
+    // Mirrors _combinedLtvPct in heloc_vs_cashout_screen.dart
+    double combinedLtvPct(double homeValue, double existingBal, double cash) {
+      if (homeValue <= 0) return 0;
+      return (existingBal + cash) / homeValue * 100;
+    }
+
+    // Mirrors _exceedsCltvCeiling in heloc_vs_cashout_screen.dart
+    bool exceedsCeiling(double homeValue, double existingBal, double cash) {
+      if (homeValue <= 0) return false;
+      final maxCapacity = HelocEngine.maxBorrowCapacity(homeValue, existingBal);
+      return cash > maxCapacity;
+    }
+
+    test(
+        'request that WOULD exceed 85% CLTV triggers the warning '
+        '(home=500k, balance=250k, cash-out=200k → 90% combined LTV)', () {
+      const homeValue = 500000.0;
+      const existingBal = 250000.0;
+      const cash = 200000.0; // 250k + 200k = 450k / 500k = 90%
+
+      final ltv = combinedLtvPct(homeValue, existingBal, cash);
+      expect(ltv, closeTo(90.0, rateDelta));
+      expect(exceedsCeiling(homeValue, existingBal, cash), isTrue);
+    });
+
+    test(
+        'request within the 85% ceiling does NOT trigger the warning '
+        '(home=500k, balance=250k, cash-out=75k → 65% combined LTV)', () {
+      const homeValue = 500000.0;
+      const existingBal = 250000.0;
+      const cash = 75000.0; // 250k + 75k = 325k / 500k = 65%
+
+      final ltv = combinedLtvPct(homeValue, existingBal, cash);
+      expect(ltv, closeTo(65.0, rateDelta));
+      expect(exceedsCeiling(homeValue, existingBal, cash), isFalse);
+    });
+
+    test('request exactly at the 85% ceiling does not trigger the warning',
+        () {
+      const homeValue = 500000.0;
+      const existingBal = 250000.0;
+      // maxBorrowCapacity(500k, 250k) = 500k×0.85 − 250k = 175000
+      const cash = 175000.0;
+
+      expect(exceedsCeiling(homeValue, existingBal, cash), isFalse);
+    });
+
+    test('request \$1 over the 85% ceiling triggers the warning', () {
+      const homeValue = 500000.0;
+      const existingBal = 250000.0;
+      const cash = 175001.0;
+
+      expect(exceedsCeiling(homeValue, existingBal, cash), isTrue);
+    });
+
+    test('zero home value never triggers the warning (division-by-zero guard)',
+        () {
+      expect(exceedsCeiling(0, 250000, 75000), isFalse);
+      expect(combinedLtvPct(0, 250000, 75000), equals(0.0));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
   // estimatedAnnualTaxSavings
   // ─────────────────────────────────────────────────────────────────────────
   group('estimatedAnnualTaxSavings', () {

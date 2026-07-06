@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../core/firebase/analytics_service.dart';
 import '../core/freemium/freemium_service.dart';
+import '../core/heloc_engine.dart';
 import '../core/services/pdf_export_service.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart';
@@ -58,6 +59,11 @@ class _CompareCashoutResult {
       breakevenMonths; // months until cumulative HELOC cost exceeds refi cost
   final int winnerIndex; // 0 = HELOC, 1 = Refi
 
+  // Home value / equity guard rail
+  final double homeValue;
+  final double combinedLtvPct; // (existingBalance + cash) / homeValue * 100
+  final bool exceedsCltvCeiling;
+
   const _CompareCashoutResult({
     required this.existingMortgagePI,
     required this.helocIO,
@@ -71,6 +77,9 @@ class _CompareCashoutResult {
     required this.scenarioBTotalCost,
     required this.breakevenMonths,
     required this.winnerIndex,
+    required this.homeValue,
+    required this.combinedLtvPct,
+    required this.exceedsCltvCeiling,
   });
 }
 
@@ -186,6 +195,8 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
           'scenario_b_total_cost': r.scenarioBTotalCost,
           'breakeven_months': r.breakevenMonths,
           'winner_index': r.winnerIndex,
+          'combined_ltv_pct': r.combinedLtvPct,
+          'exceeds_cltv_ceiling': r.exceedsCltvCeiling,
         },
       };
 
@@ -285,7 +296,25 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     _compute(silent: true);
   }
 
+  /// Combined LTV if the requested cash-out/HELOC draw were approved:
+  /// (existing balance + requested amount) / home value.
+  /// Returns 0 when homeValue is not positive (guard against division by 0).
+  double _combinedLtvPct(double homeValue, double existingBal, double cash) {
+    if (homeValue <= 0) return 0;
+    return (existingBal + cash) / homeValue * 100;
+  }
+
+  /// Whether the requested draw/cash-out would push the combined LTV past
+  /// the same 85% ceiling HelocEngine.availableEquity/maxBorrowCapacity use
+  /// elsewhere in the app (core/heloc_engine.dart).
+  bool _exceedsCltvCeiling(double homeValue, double existingBal, double cash) {
+    if (homeValue <= 0) return false;
+    final maxCapacity = HelocEngine.maxBorrowCapacity(homeValue, existingBal);
+    return cash > maxCapacity;
+  }
+
   Future<void> _compute({bool silent = false}) async {
+    final homeValue = _parseN(_homeValueCtrl.text);
     final existingBal = _parseN(_existingBalCtrl.text);
     final existingRate = _parseN(_existingRateCtrl.text);
     final existingYears = int.tryParse(_existingYearsCtrl.text) ?? 0;
@@ -297,6 +326,11 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
         existingRate <= 0 ||
         existingYears <= 0 ||
         cash <= 0) return;
+
+    // Equity / CLTV guard rail — same 85% ceiling used by HelocEngine
+    // (availableEquity / maxBorrowCapacity) elsewhere in the app.
+    final combinedLtvPct = _combinedLtvPct(homeValue, existingBal, cash);
+    final exceedsCeiling = _exceedsCltvCeiling(homeValue, existingBal, cash);
 
     // Scenario A — HELOC
     final existingPI =
@@ -355,6 +389,9 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       scenarioBTotalCost: bTotalCost,
       breakevenMonths: breakeven,
       winnerIndex: winner,
+      homeValue: homeValue,
+      combinedLtvPct: combinedLtvPct,
+      exceedsCltvCeiling: exceedsCeiling,
     );
     setState(() => _result = newResult);
     _scheduleAutoSave(newResult);
@@ -639,6 +676,42 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
           '${r.scenarioATotalMonthly.toStringAsFixed(2)}_${r.refiMonthly.toStringAsFixed(2)}'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // CLTV ceiling warning — shown when the requested cash-out/HELOC
+        // draw would push the combined loan-to-value ratio past the
+        // industry-standard 85% ceiling (same threshold as the main
+        // calculator's HelocEngine.availableEquity/maxBorrowCapacity).
+        if (r.exceedsCltvCeiling) ...[
+          Container(
+            key: const ValueKey('cltv_warning'),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.mdPlus),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    color: Colors.red, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    isEs
+                        ? 'Esto requeriría un LTV combinado de ${r.combinedLtvPct.toStringAsFixed(0)}% — la mayoría de los prestamistas limitan al 85%.'
+                        : 'This would require ${r.combinedLtvPct.toStringAsFixed(0)}% combined LTV — most lenders cap at 85%.',
+                    style: const TextStyle(
+                      fontSize: AppTextSize.sm,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
         // Winner banner
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
