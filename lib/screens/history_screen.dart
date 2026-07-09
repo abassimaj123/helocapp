@@ -9,6 +9,7 @@ import '../core/theme/app_theme.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 import '../main.dart';
+import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import 'history_detail_screen.dart';
 
@@ -98,6 +99,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _rename(Map<String, dynamic> row) async {
     final isEs = isSpanishNotifier.value;
+    if (!freemiumService.hasFullAccess) {
+      await PaywallHard.show(context);
+      return;
+    }
     final ctrl =
         TextEditingController(text: (row['pin_label'] as String?) ?? '');
     final label = await showDialog<String>(
