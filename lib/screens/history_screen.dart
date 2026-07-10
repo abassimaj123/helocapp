@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -41,6 +43,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (diff < 7) return isEs ? 'Esta semana' : 'This week';
     if (diff < 30) return isEs ? 'Este mes' : 'This month';
     return isEs ? 'Anterior' : 'Older';
+  }
+
+  /// The `inputs`/`results` shape (and this card's title/metric logic) is
+  /// specific to calculator_screen. Compare/vs-cashout/payment-shock/
+  /// draw-optimizer entries use different input keys ('draw_amount',
+  /// 'home_value', 'credit_limit', ...), so reading 'draw'/'rate' off them
+  /// silently returns 0 — showing every non-calculator entry as a
+  /// nonsensical "$0 draw @ 0.0%" card. Detect the shape and fall back to
+  /// the screen's own l1_json (already correctly labeled) instead.
+  bool _isCalcShape(Map<String, dynamic> inputs) =>
+      inputs.containsKey('homeValue') && inputs.containsKey('draw');
+
+  Map<String, dynamic> _decodeL1(Map<String, dynamic> row) {
+    final raw = row['l1_json'] as String?;
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  String _fmtL1Value(dynamic v) {
+    if (v is String) return v;
+    if (v is num) return AmountFormatter.ui(v.toDouble(), 'USD');
+    return '$v';
   }
 
   String _shortK(double v) {
@@ -100,7 +128,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _rename(Map<String, dynamic> row) async {
     final isEs = isSpanishNotifier.value;
     if (!freemiumService.hasFullAccess) {
-      await PaywallHard.show(context);
+      await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
       return;
     }
     final ctrl =
@@ -190,11 +218,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final q = _searchQuery.toLowerCase();
     final pinLabel = (row['pin_label'] as String? ?? '').toLowerCase();
     final inputs = row['inputs'] as Map<String, dynamic>? ?? {};
-    final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
-    final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
-    final humanLabel =
-        '${_shortK(draw)} draw @ ${rate.toStringAsFixed(1)}%'.toLowerCase();
-    return pinLabel.contains(q) || humanLabel.contains(q);
+    if (pinLabel.contains(q)) return true;
+    if (_isCalcShape(inputs)) {
+      final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
+      final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
+      final humanLabel =
+          '${_shortK(draw)} draw @ ${rate.toStringAsFixed(1)}%'.toLowerCase();
+      return humanLabel.contains(q);
+    }
+    final l1 = _decodeL1(row);
+    return l1.entries.any((e) =>
+        e.key.toLowerCase().contains(q) ||
+        _fmtL1Value(e.value).toLowerCase().contains(q));
   }
 
   List<Map<String, dynamic>> get _filteredPinned =>
@@ -459,7 +494,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        PaywallSoft.show(context);
+                        PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
                       },
                       style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
@@ -511,14 +546,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final results = row['results'] as Map<String, dynamic>;
     final createdAt = DateTime.parse(row['created_at'] as String);
 
+    final isCalcShape = _isCalcShape(inputs);
     final draw = (inputs['draw'] as num?)?.toDouble() ?? 0.0;
     final rate = (inputs['rate'] as num?)?.toDouble() ?? 0.0;
     final equity = (results['equity'] as num?)?.toDouble() ?? 0.0;
     final interestOnly = (results['interestOnly'] as num?)?.toDouble() ?? 0.0;
     final pinLabel = row['pin_label'] as String?;
+    final l1 = isCalcShape ? const <String, dynamic>{} : _decodeL1(row);
+    final l1Entries = l1.entries.toList();
 
-    final humanLabel =
-        '${_shortK(draw)} ${isEs ? 'dispuesto' : 'draw'} @ ${rate.toStringAsFixed(1)}%';
+    final humanLabel = isCalcShape
+        ? '${_shortK(draw)} ${isEs ? 'dispuesto' : 'draw'} @ ${rate.toStringAsFixed(1)}%'
+        : (l1Entries.isNotEmpty
+            ? '${l1Entries.first.key}: ${_fmtL1Value(l1Entries.first.value)}'
+            : (isEs ? 'Escenario guardado' : 'Saved scenario'));
     final title = pinned && pinLabel != null && pinLabel.isNotEmpty
         ? pinLabel
         : humanLabel;
@@ -639,13 +680,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isEs ? 'Pago interés' : 'Interest pmt',
+                          isCalcShape
+                              ? (isEs ? 'Pago interés' : 'Interest pmt')
+                              : (l1Entries.isNotEmpty
+                                  ? l1Entries.first.key
+                                  : ''),
                           style: const TextStyle(
                               fontSize: AppTextSize.xs,
                               color: AppTheme.labelGray),
                         ),
                         Text(
-                          '${AmountFormatter.ui(interestOnly, 'USD')}/${isEs ? 'mes' : 'mo'}',
+                          isCalcShape
+                              ? '${AmountFormatter.ui(interestOnly, 'USD')}/${isEs ? 'mes' : 'mo'}'
+                              : (l1Entries.isNotEmpty
+                                  ? _fmtL1Value(l1Entries.first.value)
+                                  : ''),
                           style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: AppTextSize.bodyMd,
@@ -659,13 +708,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          isEs ? 'Capital disp.' : 'Equity',
+                          isCalcShape
+                              ? (isEs ? 'Capital disp.' : 'Equity')
+                              : (l1Entries.length > 1
+                                  ? l1Entries[1].key
+                                  : ''),
                           style: const TextStyle(
                               fontSize: AppTextSize.xs,
                               color: AppTheme.labelGray),
                         ),
                         Text(
-                          AmountFormatter.ui(equity, 'USD'),
+                          isCalcShape
+                              ? AmountFormatter.ui(equity, 'USD')
+                              : (l1Entries.length > 1
+                                  ? _fmtL1Value(l1Entries[1].value)
+                                  : ''),
                           style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: AppTextSize.bodyMd,

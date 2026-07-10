@@ -169,9 +169,9 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
           mounted &&
           !freemiumService.hasFullAccess) {
         if (trigger == PaywallTrigger.soft) {
-          PaywallSoft.show(context);
+          PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
         } else {
-          PaywallHard.show(context);
+          PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
         }
       }
     }
@@ -179,7 +179,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
 
   Future<void> _exportPdf(BuildContext context, bool isSpanish) async {
     if (!freemiumService.hasFullAccess && !freemiumService.isRewarded) {
-      await PaywallHard.show(context);
+      await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
       return;
     }
     final doc = pw.Document();
@@ -353,7 +353,7 @@ class _DrawScheduleScreenState extends State<DrawScheduleScreen>
                               ? 'Accede al calendario completo, gráfico de balance y exportación PDF.'
                               : 'Access the full amortization schedule, balance chart, and PDF export.',
                           onUnlock: () {
-                            PaywallHard.show(context);
+                            PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                           },
                           price: IAPService.instance.localizedPrice,
                         );

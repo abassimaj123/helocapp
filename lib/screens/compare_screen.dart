@@ -168,6 +168,11 @@ class _CompareScreenState extends State<CompareScreen>
   }
 
   void _scheduleAutoSave(_CompareResult cr) {
+    // The draw amount field's validator only rejects negative values, so a
+    // transient mid-typing state (e.g. "1" briefly while retyping
+    // "100000") passes validation and would otherwise persist a
+    // nonsensical comparison to History looking like a real saved scenario.
+    if (_parseN(_drawCtrl.text) < 1000) return;
     final hash = ResultHasher.hashMixed({
       'draw': _roundTo(_parseN(_drawCtrl.text), 500),
       'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),
@@ -285,10 +290,10 @@ class _CompareScreenState extends State<CompareScreen>
       final trigger = await paywallSession.recordAction();
       if (!mounted) return;
       if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-        PaywallHard.show(context);
+        PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
       } else if (trigger == PaywallTrigger.soft &&
           !freemiumService.hasFullAccess) {
-        PaywallSoft.show(context);
+        PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
       }
     }
   }

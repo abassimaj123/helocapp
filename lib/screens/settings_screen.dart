@@ -88,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     color: AppTheme.labelGray),
                                 onTap: () {
                                   AnalyticsService.instance.logUpgradeButtonTapped('settings');
-                                  PaywallHard.show(context);
+                                  PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                                 },
                               ),
                               ListTile(

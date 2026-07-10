@@ -128,6 +128,11 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
       };
 
   void _scheduleAutoSave(_ShockResult r) {
+    // _tryCompute/_compute only gate on balance > 0 — a transient mid-typing
+    // state (e.g. "4" briefly while retyping "400000") passes that guard and
+    // would otherwise persist a nonsensical near-zero payment shock entry to
+    // History looking like a real saved scenario.
+    if (_parseN(_balanceCtrl.text) < 1000) return;
     final hash = ResultHasher.hashMixed({
       'balance': _roundTo(_parseN(_balanceCtrl.text), 500),
       'current_rate': _roundTo(_parseN(_currentRateCtrl.text), 0.25),
@@ -234,10 +239,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-      PaywallHard.show(context);
+      PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
-      PaywallSoft.show(context);
+      PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
     }
   }
 
@@ -553,7 +558,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
                       ? 'Visualiza la comparación completa de pagos con gráfico interactivo.'
                       : 'View the full payment comparison with an interactive bar chart.',
                   onUnlock: () {
-                    PaywallHard.show(context);
+                    PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                   },
                   price: IAPService.instance.localizedPrice,
                 );

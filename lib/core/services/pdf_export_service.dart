@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../widgets/paywall_hard.dart';
+import '../../main.dart' show isSpanishNotifier;
 import '../freemium/freemium_service.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 
@@ -1682,6 +1683,6 @@ class PdfExportService {
       await onExport();
       return;
     }
-    await PaywallHard.show(context);
+    await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
   }
 }

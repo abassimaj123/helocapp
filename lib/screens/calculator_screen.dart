@@ -474,6 +474,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     adService.onAction();
 
     // Auto-save: debounced ring-buffer via SmartHistory.
+    // Skip persisting transient/degenerate states (e.g. home value briefly
+    // "$4" while retyping "$400,000", or a near-zero draw/rate mid-edit) —
+    // these still pass the `<= 0` guards above but produce a nonsensical
+    // entry (zeroed-out equity/payments) that would otherwise sit in
+    // History looking like a real saved scenario. Live results above still
+    // compute/display normally; only the persisted-to-History write is
+    // gated.
+    if (homeValue < 10000 || draw < 1000 || rate < 0.1) return;
     final inputs = _resultsToInputs();
     final results = _resultsToResults();
     smartHistoryService.scheduleAutoSave(
@@ -499,9 +507,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       return;
     }
     if (trigger == PaywallTrigger.soft) {
-      PaywallSoft.show(context);
+      PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
     } else {
-      PaywallHard.show(context);
+      PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
     }
   }
 
@@ -737,7 +745,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
     if (_results == null) return;
 
     if (!freemiumService.hasFullAccess) {
-      await PaywallHard.show(context);
+      await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
       return;
     }
 
@@ -1398,7 +1406,7 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                         ? 'Simula el impacto de cambios de tasa en tu pago mensual e interés total.'
                                         : 'Simulate how rate changes impact your monthly payment and total interest.',
                                     onUnlock: () {
-                                      PaywallHard.show(context);
+                                      PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                                     },
                                     price:
                                         IAPService.instance.localizedPrice,

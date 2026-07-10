@@ -341,7 +341,7 @@ class _MainShellState extends State<MainShell> {
             },
             onRewardAd: () => CalcwiseRewardAdSheet.show(context),
             onPremium: () {
-              PaywallHard.show(context);
+              PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
             },
           ),
         ],

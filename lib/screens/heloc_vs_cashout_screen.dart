@@ -201,6 +201,11 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       };
 
   void _scheduleAutoSave(_CompareCashoutResult r) {
+    // _tryCompute/_compute never gate on homeValue > 0 (it only affects the
+    // CLTV display, guarded internally to 0) — an implausibly low or empty
+    // home value would otherwise still persist a comparison with a
+    // nonsensical CLTV% to History looking like a real saved scenario.
+    if (r.homeValue < 10000) return;
     final hash = ResultHasher.hashMixed({
       'existing_bal': _roundTo(_parseN(_existingBalCtrl.text), 1000),
       'cash': _roundTo(_parseN(_cashCtrl.text), 500),
@@ -403,10 +408,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final trigger = await paywallSession.recordAction();
     if (!mounted) return;
     if (trigger == PaywallTrigger.hard && !freemiumService.hasFullAccess) {
-      PaywallHard.show(context);
+      PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
     } else if (trigger == PaywallTrigger.soft &&
         !freemiumService.hasFullAccess) {
-      PaywallSoft.show(context);
+      PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
     }
   }
 

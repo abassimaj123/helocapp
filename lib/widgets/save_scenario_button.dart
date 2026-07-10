@@ -48,35 +48,11 @@ class _SaveScenarioButtonState extends State<SaveScenarioButton> {
     }
   }
 
-  Future<String?> _showNameDialog() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
+  Future<String?> _showNameDialog() {
+    return showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(_isEs ? 'Guardar Escenario' : 'Save Scenario'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            hintText: _isEs ? 'Nombre (opcional)' : 'Scenario name (optional)',
-          ),
-          onSubmitted: (v) => Navigator.pop(context, v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(_isEs ? 'Cancelar' : 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(_isEs ? 'Guardar' : 'Save'),
-          ),
-        ],
-      ),
+      builder: (_) => _SaveScenarioNameDialog(isEs: _isEs),
     );
-    controller.dispose();
-    return result;
   }
 
   @override
@@ -99,6 +75,59 @@ class _SaveScenarioButtonState extends State<SaveScenarioButton> {
           minimumSize: const Size.fromHeight(48),
         ),
       ),
+    );
+  }
+}
+
+class _SaveScenarioNameDialog extends StatefulWidget {
+  final bool isEs;
+
+  const _SaveScenarioNameDialog({required this.isEs});
+
+  @override
+  State<_SaveScenarioNameDialog> createState() =>
+      _SaveScenarioNameDialogState();
+}
+
+class _SaveScenarioNameDialogState extends State<_SaveScenarioNameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEs = widget.isEs;
+    return AlertDialog(
+      title: Text(isEs ? 'Guardar Escenario' : 'Save Scenario'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: InputDecoration(
+          hintText: isEs ? 'Nombre (opcional)' : 'Scenario name (optional)',
+        ),
+        onSubmitted: (v) => Navigator.pop(context, v),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(isEs ? 'Cancelar' : 'Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: Text(isEs ? 'Guardar' : 'Save'),
+        ),
+      ],
     );
   }
 }

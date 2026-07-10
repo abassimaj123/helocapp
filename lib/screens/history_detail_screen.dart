@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math' show pow;
 import 'dart:typed_data';
@@ -453,7 +454,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
   Future<void> _exportPdf(BuildContext context, bool isEs) async {
     if (!freemiumService.hasFullAccess) {
-      await PaywallHard.show(context);
+      await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
       return;
     }
     try {
@@ -534,12 +535,87 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
+  /// True only for entries saved from calculator_screen — the only screen
+  /// whose 'inputs' map uses the 'homeValue'/'draw' keys this detail view
+  /// (and its PDF export) is built around. Compare/vs-cashout/payment-shock/
+  /// draw-optimizer entries use different key names, so reading those keys
+  /// off them silently returns 0 — showing a confidently-wrong all-$0
+  /// breakdown. Detected here so those entries fall back to a generic,
+  /// honest summary built from their own l1 snapshot instead.
+  bool get _isCalcShape =>
+      _inputs.containsKey('homeValue') && _inputs.containsKey('draw');
+
+  Map<String, dynamic> get _l1 {
+    final raw = widget.entry['l1_json'] as String?;
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  String _fmtL1Value(dynamic v) {
+    if (v is String) return v;
+    if (v is num) return AmountFormatter.ui(v.toDouble(), 'USD');
+    return '$v';
+  }
+
+  Widget _buildGenericFallback(BuildContext context, bool isEs, String dateStr) {
+    final l1 = _l1;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(dateStr, style: const TextStyle(fontSize: AppTextSize.body)),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+            tooltip: isEs ? 'Eliminar' : 'Delete',
+            onPressed: () => _confirmDelete(context, isEs),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            _SectionHeader(
+              icon: Icons.bookmark_border_rounded,
+              title: isEs ? 'Escenario Guardado' : 'Saved Scenario',
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  children: l1.isEmpty
+                      ? [
+                          Text(isEs
+                              ? 'Sin detalles disponibles.'
+                              : 'No details available.'),
+                        ]
+                      : l1.entries
+                          .map((e) => _DetailRow(
+                              label: e.key, value: _fmtL1Value(e.value)))
+                          .toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isEs, __) {
         final dateStr = _fmtDate.format(_createdAt.toLocal());
+        if (!_isCalcShape) {
+          return _buildGenericFallback(context, isEs, dateStr);
+        }
         return Scaffold(
           appBar: AppBar(
             title: Text(dateStr,
@@ -811,7 +887,7 @@ Calculated: ${_fmtDate.format(_createdAt.toLocal())}
                               HapticFeedback.mediumImpact();
                               if (!isPremium) {
                                 if (context.mounted) {
-                                  await PaywallHard.show(context);
+                                  await PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                                 }
                                 return;
                               }
