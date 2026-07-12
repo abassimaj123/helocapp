@@ -106,10 +106,12 @@ Future<void> main() async {
     isSpanishNotifier.value = lang == 'es';
   }
 
-  // statusBarIconBrightness is set dynamically in the shell build()
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-  ));
+  // statusBarIconBrightness is set dynamically in the shell build().
+  // No statusBarColor/systemNavigationBarColor here: MainActivity already
+  // enables edge-to-edge (decorFitsSystemWindows=false), and setting a
+  // color at all triggers the deprecated Window.setStatusBarColor API on
+  // Android 15+ even when the value is transparent.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle());
 
   await themeModeService.initialize();
   await freemiumService.initialize();
@@ -309,14 +311,13 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final isEs = isSpanishNotifier.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // No bar colors set: edge-to-edge (MainActivity) already forces
+    // transparent bars on Android 15+, and passing a color at all — even
+    // Colors.transparent — invokes the deprecated Window.setStatusBarColor/
+    // setNavigationBarColor APIs.
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      // Transparent — the app draws under the system nav bar
-      // (edge-to-edge) instead of painting it opaque, per Android 15's
-      // forced behavior.
-      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
-      statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
     ));
 
