@@ -259,6 +259,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               AppSpacing.lg, AppSpacing.sm,
                               AppSpacing.lg, AppSpacing.xs),
                           child: CalcwiseSearchBar(
+                            hintText: isEs
+                                ? 'Buscar cálculos…'
+                                : 'Search calculations…',
                             onChanged: (q) =>
                                 setState(() => _searchQuery = q),
                           ),
