@@ -16,7 +16,7 @@ class DatabaseService {
     final path = join(await getDatabasesPath(), 'heloc_app.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE history (
@@ -28,7 +28,8 @@ class DatabaseService {
             input_hash TEXT,
             pin_label TEXT,
             pin_order INTEGER NOT NULL DEFAULT 0,
-            l1_json TEXT
+            l1_json TEXT,
+            screen_id TEXT NOT NULL DEFAULT 'calculator'
           )
         ''');
       },
@@ -41,6 +42,15 @@ class DatabaseService {
           await db.execute(
               'ALTER TABLE history ADD COLUMN pin_order INTEGER NOT NULL DEFAULT 0');
           await db.execute('ALTER TABLE history ADD COLUMN l1_json TEXT');
+        }
+        // v3 — screen_id so the 6 save-capable screens (calculator, compare,
+        // draw_optimizer, draw_schedule, heloc_vs_cashout, payment_shock)
+        // stop sharing one dedup bucket: previously getHistoryByHash matched
+        // on input_hash alone, so any two screens whose rounded inputs
+        // happened to hash the same would silently overwrite each other.
+        if (oldVersion < 3) {
+          await db.execute(
+              "ALTER TABLE history ADD COLUMN screen_id TEXT NOT NULL DEFAULT 'calculator'");
         }
       },
     );
@@ -58,6 +68,7 @@ class DatabaseService {
     int pinOrder = 0,
     String? l1Json,
     DateTime? createdAt,
+    String screenId = 'calculator',
   }) async {
     final db = await database;
     return db.insert('history', {
@@ -69,6 +80,7 @@ class DatabaseService {
       'pin_label': pinLabel,
       'pin_order': pinOrder,
       'l1_json': l1Json,
+      'screen_id': screenId,
     });
   }
 
@@ -91,13 +103,17 @@ class DatabaseService {
       'pin_label': r['pin_label'],
       'pin_order': r['pin_order'] ?? 0,
       'l1_json': r['l1_json'],
+      'screen_id': r['screen_id'],
     };
   }
 
-  Future<Map<String, dynamic>?> getHistoryByHash(String hash) async {
+  Future<Map<String, dynamic>?> getHistoryByHash(
+      String screenId, String hash) async {
     final db = await database;
     final rows = await db.query('history',
-        where: 'input_hash = ?', whereArgs: [hash], limit: 1);
+        where: 'screen_id = ? AND input_hash = ?',
+        whereArgs: [screenId, hash],
+        limit: 1);
     return rows.isEmpty ? null : rows.first;
   }
 

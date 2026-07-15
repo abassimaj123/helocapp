@@ -32,6 +32,7 @@ class HelocDatabaseAdapter implements DatabaseAdapter {
       pinLabel: row['pin_label'] as String?,
       pinOrder: (row['pin_order'] as int?) ?? 0,
       l1Json: row['l1_json'] as String?,
+      screenId: (row['screen_id'] as String?) ?? _screenId,
     );
   }
 
@@ -64,9 +65,11 @@ class HelocDatabaseAdapter implements DatabaseAdapter {
   @override
   Future<Map<String, dynamic>?> getRowByHash({
     required String appKey,
+    required String screenId,
     required String resultHash,
   }) async {
-    final row = await DatabaseService.instance.getHistoryByHash(resultHash);
+    final row =
+        await DatabaseService.instance.getHistoryByHash(screenId, resultHash);
     return row == null ? null : _toAdapterRow(row);
   }
 
@@ -122,7 +125,7 @@ class HelocDatabaseAdapter implements DatabaseAdapter {
     return {
       'id': row['id'],
       'app_key': _appKey,
-      'screen_id': _screenId,
+      'screen_id': (row['screen_id'] as String?) ?? _screenId,
       'result_hash': (row['input_hash'] as String?) ?? '',
       'l1_json': l1Json,
       'l2_json': l2Json,
