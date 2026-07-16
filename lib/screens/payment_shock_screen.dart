@@ -60,6 +60,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
   double _projectedRate = 9.5;
 
   _ShockResult? _result;
+  bool _hasInteracted = false;
 
   Color get _piColor =>
       CalcwiseSemanticColors.error(Theme.of(context).brightness);
@@ -77,7 +78,10 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
       _currentRateCtrl.text = h.rate.toStringAsFixed(1);
     }
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
-      c.addListener(() => scheduleCalc(_tryCompute));
+      c.addListener(() {
+        _hasInteracted = true;
+        scheduleCalc(_tryCompute);
+      });
     }
     isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
@@ -133,6 +137,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
     // would otherwise persist a nonsensical near-zero payment shock entry to
     // History looking like a real saved scenario.
     if (_parseN(_balanceCtrl.text) < 1000) return;
+    if (!_hasInteracted) return;
     final hash = ResultHasher.hashMixed({
       'balance': _roundTo(_parseN(_balanceCtrl.text), 500),
       'current_rate': _roundTo(_parseN(_currentRateCtrl.text), 0.25),
@@ -321,6 +326,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
                         selected: {_repayYears},
                         onSelectionChanged: (s) {
                           setState(() => _repayYears = s.first);
+                          _hasInteracted = true;
                           scheduleCalc(_tryCompute);
                         },
                       ),
@@ -347,6 +353,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
                             label: '${_projectedRate.toStringAsFixed(2)}%',
                             onChanged: (v) {
                               setState(() => _projectedRate = v);
+                              _hasInteracted = true;
                               scheduleCalc(_tryCompute);
                             },
                           ),

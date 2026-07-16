@@ -73,6 +73,7 @@ class _CompareScreenState extends State<CompareScreen>
   final _loanTermCtrl = TextEditingController(text: '5');
 
   _CompareResult? _result;
+  bool _hasInteracted = false;
 
   @override
   void initState() {
@@ -97,7 +98,10 @@ class _CompareScreenState extends State<CompareScreen>
       _loanRateCtrl,
       _loanTermCtrl,
     ]) {
-      c.addListener(() => scheduleCalc(_compare));
+      c.addListener(() {
+        _hasInteracted = true;
+        scheduleCalc(_compare);
+      });
     }
     isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -173,6 +177,7 @@ class _CompareScreenState extends State<CompareScreen>
     // "100000") passes validation and would otherwise persist a
     // nonsensical comparison to History looking like a real saved scenario.
     if (_parseN(_drawCtrl.text) < 1000) return;
+    if (!_hasInteracted) return;
     final hash = ResultHasher.hashMixed({
       'draw': _roundTo(_parseN(_drawCtrl.text), 500),
       'heloc_rate': _roundTo(_parseN(_helocRateCtrl.text), 0.25),

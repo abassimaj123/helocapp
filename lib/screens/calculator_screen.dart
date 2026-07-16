@@ -347,6 +347,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
   List<Map<String, dynamic>>? _cachedScenarios;
   bool _paywallChecked = false;
 
+  // True once the user has actually edited a field (or explicitly loaded a
+  // scenario from History). Gates auto-save so the initial mount-time
+  // calculation — run against the default example values — never persists
+  // to History on its own. See bug_autosave_on_mount memory.
+  bool _hasInteracted = false;
+
   @override
   void initState() {
     super.initState();
@@ -362,7 +368,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
       _drawYearsCtrl,
       _repayYearsCtrl
     ]) {
-      c.addListener(() => scheduleCalc(_tryCalculate));
+      c.addListener(() {
+        _hasInteracted = true;
+        scheduleCalc(_tryCalculate);
+      });
     }
     _taxBracketCtrl.addListener(() {
       _taxBracket = (double.tryParse(_taxBracketCtrl.text) ?? 22.0).clamp(0.0, 50.0);
@@ -395,6 +404,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     _taxBracket = ((data['taxBracket'] as num?) ?? 22.0).toDouble().clamp(0.0, 50.0);
     _taxBracketCtrl.text = _taxBracket.toStringAsFixed(0);
     _updateEquity();
+    _hasInteracted = true; // explicit "Load into Calculator" — a real save-worthy scenario
     _tryCalculate();
   }
 
@@ -482,6 +492,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> with CalcwiseAutoCa
     // compute/display normally; only the persisted-to-History write is
     // gated.
     if (homeValue < 10000 || draw < 1000 || rate < 0.1) return;
+    if (!_hasInteracted) return;
     final inputs = _resultsToInputs();
     final results = _resultsToResults();
     smartHistoryService.scheduleAutoSave(

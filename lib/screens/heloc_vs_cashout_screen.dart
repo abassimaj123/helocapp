@@ -107,6 +107,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
   int _helocRepayYears = 20;
 
   _CompareCashoutResult? _result;
+  bool _hasInteracted = false;
 
   @override
   void initState() {
@@ -131,7 +132,10 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       _refiRateCtrl,
       _closingPctCtrl,
     ]) {
-      c.addListener(() => scheduleCalc(_tryCompute));
+      c.addListener(() {
+        _hasInteracted = true;
+        scheduleCalc(_tryCompute);
+      });
     }
     isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryCompute());
@@ -206,6 +210,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     // home value would otherwise still persist a comparison with a
     // nonsensical CLTV% to History looking like a real saved scenario.
     if (r.homeValue < 10000) return;
+    if (!_hasInteracted) return;
     final hash = ResultHasher.hashMixed({
       'existing_bal': _roundTo(_parseN(_existingBalCtrl.text), 1000),
       'cash': _roundTo(_parseN(_cashCtrl.text), 500),
@@ -531,6 +536,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                             final val = int.tryParse(v);
                             if (val != null && val > 0) {
                               setState(() => _helocDrawYears = val);
+                              _hasInteracted = true;
                               scheduleCalc(_tryCompute);
                             }
                           },
@@ -550,6 +556,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                             final val = int.tryParse(v);
                             if (val != null && val > 0) {
                               setState(() => _helocRepayYears = val);
+                              _hasInteracted = true;
                               scheduleCalc(_tryCompute);
                             }
                           },
@@ -593,6 +600,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
                       value: _financeClosing,
                       onChanged: (v) {
                         setState(() => _financeClosing = v);
+                        _hasInteracted = true;
                         scheduleCalc(_tryCompute);
                       },
                     ),

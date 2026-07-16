@@ -152,6 +152,11 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   List<Map<String, double>>? _varRateSchedule;
   bool _varRateExpanded = false;
 
+  // True once the user has actually edited a field. Gates auto-save so the
+  // initial mount-time calculation (default example values) never persists
+  // to History on its own.
+  bool _hasInteracted = false;
+
   @override
   void initState() {
     super.initState();
@@ -183,7 +188,10 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
       _primeRateCtrl,
       _marginCtrl,
     ]) {
-      c.addListener(() => scheduleCalc(_optimize));
+      c.addListener(() {
+        _hasInteracted = true;
+        scheduleCalc(_optimize);
+      });
     }
     isSpanishNotifier.addListener(_onLangChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -382,6 +390,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
   }
 
   void _scheduleAutoSave(List<_StrategyResult> results, int optimalIdx) {
+    if (!_hasInteracted) return;
     final hash = ResultHasher.hashMixed({
       'limit': _roundTo(_parseCtrl(_creditLimitCtrl), 1000),
       'rate': _roundTo(_parseCtrl(_rateCtrl), 0.25),
@@ -598,6 +607,7 @@ class _DrawOptimizerScreenState extends State<DrawOptimizerScreen>
                           _draws[i] = updated;
                           _results = null;
                         });
+                        _hasInteracted = true;
                         scheduleCalc(_optimize);
                       },
                       onRemove: _draws.length > 1 ? () => _removeDraw(i) : null,
