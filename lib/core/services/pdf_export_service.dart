@@ -13,7 +13,7 @@ import '../../main.dart' show isSpanishNotifier;
 import '../freemium/freemium_service.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 
-const _teal = PdfColor(0.039, 0.475, 0.490); // HELOC teal
+const _teal = PdfColor(0.0314, 0.4863, 0.4980); // HELOC teal (#087C7F)
 const _navy = PdfColor(0.059, 0.200, 0.350);
 const _light = PdfColor(0.910, 0.965, 0.980);
 

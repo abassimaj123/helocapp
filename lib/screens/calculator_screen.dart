@@ -84,7 +84,7 @@ pw.Widget _calcPdfSectionTitle(String title) {
       style: pw.TextStyle(
         fontSize: AppTextSize.md,
         fontWeight: pw.FontWeight.bold,
-        color: const PdfColor.fromInt(0xFF00695C),
+        color: const PdfColor.fromInt(0xFF087C7F),
       ),
     ),
   );
@@ -122,7 +122,7 @@ pw.Widget _calcPdfTable(List<List<String>> rows, {bool highlightFirst = false}) 
                 fontWeight:
                     isFirst ? pw.FontWeight.bold : pw.FontWeight.normal,
                 color: isFirst
-                    ? const PdfColor.fromInt(0xFF00695C)
+                    ? const PdfColor.fromInt(0xFF087C7F)
                     : PdfColors.black,
               ),
               textAlign: pw.TextAlign.right,
@@ -153,7 +153,7 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
             pw.Container(
               padding: const pw.EdgeInsets.all(AppSpacing.lg),
               decoration: pw.BoxDecoration(
-                color: const PdfColor.fromInt(0xFF00695C),
+                color: const PdfColor.fromInt(0xFF087C7F),
                 borderRadius: pw.BorderRadius.circular(AppRadius.md),
               ),
               child: pw.Row(

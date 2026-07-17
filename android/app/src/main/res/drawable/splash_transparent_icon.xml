@@ -6,6 +6,6 @@
     android:viewportHeight="108">
     <!-- Solid circle = splash background color. Invisible zoom animation on Samsung. -->
     <path
-        android:fillColor="#00695C"
+        android:fillColor="#087C7F"
         android:pathData="M54,54 m-54,0 a54,54 0 1,0 108,0 a54,54 0 1,0 -108,0"/>
 </vector>
