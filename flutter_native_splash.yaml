@@ -1,12 +1,14 @@
 flutter_native_splash:
-  color: "#00695C"
-  color_dark: "#00695C"
-  image: assets/icons/icon_foreground.png
-  android_12:
-    color: "#00695C"
-    image: assets/icons/icon_foreground.png
-    icon_background_color: "#00695C"
-    icon_background_color_dark: "#00695C"
+  # NOTE: no `image`/`android_12` keys on purpose. Android 12+ splash is
+  # hand-authored in values-v31/styles.xml to use the animated 3-dot
+  # @drawable/animated_splash_dots icon. Re-running `flutter_native_splash:create`
+  # with an image/android_12 block here would silently overwrite that back to a
+  # static image (this actually happened once on MortgageCA, commit c013dcb).
+  # These color keys only drive the pre-Android-12 fallback splash. Splash is
+  # intentionally darker than the launcher icon (#0C9C9F) for WCAG AA contrast
+  # with white text — do not "sync" this to the icon color.
+  color: "#087C7F"
+  color_dark: "#087C7F"
   fullscreen: true
   android: true
   ios: false
