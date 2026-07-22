@@ -234,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? 'Ver todas nuestras calculadoras'
                           : 'See all our calculators',
                       onTap: () => _launch(
-                          'https://play.google.com/store/apps/developer?id=CalqWise'),
+                          'https://play.google.com/store/apps/developer?id=Dailywave+Apps'),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
