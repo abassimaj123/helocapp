@@ -1,7 +1,7 @@
 name: heloc_app
 description: HELOC Calculator
 publish_to: 'none'
-version: 1.0.11+16
+version: 1.0.12+17
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
