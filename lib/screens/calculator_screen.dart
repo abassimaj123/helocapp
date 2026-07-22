@@ -215,8 +215,8 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
                         'Pago amortizado (periodo de pago)',
                         AmountFormatter.ui(p.repayment, 'USD')
                       ],
-                      ['Capital disponible (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
-                      ['LTV actual', '${fmtPct.format(p.ltv)}%'],
+                      ['Capital disponible (85% del valor de la casa)', AmountFormatter.ui(p.equity, 'USD')],
+                      ['LTV actual (% de la casa que aún debes)', '${fmtPct.format(p.ltv)}%'],
                       [
                         'Ahorro fiscal estimado (${p.taxBracket.toStringAsFixed(0)}%)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/año'
@@ -231,8 +231,8 @@ Future<Uint8List> _buildCalculatorPdf(_CalculatorPdfParams p) async {
                         'Repayment Payment (After Draw)',
                         AmountFormatter.ui(p.repayment, 'USD')
                       ],
-                      ['Available Equity (85% LTV)', AmountFormatter.ui(p.equity, 'USD')],
-                      ['Current LTV', '${fmtPct.format(p.ltv)}%'],
+                      ['Available Equity (85% of Home Value)', AmountFormatter.ui(p.equity, 'USD')],
+                      ['Current LTV (% of Home You Still Owe)', '${fmtPct.format(p.ltv)}%'],
                       [
                         'Est. Tax Savings (${p.taxBracket.toStringAsFixed(0)}% bracket)',
                         '${AmountFormatter.ui(p.taxSavings, "USD")}/year'
@@ -923,8 +923,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                                       ? 'Pago Solo Interés'
                                                       : 'Interest-Only Payment')
                                                   : (isEs
-                                                      ? 'Pago P&I'
-                                                      : 'P&I Payment'),
+                                                      ? 'Pago (Capital + Interés)'
+                                                      : 'Principal + Interest Payment'),
                                               value: AmountFormatter.ui(
                                                   drawPayment, 'USD'),
                                               rawValue: drawPayment,
@@ -993,8 +993,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                             child: Column(children: [
                                               MetricRow(
                                                 label: isEs
-                                                    ? 'Capital disponible (85% LTV)'
-                                                    : 'Available Equity (85% LTV)',
+                                                    ? 'Capital disponible (85% del valor de la casa)'
+                                                    : 'Available Equity (85% of Home Value)',
                                                 value: AmountFormatter.ui(
                                                     (_results!['equity']
                                                             as double?) ??
@@ -1017,8 +1017,8 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                               const Divider(height: 16),
                                               MetricRow(
                                                 label: isEs
-                                                    ? 'LTV actual'
-                                                    : 'Current LTV',
+                                                    ? 'LTV actual (% de la casa que aún debes)'
+                                                    : 'Current LTV (% of Home You Still Owe)',
                                                 value:
                                                     '${_fmtPct.format(_results!['ltv'])}%',
                                                 valueColor:
@@ -1291,7 +1291,12 @@ Est. Tax Savings: ${AmountFormatter.ui(taxSavings, 'USD')}/yr
                                   RegExp(r'[0-9.]')),
                             ],
                             decoration: InputDecoration(
-                              labelText: isEs ? 'Tramo Impositivo (%)' : 'Tax Bracket (%)',
+                              labelText: isEs
+                                  ? 'Tu tramo de impuesto federal (%)'
+                                  : 'Your federal tax bracket (%)',
+                              helperText: isEs
+                                  ? 'El % de impuesto que pagas sobre tu último dólar ganado'
+                                  : 'The tax rate on your last dollar earned',
                               hintText: '22',
                               suffixText: '%',
                             ),

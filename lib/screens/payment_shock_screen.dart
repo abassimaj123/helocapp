@@ -61,6 +61,7 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
 
   _ShockResult? _result;
   bool _hasInteracted = false;
+  bool _seededFromCalc = false;
 
   Color get _piColor =>
       CalcwiseSemanticColors.error(Theme.of(context).brightness);
@@ -73,9 +74,11 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
     final h = helocNotifier.value;
     if (h.balance > 0) {
       _balanceCtrl.text = h.balance.toStringAsFixed(0);
+      _seededFromCalc = true;
     }
     if (h.rate > 0) {
       _currentRateCtrl.text = h.rate.toStringAsFixed(1);
+      _seededFromCalc = true;
     }
     for (final c in [_balanceCtrl, _currentRateCtrl]) {
       c.addListener(() {
@@ -271,6 +274,13 @@ class _PaymentShockScreenState extends State<PaymentShockScreen>
       ),
       body: Column(
         children: [
+          if (_seededFromCalc)
+            CalcSourceBanner(
+              label: isEs ? 'Desde tu calculadora:' : 'From your calculator:',
+              summary: isEs
+                  ? '\$${_balanceCtrl.text} al ${_currentRateCtrl.text}%'
+                  : '\$${_balanceCtrl.text} at ${_currentRateCtrl.text}%',
+            ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),

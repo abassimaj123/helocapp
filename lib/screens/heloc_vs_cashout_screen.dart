@@ -108,6 +108,7 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
 
   _CompareCashoutResult? _result;
   bool _hasInteracted = false;
+  bool _seededFromCalc = false;
 
   @override
   void initState() {
@@ -118,9 +119,11 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
     final h = helocNotifier.value;
     if (h.balance > 0) {
       _existingBalCtrl.text = h.balance.toStringAsFixed(0);
+      _seededFromCalc = true;
     }
     if (h.rate > 0) {
       _helocRateCtrl.text = h.rate.toStringAsFixed(1);
+      _seededFromCalc = true;
     }
     for (final c in [
       _homeValueCtrl,
@@ -448,6 +451,13 @@ class _HelocVsCashoutScreenState extends State<HelocVsCashoutScreen> with Calcwi
       ),
       body: Column(
         children: [
+          if (_seededFromCalc)
+            CalcSourceBanner(
+              label: isEs ? 'Desde tu calculadora:' : 'From your calculator:',
+              summary: isEs
+                  ? '\$${_existingBalCtrl.text} al ${_helocRateCtrl.text}%'
+                  : '\$${_existingBalCtrl.text} at ${_helocRateCtrl.text}%',
+            ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),

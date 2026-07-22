@@ -388,9 +388,9 @@ class _MainShellState extends State<MainShell> {
             label: isEs ? 'Comparar' : 'Compare',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.build_rounded),
-            selectedIcon: const Icon(Icons.build),
-            label: isEs ? 'Herramientas' : 'Tools',
+            icon: const Icon(Icons.grid_view_rounded),
+            selectedIcon: const Icon(Icons.grid_view_rounded),
+            label: isEs ? 'Más cálculos' : 'More Calculators',
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_rounded),

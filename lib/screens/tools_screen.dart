@@ -37,15 +37,29 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Text(
+                          isEs
+                              ? 'Escenarios adicionales para explorar más allá de tu cálculo principal.'
+                              : 'Extra what-if scenarios, beyond your main calculation.',
+                          style: TextStyle(
+                            fontSize: AppTextSize.sm,
+                            color: CalcwiseTheme.of(context).textSecondary,
+                          ),
+                        ),
+                      ),
                       CalcwiseStaggerItem(
                         index: 0,
                         child: _ToolCard(
-                          icon: Icons.tune_rounded,
+                          icon: Icons.compare_arrows_rounded,
                           color: _toolTealColor,
-                          title: isEs ? 'Optimizador de retiro' : 'Draw Optimizer',
+                          title: isEs
+                              ? 'Comparar estrategias de retiro'
+                              : 'Compare Draw Strategies',
                           subtitle: isEs
-                              ? 'Optimice su calendario de retiro'
-                              : 'Optimize your draw schedule',
+                              ? 'Prueba distintos montos y calendarios de retiro (no es tu plan guardado)'
+                              : 'Try different draw amounts and timing (not your saved plan)',
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -76,12 +90,14 @@ class _ToolsScreenState extends State<ToolsScreen> {
                       CalcwiseStaggerItem(
                         index: 2,
                         child: _ToolCard(
-                          icon: Icons.compare_arrows_rounded,
+                          icon: Icons.fact_check_rounded,
                           color: _toolIndigoColor,
-                          title: isEs ? 'HELOC vs Refinanciamiento' : 'HELOC vs Cash-Out Refi',
+                          title: isEs
+                              ? 'HELOC vs Refi: análisis detallado'
+                              : 'HELOC vs Cash-Out Refi: Deep Dive',
                           subtitle: isEs
-                              ? 'Compare HELOC con refinanciamiento con retiro de efectivo'
-                              : 'Compare HELOC with cash-out refinance',
+                              ? 'Comparación línea por línea (más detallada que la pestaña Comparar)'
+                              : 'Line-by-line comparison (more detail than the Compare tab)',
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(

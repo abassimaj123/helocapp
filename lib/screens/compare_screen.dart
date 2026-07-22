@@ -359,7 +359,7 @@ class _CompareScreenState extends State<CompareScreen>
 
                   // ── Shared input ───────────────────────────────────────
                   _sectionHeader(
-                      isEs ? 'Capital a financiar' : 'Amount to Finance'),
+                      isEs ? 'Monto de retiro (Draw Amount)' : 'Draw Amount'),
                   const SizedBox(height: AppSpacing.md),
                   _field(
                     ctrl: _drawCtrl,
